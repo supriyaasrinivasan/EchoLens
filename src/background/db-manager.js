@@ -16,9 +16,9 @@ export class DatabaseManager {
     if (this.isInitialized) return;
 
     try {
-      // Initialize SQL.js
+      // Initialize SQL.js with proper configuration for Service Worker
       this.SQL = await initSqlJs({
-        locateFile: file => `dist/${file}`
+        locateFile: file => chrome.runtime.getURL(file)
       });
 
       // Try to load existing database from chrome storage
