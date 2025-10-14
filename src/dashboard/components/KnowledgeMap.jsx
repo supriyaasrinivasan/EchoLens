@@ -1,8 +1,22 @@
-import React, { useRef, useEffect } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import React, { useRef, useEffect, useState } from 'react';
 
+// Lazy load ForceGraph2D to handle potential loading issues
 const KnowledgeMap = ({ memories }) => {
   const graphRef = useRef();
+  const [ForceGraph2D, setForceGraph2D] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    // Dynamically import the graph library
+    import('react-force-graph-2d')
+      .then((module) => {
+        setForceGraph2D(() => module.default);
+      })
+      .catch((err) => {
+        console.error('Failed to load ForceGraph2D:', err);
+        setLoadError(true);
+      });
+  }, []);
 
   // Transform memories into graph data
   const graphData = React.useMemo(() => {
@@ -72,11 +86,41 @@ const KnowledgeMap = ({ memories }) => {
   };
 
   useEffect(() => {
-    if (graphRef.current) {
+    if (graphRef.current && ForceGraph2D) {
       // Zoom to fit
       graphRef.current.zoomToFit(400);
     }
-  }, [graphData]);
+  }, [graphData, ForceGraph2D]);
+
+  // Show loading state
+  if (!ForceGraph2D && !loadError) {
+    return (
+      <div className="empty-map">
+        <div className="empty-icon">⌛</div>
+        <h3>Loading Knowledge Map...</h3>
+        <p>Preparing your memory constellation</p>
+      </div>
+    );
+  }
+
+  // Show error state with fallback
+  if (loadError) {
+    return (
+      <div className="empty-map">
+        <div className="empty-icon">⚠️</div>
+        <h3>Graph View Unavailable</h3>
+        <p>Please use List or Timeline view instead</p>
+        <div className="fallback-list">
+          {memories.slice(0, 10).map((memory, idx) => (
+            <div key={idx} className="fallback-item" onClick={() => window.open(memory.url, '_blank')}>
+              <strong>{memory.title}</strong>
+              <small>{memory.visits} visits • {memory.tags.join(', ')}</small>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (memories.length === 0) {
     return (

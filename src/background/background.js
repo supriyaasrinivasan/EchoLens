@@ -510,6 +510,16 @@ class EchoLensBackground {
           sendResponse({ stats });
           break;
 
+        case 'EXPORT_DATA':
+          const exportData = await this.exportData();
+          sendResponse({ data: exportData });
+          break;
+
+        case 'IMPORT_DATA':
+          await this.importData(data);
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ error: 'Unknown message type' });
       }
@@ -649,6 +659,14 @@ class EchoLensBackground {
 
   async getStats() {
     return await this.storage.getStats();
+  }
+
+  async exportData() {
+    return await this.storage.exportData();
+  }
+
+  async importData(data) {
+    return await this.storage.importData(data);
   }
 
   async performCleanup() {

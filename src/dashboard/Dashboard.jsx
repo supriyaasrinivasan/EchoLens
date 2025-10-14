@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload } from 'lucide-react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
 import MemoryTimeline from './components/MemoryTimeline';
 import StatsOverview from './components/StatsOverview';
 import SearchBar from './components/SearchBar';
+import InsightsPanel from './components/InsightsPanel';
 
 const Dashboard = () => {
-  const [view, setView] = useState('map'); // map, list, timeline
+  const [view, setView] = useState('map'); // map, list, timeline, insights
   const [memories, setMemories] = useState([]);
   const [filteredMemories, setFilteredMemories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -26,6 +27,32 @@ const Dashboard = () => {
   useEffect(() => {
     applyFilters();
   }, [memories, searchQuery, filters]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Ctrl/Cmd + K for search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.querySelector('.search-input')?.focus();
+      }
+      // Number keys for view switching (1-4)
+      if (!e.ctrlKey && !e.metaKey && !e.target.matches('input, textarea')) {
+        if (e.key === '1') setView('map');
+        if (e.key === '2') setView('list');
+        if (e.key === '3') setView('timeline');
+        if (e.key === '4') setView('insights');
+      }
+      // Ctrl/Cmd + E for export
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        handleExport();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -103,8 +130,38 @@ const Dashboard = () => {
         link.href = url;
         link.download = `echolens-export-${Date.now()}.json`;
         link.click();
+        URL.revokeObjectURL(url);
       }
     });
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            chrome.runtime.sendMessage({ type: 'IMPORT_DATA', data }, (response) => {
+              if (response?.success) {
+                loadData(); // Reload data after import
+                alert('Data imported successfully!');
+              } else {
+                alert('Failed to import data');
+              }
+            });
+          } catch (error) {
+            alert('Invalid file format');
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   if (loading) {
@@ -132,6 +189,7 @@ const Dashboard = () => {
           <button 
             className={`nav-item ${view === 'map' ? 'active' : ''}`}
             onClick={() => setView('map')}
+            title="Shortcut: 1"
           >
             <MapIcon size={20} />
             <span>Knowledge Map</span>
@@ -139,6 +197,7 @@ const Dashboard = () => {
           <button 
             className={`nav-item ${view === 'list' ? 'active' : ''}`}
             onClick={() => setView('list')}
+            title="Shortcut: 2"
           >
             <List size={20} />
             <span>Memory List</span>
@@ -146,18 +205,31 @@ const Dashboard = () => {
           <button 
             className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
             onClick={() => setView('timeline')}
+            title="Shortcut: 3"
           >
             <Calendar size={20} />
             <span>Timeline</span>
+          </button>
+          <button 
+            className={`nav-item ${view === 'insights' ? 'active' : ''}`}
+            onClick={() => setView('insights')}
+            title="Shortcut: 4"
+          >
+            <Sparkles size={20} />
+            <span>AI Insights</span>
           </button>
         </nav>
 
         {stats && <StatsOverview stats={stats} />}
 
         <div className="sidebar-footer">
-          <button className="footer-button" onClick={handleExport}>
+          <button className="footer-button" onClick={handleExport} title="Shortcut: Ctrl+E">
             <Download size={18} />
             <span>Export Data</span>
+          </button>
+          <button className="footer-button" onClick={handleImport} style={{ marginTop: '8px' }}>
+            <Upload size={18} />
+            <span>Import Data</span>
           </button>
         </div>
       </div>
@@ -171,6 +243,7 @@ const Dashboard = () => {
               {view === 'map' && '🗺️ Knowledge Map'}
               {view === 'list' && '📚 Memory Library'}
               {view === 'timeline' && '📅 Memory Timeline'}
+              {view === 'insights' && '✨ AI Insights'}
             </h2>
             <p className="page-subtitle">
               {filteredMemories.length} memories
@@ -206,7 +279,12 @@ const Dashboard = () => {
               <option value="2">2+</option>
               <option value="5">5+</option>
               <option value="10">10+</option>
+              <option value="20">20+</option>
             </select>
+          </div>
+
+          <div className="keyboard-hint" style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
+            💡 Press <kbd>Ctrl+K</kbd> to search, <kbd>1-4</kbd> to switch views
           </div>
         </div>
 
@@ -215,6 +293,7 @@ const Dashboard = () => {
           {view === 'map' && <KnowledgeMap memories={filteredMemories} />}
           {view === 'list' && <MemoryList memories={filteredMemories} />}
           {view === 'timeline' && <MemoryTimeline memories={filteredMemories} />}
+          {view === 'insights' && <InsightsPanel memories={filteredMemories} />}
         </div>
       </div>
     </div>
