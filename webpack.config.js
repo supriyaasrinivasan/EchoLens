@@ -48,11 +48,23 @@ module.exports = {
             }
           }
         ]
+      },
+      {
+        test: /\.wasm$/,
+        type: 'asset/resource',
+        generator: {
+          filename: '[name][ext]'
+        }
       }
     ]
   },
   resolve: {
-    extensions: ['.js', '.jsx']
+    extensions: ['.js', '.jsx'],
+    fallback: {
+      'fs': false,
+      'path': false,
+      'crypto': false
+    }
   },
   optimization: {
     // Disable code splitting for Chrome Extension compatibility
@@ -105,7 +117,12 @@ module.exports = {
       patterns: [
         { from: 'manifest.json', to: 'manifest.json' },
         { from: 'src/content/content.css', to: 'content.css' },
-        { from: 'assets', to: 'assets', noErrorOnMissing: true }
+        { from: 'assets', to: 'assets', noErrorOnMissing: true },
+        // Copy sql.js wasm file
+        { 
+          from: 'node_modules/sql.js/dist/sql-wasm.wasm', 
+          to: 'sql-wasm.wasm' 
+        }
       ]
     })
   ]

@@ -1,249 +1,7 @@
 // EchoLens Background Service Worker
 // Handles data storage, AI processing, and cross-extension communication
 
-// Storage Manager Class
-class StorageManager {
-  constructor() {
-    this.KEYS = {
-      VISITS: 'echolens_visits',
-      HIGHLIGHTS: 'echolens_highlights',
-      INSIGHTS: 'echolens_insights',
-      TAGS: 'echolens_tags',
-      SETTINGS: 'echolens_settings'
-    };
-  }
-
-  async get(key) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get([key], (result) => {
-        resolve(result[key] || null);
-      });
-    });
-  }
-
-  async set(key, value) {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ [key]: value }, () => {
-        resolve();
-      });
-    });
-  }
-
-  async updateVisit(context) {
-    const { url, title, content, timeSpent, scrollDepth, interactions, highlights } = context;
-    
-    let visits = await this.get(this.KEYS.VISITS) || {};
-    
-    const urlKey = this.hashURL(url);
-    if (!visits[urlKey]) {
-      visits[urlKey] = {
-        url,
-        title,
-        firstVisit: Date.now(),
-        visits: 0,
-        totalTimeSpent: 0,
-        sessions: []
-      };
-    }
-
-    visits[urlKey].visits += 1;
-    visits[urlKey].totalTimeSpent += timeSpent;
-    visits[urlKey].lastVisit = Date.now();
-    visits[urlKey].title = title;
-    
-    visits[urlKey].sessions.push({
-      timestamp: Date.now(),
-      timeSpent,
-      scrollDepth,
-      interactions,
-      highlightCount: highlights?.length || 0
-    });
-
-    if (visits[urlKey].sessions.length > 50) {
-      visits[urlKey].sessions = visits[urlKey].sessions.slice(-50);
-    }
-
-    await this.set(this.KEYS.VISITS, visits);
-  }
-
-  async getVisitHistory(url) {
-    const visits = await this.get(this.KEYS.VISITS) || {};
-    const urlKey = this.hashURL(url);
-    return visits[urlKey] || null;
-  }
-
-  async saveHighlight(data) {
-    const { text, url, title, timestamp } = data;
-    
-    let highlights = await this.get(this.KEYS.HIGHLIGHTS) || {};
-    const urlKey = this.hashURL(url);
-    
-    if (!highlights[urlKey]) {
-      highlights[urlKey] = {
-        url,
-        title,
-        items: []
-      };
-    }
-
-    highlights[urlKey].items.push({
-      text,
-      timestamp
-    });
-
-    if (highlights[urlKey].items.length > 100) {
-      highlights[urlKey].items = highlights[urlKey].items.slice(-100);
-    }
-
-    await this.set(this.KEYS.HIGHLIGHTS, highlights);
-  }
-
-  async getHighlights(url) {
-    const highlights = await this.get(this.KEYS.HIGHLIGHTS) || {};
-    const urlKey = this.hashURL(url);
-    return highlights[urlKey]?.items || [];
-  }
-
-  async saveAIInsights(url, insights) {
-    let allInsights = await this.get(this.KEYS.INSIGHTS) || {};
-    const urlKey = this.hashURL(url);
-    
-    allInsights[urlKey] = {
-      url,
-      ...insights
-    };
-
-    await this.set(this.KEYS.INSIGHTS, allInsights);
-  }
-
-  async getAIInsights(url) {
-    const insights = await this.get(this.KEYS.INSIGHTS) || {};
-    const urlKey = this.hashURL(url);
-    return insights[urlKey] || null;
-  }
-
-  async addTag(url, tag) {
-    let tags = await this.get(this.KEYS.TAGS) || {};
-    const urlKey = this.hashURL(url);
-    
-    if (!tags[urlKey]) {
-      tags[urlKey] = {
-        url,
-        tags: []
-      };
-    }
-
-    if (!tags[urlKey].tags.includes(tag)) {
-      tags[urlKey].tags.push(tag);
-    }
-
-    await this.set(this.KEYS.TAGS, tags);
-  }
-
-  async getMemories(filters = {}) {
-    const visits = await this.get(this.KEYS.VISITS) || {};
-    const highlights = await this.get(this.KEYS.HIGHLIGHTS) || {};
-    const insights = await this.get(this.KEYS.INSIGHTS) || {};
-    const tags = await this.get(this.KEYS.TAGS) || {};
-
-    const memories = Object.keys(visits).map(urlKey => {
-      const visit = visits[urlKey];
-      return {
-        url: visit.url,
-        title: visit.title,
-        visits: visit.visits,
-        lastVisit: visit.lastVisit,
-        firstVisit: visit.firstVisit,
-        totalTimeSpent: visit.totalTimeSpent,
-        highlights: highlights[urlKey]?.items || [],
-        insights: insights[urlKey] || null,
-        tags: tags[urlKey]?.tags || [],
-        sessions: visit.sessions
-      };
-    });
-
-    let filtered = memories;
-
-    if (filters.minVisits) {
-      filtered = filtered.filter(m => m.visits >= filters.minVisits);
-    }
-
-    if (filters.minTimeSpent) {
-      filtered = filtered.filter(m => m.totalTimeSpent >= filters.minTimeSpent);
-    }
-
-    if (filters.tag) {
-      filtered = filtered.filter(m => m.tags.includes(filters.tag));
-    }
-
-    if (filters.dateFrom) {
-      filtered = filtered.filter(m => m.lastVisit >= filters.dateFrom);
-    }
-
-    filtered.sort((a, b) => b.lastVisit - a.lastVisit);
-
-    return filtered;
-  }
-
-  async getAllMemories() {
-    return await this.getMemories();
-  }
-
-  async getStats() {
-    const visits = await this.get(this.KEYS.VISITS) || {};
-    const highlights = await this.get(this.KEYS.HIGHLIGHTS) || {};
-    
-    const totalVisits = Object.keys(visits).length;
-    const totalTimeSpent = Object.values(visits).reduce((sum, v) => sum + v.totalTimeSpent, 0);
-    const totalHighlights = Object.values(highlights).reduce((sum, h) => sum + h.items.length, 0);
-    const totalSessions = Object.values(visits).reduce((sum, v) => sum + v.visits, 0);
-
-    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-    const thisWeekVisits = Object.values(visits).filter(v => v.lastVisit >= oneWeekAgo).length;
-
-    return {
-      totalVisits,
-      totalTimeSpent,
-      totalHighlights,
-      totalSessions,
-      thisWeekVisits,
-      averageTimePerVisit: totalSessions > 0 ? Math.floor(totalTimeSpent / totalSessions) : 0
-    };
-  }
-
-  async cleanup() {
-    console.log('Cleanup would happen here for free tier users');
-  }
-
-  hashURL(url) {
-    return url.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 100);
-  }
-
-  async exportData() {
-    const visits = await this.get(this.KEYS.VISITS) || {};
-    const highlights = await this.get(this.KEYS.HIGHLIGHTS) || {};
-    const insights = await this.get(this.KEYS.INSIGHTS) || {};
-    const tags = await this.get(this.KEYS.TAGS) || {};
-    const settings = await this.get(this.KEYS.SETTINGS) || {};
-
-    return {
-      visits,
-      highlights,
-      insights,
-      tags,
-      settings,
-      exportDate: Date.now()
-    };
-  }
-
-  async importData(data) {
-    if (data.visits) await this.set(this.KEYS.VISITS, data.visits);
-    if (data.highlights) await this.set(this.KEYS.HIGHLIGHTS, data.highlights);
-    if (data.insights) await this.set(this.KEYS.INSIGHTS, data.insights);
-    if (data.tags) await this.set(this.KEYS.TAGS, data.tags);
-    if (data.settings) await this.set(this.KEYS.SETTINGS, data.settings);
-  }
-}
+import { DatabaseManager } from './db-manager.js';
 
 // AI Processor Class
 class AIProcessor {
@@ -428,14 +186,15 @@ class AIProcessor {
 
 class EchoLensBackground {
   constructor() {
-    this.storage = new StorageManager();
+    this.db = new DatabaseManager();
     this.ai = new AIProcessor();
     this.activeSessions = new Map();
-    
     this.init();
   }
 
-  init() {
+  async init() {
+    // Initialize database
+    await this.db.init();
     // Listen for messages from content scripts
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       this.handleMessage(message, sender, sendResponse);
@@ -558,7 +317,7 @@ class EchoLensBackground {
     }
 
     // Save to storage
-    await this.storage.updateVisit(context);
+    await this.db.updateVisit(context);
   }
 
   async processWithAI(context) {
@@ -573,7 +332,7 @@ class EchoLensBackground {
       const topics = await this.ai.extractTopics(context.content);
 
       // Save AI insights
-      await this.storage.saveAIInsights(context.url, {
+      await this.db.saveAIInsights(context.url, {
         summary,
         tags,
         topics,
@@ -590,10 +349,10 @@ class EchoLensBackground {
     if (!tab.url || tab.url.startsWith('chrome://')) return;
 
     // Check if we have previous context for this URL
-    const previousContext = await this.storage.getVisitHistory(tab.url);
+    const previousContext = await this.db.getVisitHistory(tab.url);
     
-    if (previousContext && previousContext.visits > 0) {
-      console.log(`🔮 Returning user to: ${tab.url} (${previousContext.visits} previous visits)`);
+    if (previousContext && previousContext.visit_count > 0) {
+      console.log(`🔮 Returning user to: ${tab.url} (${previousContext.visit_count} previous visits)`);
     }
   }
 
@@ -601,31 +360,31 @@ class EchoLensBackground {
     const session = this.activeSessions.get(tabId);
     if (session && session.context) {
       // Save final state
-      await this.storage.updateVisit(session.context);
+      await this.db.updateVisit(session.context);
       this.activeSessions.delete(tabId);
     }
   }
 
   async handlePageUnload(context, tab) {
-    await this.storage.updateVisit(context);
+    await this.db.updateVisit(context);
     this.activeSessions.delete(tab.id);
   }
 
   async saveHighlight(data) {
-    await this.storage.saveHighlight(data);
+    await this.db.saveHighlight(data);
   }
 
   async getPreviousContext(url) {
-    const history = await this.storage.getVisitHistory(url);
-    const highlights = await this.storage.getHighlights(url);
-    const insights = await this.storage.getAIInsights(url);
+    const history = await this.db.getVisitHistory(url);
+    const highlights = await this.db.getHighlights(url);
+    const insights = await this.db.getAIInsights(url);
 
     if (!history) return null;
 
     return {
-      visits: history.visits || 0,
-      lastVisit: history.lastVisit,
-      totalTimeSpent: history.totalTimeSpent || 0,
+      visits: history.visit_count || 0,
+      lastVisit: history.last_visit,
+      totalTimeSpent: history.total_time_spent || 0,
       highlights: highlights.slice(0, 5),
       tags: insights?.tags || [],
       summary: insights?.summary
@@ -633,45 +392,46 @@ class EchoLensBackground {
   }
 
   async getMemories(filters = {}) {
-    return await this.storage.getMemories(filters);
+    return await this.db.getMemories(filters);
   }
 
   async searchMemories(query) {
-    const allMemories = await this.storage.getAllMemories();
+    const allMemories = await this.db.getMemories();
     
     // Simple text search across titles, content, and highlights
     const results = allMemories.filter(memory => {
-      const searchText = `${memory.title} ${memory.content} ${memory.highlights?.join(' ')}`.toLowerCase();
+      const highlightTexts = memory.highlights.map(h => h.text || '').join(' ');
+      const searchText = `${memory.title} ${highlightTexts}`.toLowerCase();
       return searchText.includes(query.toLowerCase());
     });
 
     // Sort by relevance (number of matches)
     return results.sort((a, b) => {
-      const aMatches = (a.title + a.content).toLowerCase().split(query.toLowerCase()).length;
-      const bMatches = (b.title + b.content).toLowerCase().split(query.toLowerCase()).length;
+      const aMatches = (a.title).toLowerCase().split(query.toLowerCase()).length;
+      const bMatches = (b.title).toLowerCase().split(query.toLowerCase()).length;
       return bMatches - aMatches;
     });
   }
 
   async addTag(url, tag) {
-    await this.storage.addTag(url, tag);
+    await this.db.addTag(url, tag);
   }
 
   async getStats() {
-    return await this.storage.getStats();
+    return await this.db.getStats();
   }
 
   async exportData() {
-    return await this.storage.exportData();
+    return await this.db.exportData();
   }
 
   async importData(data) {
-    return await this.storage.importData(data);
+    return await this.db.importData(data);
   }
 
   async performCleanup() {
     console.log('🧹 Performing cleanup...');
-    await this.storage.cleanup();
+    await this.db.cleanup();
   }
 }
 

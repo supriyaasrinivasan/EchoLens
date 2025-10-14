@@ -1,20 +1,27 @@
 import React, { useRef, useEffect, useState } from 'react';
 import KnowledgeMapFallback from './KnowledgeMapFallback';
 
-// Static import instead of dynamic import to avoid CSP issues
-let ForceGraph2D = null;
-try {
-  ForceGraph2D = require('react-force-graph-2d').default;
-} catch (err) {
-  console.warn('ForceGraph2D not available, using fallback visualization:', err);
-}
-
 const KnowledgeMap = ({ memories }) => {
   const graphRef = useRef();
-  const [loadError] = useState(!ForceGraph2D);
+  const [ForceGraph2D, setForceGraph2D] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+
+  // Dynamically import ForceGraph2D
+  useEffect(() => {
+    const loadGraph = async () => {
+      try {
+        const module = await import('react-force-graph-2d');
+        setForceGraph2D(() => module.default);
+      } catch (err) {
+        console.warn('ForceGraph2D not available, using fallback visualization:', err);
+        setLoadError(true);
+      }
+    };
+    loadGraph();
+  }, []);
 
   // If ForceGraph2D isn't available, use fallback
-  if (loadError) {
+  if (loadError || !ForceGraph2D) {
     return <KnowledgeMapFallback memories={memories} />;
   }
 
@@ -86,14 +93,14 @@ const KnowledgeMap = ({ memories }) => {
   };
 
   useEffect(() => {
-    if (graphRef.current && ForceGraph2D && !loadError) {
+    if (graphRef.current && ForceGraph2D) {
       // Zoom to fit
       graphRef.current.zoomToFit(400);
     }
-  }, [graphData, loadError]);
+  }, [graphData, ForceGraph2D]);
 
   // Show error state with fallback
-  if (loadError) {
+  if (loadError || !ForceGraph2D) {
     return <KnowledgeMapFallback memories={memories} />;
   }
 
