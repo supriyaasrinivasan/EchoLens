@@ -265,4 +265,100 @@ export class AIProcessor {
     // Similar to tags but focused on noun phrases
     return this.generateFallbackTags(content, '');
   }
+
+  // Generate personality report for weekly snapshot
+  async generatePersonalityReport(weeklyData) {
+    if (!this.apiKey) {
+      return this.generateFallbackPersonalityReport(weeklyData);
+    }
+
+    try {
+      const { visits, highlights, topics, timeSpent } = weeklyData;
+      
+      const topTopics = Object.entries(
+        topics.reduce((acc, topic) => {
+          acc[topic] = (acc[topic] || 0) + 1;
+          return acc;
+        }, {})
+      )
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([topic]) => topic);
+
+      const prompt = `Analyze this week's browsing data and create a personality snapshot:
+
+Visits: ${visits.length} pages
+Time Spent: ${Math.floor(timeSpent / 3600)} hours
+Top Topics: ${topTopics.join(', ')}
+Highlights Saved: ${highlights.length}
+
+Generate a brief personality snapshot with:
+1. Overall tone (2-3 descriptive words)
+2. Top 3-5 topics
+3. Reading habits description
+4. Emotional themes (2-4 emotions)
+5. A 2-sentence summary
+6. 3 dominant interests
+
+Format as JSON with keys: tone, topTopics, readingHabits, emotionalThemes, summary, dominantInterests`;
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an insightful personality analyst. Create concise, meaningful personality snapshots.'
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 300,
+          temperature: 0.6
+        })
+      });
+
+      const data = await response.json();
+      const content = data.choices[0].message.content.trim();
+      
+      try {
+        return JSON.parse(content);
+      } catch {
+        return this.generateFallbackPersonalityReport(weeklyData);
+      }
+    } catch (error) {
+      console.error('Personality report error:', error);
+      return this.generateFallbackPersonalityReport(weeklyData);
+    }
+  }
+
+  generateFallbackPersonalityReport(weeklyData) {
+    const { visits, topics, highlights } = weeklyData;
+    
+    const topTopics = Object.entries(
+      topics.reduce((acc, topic) => {
+        acc[topic] = (acc[topic] || 0) + 1;
+        return acc;
+      }, {})
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([topic]) => topic);
+
+    return {
+      tone: 'curious, engaged, thoughtful',
+      topTopics: topTopics,
+      readingHabits: `Explored ${visits.length} pages with ${highlights.length} highlights`,
+      emotionalThemes: ['curiosity', 'interest', 'focus'],
+      summary: `This week, your reading leaned toward ${topTopics.slice(0, 3).join(', ')}. Your tone: curious and engaged.`,
+      dominantInterests: topTopics.slice(0, 3)
+    };
+  }
 }

@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import PersonaSync styles */
+@import './personasync.css';
+
 * {
   box-sizing: border-box;
   margin: 0;

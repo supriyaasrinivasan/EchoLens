@@ -107,6 +107,63 @@ export class DatabaseManager {
         FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
       );
 
+      -- Personality Snapshots table (for PersonaSync)
+      CREATE TABLE IF NOT EXISTS personality_snapshots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        week_start INTEGER NOT NULL,
+        week_end INTEGER NOT NULL,
+        tone TEXT,
+        top_topics TEXT,
+        reading_habits TEXT,
+        emotional_themes TEXT,
+        summary TEXT,
+        total_time_spent INTEGER DEFAULT 0,
+        total_visits INTEGER DEFAULT 0,
+        total_highlights INTEGER DEFAULT 0,
+        dominant_interests TEXT,
+        quote_of_week TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Interest Evolution table
+      CREATE TABLE IF NOT EXISTS interest_evolution (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        topic TEXT NOT NULL,
+        period TEXT NOT NULL,
+        count INTEGER DEFAULT 0,
+        total_time INTEGER DEFAULT 0,
+        trend_score REAL DEFAULT 0,
+        status TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Mood Tracking table
+      CREATE TABLE IF NOT EXISTS mood_tracking (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp INTEGER NOT NULL,
+        sentiment TEXT,
+        sentiment_score REAL DEFAULT 0,
+        emotions TEXT,
+        tone TEXT,
+        url TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Goals table
+      CREATE TABLE IF NOT EXISTS goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        keywords TEXT,
+        priority TEXT DEFAULT 'medium',
+        target_hours REAL DEFAULT 0,
+        actual_hours REAL DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
+        last_nudge INTEGER,
+        nudge_count INTEGER DEFAULT 0
+      );
+
       -- Indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_visits_url_hash ON visits(url_hash);
       CREATE INDEX IF NOT EXISTS idx_visits_last_visit ON visits(last_visit);
@@ -115,6 +172,9 @@ export class DatabaseManager {
       CREATE INDEX IF NOT EXISTS idx_insights_visit_id ON insights(visit_id);
       CREATE INDEX IF NOT EXISTS idx_visit_tags_visit_id ON visit_tags(visit_id);
       CREATE INDEX IF NOT EXISTS idx_visit_tags_tag_id ON visit_tags(tag_id);
+      CREATE INDEX IF NOT EXISTS idx_personality_snapshots_week ON personality_snapshots(week_start);
+      CREATE INDEX IF NOT EXISTS idx_interest_evolution_period ON interest_evolution(period);
+      CREATE INDEX IF NOT EXISTS idx_mood_tracking_timestamp ON mood_tracking(timestamp);
     `;
 
     this.db.run(schema);
@@ -691,6 +751,284 @@ export class DatabaseManager {
     `);
 
     await this.saveDatabase();
+  }
+
+  // === PersonaSync Methods ===
+
+  // Save personality snapshot
+  async savePersonalitySnapshot(snapshot) {
+    this.db.run(
+      `INSERT INTO personality_snapshots (
+        week_start, week_end, tone, top_topics, reading_habits, 
+        emotional_themes, summary, total_time_spent, total_visits, 
+        total_highlights, dominant_interests, quote_of_week
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        snapshot.weekStart,
+        snapshot.weekEnd,
+        snapshot.tone,
+        JSON.stringify(snapshot.topTopics),
+        snapshot.readingHabits,
+        JSON.stringify(snapshot.emotionalThemes),
+        snapshot.summary,
+        snapshot.totalTimeSpent,
+        snapshot.totalVisits,
+        snapshot.totalHighlights,
+        JSON.stringify(snapshot.dominantInterests),
+        snapshot.quoteOfWeek || ''
+      ]
+    );
+
+    await this.saveDatabase();
+  }
+
+  // Get personality snapshots
+  async getPersonalitySnapshots(limit = 10) {
+    const stmt = this.db.prepare(`
+      SELECT * FROM personality_snapshots 
+      ORDER BY week_start DESC 
+      LIMIT ?
+    `);
+    stmt.bind([limit]);
+
+    const snapshots = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      snapshots.push({
+        id: row.id,
+        weekStart: row.week_start,
+        weekEnd: row.week_end,
+        tone: row.tone,
+        topTopics: JSON.parse(row.top_topics || '[]'),
+        readingHabits: row.reading_habits,
+        emotionalThemes: JSON.parse(row.emotional_themes || '[]'),
+        summary: row.summary,
+        totalTimeSpent: row.total_time_spent,
+        totalVisits: row.total_visits,
+        totalHighlights: row.total_highlights,
+        dominantInterests: JSON.parse(row.dominant_interests || '[]'),
+        quoteOfWeek: row.quote_of_week,
+        createdAt: row.created_at
+      });
+    }
+    stmt.free();
+
+    return snapshots;
+  }
+
+  // Save interest evolution data
+  async saveInterestEvolution(data) {
+    for (const item of data) {
+      this.db.run(
+        `INSERT INTO interest_evolution (
+          topic, period, count, total_time, trend_score, status
+        ) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          item.topic,
+          item.period,
+          item.count,
+          item.totalTime || 0,
+          item.trendScore || 0,
+          item.status || 'steady'
+        ]
+      );
+    }
+
+    await this.saveDatabase();
+  }
+
+  // Get interest evolution
+  async getInterestEvolution() {
+    const stmt = this.db.prepare(`
+      SELECT * FROM interest_evolution 
+      ORDER BY period DESC, count DESC
+    `);
+
+    const evolution = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      evolution.push({
+        id: row.id,
+        topic: row.topic,
+        period: row.period,
+        count: row.count,
+        totalTime: row.total_time,
+        trendScore: row.trend_score,
+        status: row.status,
+        createdAt: row.created_at
+      });
+    }
+    stmt.free();
+
+    return evolution;
+  }
+
+  // Save mood tracking data
+  async saveMoodData(moodData) {
+    this.db.run(
+      `INSERT INTO mood_tracking (
+        timestamp, sentiment, sentiment_score, emotions, tone, url
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        moodData.timestamp,
+        moodData.sentiment,
+        moodData.sentimentScore || 0,
+        JSON.stringify(moodData.emotions || []),
+        moodData.tone || '',
+        moodData.url || ''
+      ]
+    );
+
+    await this.saveDatabase();
+  }
+
+  // Get mood history
+  async getMoodHistory(days = 30) {
+    const startTime = Date.now() - (days * 24 * 60 * 60 * 1000);
+    
+    const stmt = this.db.prepare(`
+      SELECT * FROM mood_tracking 
+      WHERE timestamp >= ?
+      ORDER BY timestamp DESC
+    `);
+    stmt.bind([startTime]);
+
+    const moods = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      moods.push({
+        id: row.id,
+        timestamp: row.timestamp,
+        sentiment: row.sentiment,
+        sentimentScore: row.sentiment_score,
+        emotions: JSON.parse(row.emotions || '[]'),
+        tone: row.tone,
+        url: row.url,
+        createdAt: row.created_at
+      });
+    }
+    stmt.free();
+
+    return moods;
+  }
+
+  // Get weekly mood summary
+  async getWeeklyMoodSummary() {
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    const stmt = this.db.prepare(`
+      SELECT sentiment, COUNT(*) as count, AVG(sentiment_score) as avg_score
+      FROM mood_tracking 
+      WHERE timestamp >= ?
+      GROUP BY sentiment
+    `);
+    stmt.bind([weekAgo]);
+
+    const summary = {
+      positive: 0,
+      negative: 0,
+      neutral: 0,
+      averageScore: 0,
+      dominantMood: 'neutral'
+    };
+
+    let totalCount = 0;
+    let totalScore = 0;
+
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      const sentiment = row.sentiment || 'neutral';
+      const count = row.count || 0;
+      const avgScore = row.avg_score || 0;
+
+      summary[sentiment] = count;
+      totalCount += count;
+      totalScore += avgScore * count;
+    }
+    stmt.free();
+
+    if (totalCount > 0) {
+      summary.averageScore = totalScore / totalCount;
+      summary.dominantMood = Object.entries(summary)
+        .filter(([key]) => ['positive', 'negative', 'neutral'].includes(key))
+        .sort((a, b) => b[1] - a[1])[0][0];
+    }
+
+    return summary;
+  }
+
+  // Get weekly data for snapshot generation
+  async getWeeklyData() {
+    const weekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const now = Date.now();
+
+    // Get visits
+    const visitsStmt = this.db.prepare(`
+      SELECT * FROM visits 
+      WHERE last_visit >= ? AND last_visit < ?
+      ORDER BY last_visit DESC
+    `);
+    visitsStmt.bind([weekAgo, now]);
+
+    const visits = [];
+    while (visitsStmt.step()) {
+      visits.push(visitsStmt.getAsObject());
+    }
+    visitsStmt.free();
+
+    // Get highlights
+    const highlightsStmt = this.db.prepare(`
+      SELECT h.* FROM highlights h
+      JOIN visits v ON h.visit_id = v.id
+      WHERE h.timestamp >= ? AND h.timestamp < ?
+    `);
+    highlightsStmt.bind([weekAgo, now]);
+
+    const highlights = [];
+    while (highlightsStmt.step()) {
+      highlights.push(highlightsStmt.getAsObject());
+    }
+    highlightsStmt.free();
+
+    // Get all topics from insights
+    const topicsStmt = this.db.prepare(`
+      SELECT i.topics FROM insights i
+      JOIN visits v ON i.visit_id = v.id
+      WHERE v.last_visit >= ? AND v.last_visit < ?
+    `);
+    topicsStmt.bind([weekAgo, now]);
+
+    const allTopics = [];
+    while (topicsStmt.step()) {
+      const row = topicsStmt.getAsObject();
+      if (row.topics) {
+        const topics = JSON.parse(row.topics);
+        allTopics.push(...topics);
+      }
+    }
+    topicsStmt.free();
+
+    // Calculate total time spent
+    const timeStmt = this.db.prepare(`
+      SELECT SUM(total_time_spent) as total FROM visits
+      WHERE last_visit >= ? AND last_visit < ?
+    `);
+    timeStmt.bind([weekAgo, now]);
+
+    let totalTimeSpent = 0;
+    if (timeStmt.step()) {
+      totalTimeSpent = timeStmt.getAsObject().total || 0;
+    }
+    timeStmt.free();
+
+    return {
+      weekStart: weekAgo,
+      weekEnd: now,
+      visits,
+      highlights,
+      topics: allTopics,
+      timeSpent: totalTimeSpent
+    };
   }
 
   // Close database

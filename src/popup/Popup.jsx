@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, MapPin, Tag, Sparkles, TrendingUp, Calendar, Search } from 'lucide-react';
+import { Clock, MapPin, Tag, Sparkles, TrendingUp, Calendar, Search, User, Target, Heart } from 'lucide-react';
 
 const Popup = () => {
   const [stats, setStats] = useState(null);
   const [recentMemories, setRecentMemories] = useState([]);
   const [currentPageContext, setCurrentPageContext] = useState(null);
+  const [latestSnapshot, setLatestSnapshot] = useState(null);
+  const [moodSummary, setMoodSummary] = useState(null);
+  const [goalInsights, setGoalInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -29,6 +32,27 @@ const Popup = () => {
     }, (response) => {
       if (response?.memories) {
         setRecentMemories(response.memories.slice(0, 5));
+      }
+    });
+
+    // Get latest personality snapshot
+    chrome.runtime.sendMessage({ type: 'GET_PERSONALITY_SNAPSHOTS', data: { limit: 1 } }, (response) => {
+      if (response?.snapshots && response.snapshots.length > 0) {
+        setLatestSnapshot(response.snapshots[0]);
+      }
+    });
+
+    // Get mood summary
+    chrome.runtime.sendMessage({ type: 'GET_MOOD_SUMMARY' }, (response) => {
+      if (response?.moodSummary) {
+        setMoodSummary(response.moodSummary);
+      }
+    });
+
+    // Get goal insights
+    chrome.runtime.sendMessage({ type: 'GET_GOAL_INSIGHTS' }, (response) => {
+      if (response?.insights) {
+        setGoalInsights(response.insights);
       }
     });
 
@@ -70,6 +94,15 @@ const Popup = () => {
     return `${Math.floor(diffDays / 30)} months ago`;
   };
 
+  const getMoodEmoji = (mood) => {
+    const emojis = {
+      positive: '😊',
+      neutral: '😐',
+      negative: '😔'
+    };
+    return emojis[mood] || '🤔';
+  };
+
   if (loading) {
     return (
       <div className="popup-container">
@@ -86,10 +119,10 @@ const Popup = () => {
       {/* Header */}
       <div className="popup-header">
         <div className="header-title">
-          <span className="header-icon">🌌</span>
-          <h1>EchoLens</h1>
+          <span className="header-icon">✨</span>
+          <h1>SupriAI</h1>
         </div>
-        <p className="header-subtitle">Your Digital Memory</p>
+        <p className="header-subtitle">Your AI Mirror</p>
       </div>
 
       {/* Tab Navigation */}
@@ -99,6 +132,12 @@ const Popup = () => {
           onClick={() => setActiveTab('overview')}
         >
           Overview
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'persona' ? 'active' : ''}`}
+          onClick={() => setActiveTab('persona')}
+        >
+          Persona
         </button>
         <button 
           className={`tab-button ${activeTab === 'current' ? 'active' : ''}`}
@@ -163,6 +202,81 @@ const Popup = () => {
                 )}
               </div>
             </div>
+          </>
+        )}
+
+        {activeTab === 'persona' && (
+          <>
+            {/* Latest Snapshot */}
+            {latestSnapshot && (
+              <div className="section">
+                <div className="section-header">
+                  <User size={18} />
+                  <h3>This Week's Vibe</h3>
+                </div>
+                <div className="persona-card">
+                  <div className="persona-tone">
+                    <span className="persona-label">Tone</span>
+                    <span className="persona-value">{latestSnapshot.tone}</span>
+                  </div>
+                  {latestSnapshot.quoteOfWeek && (
+                    <div className="persona-quote">
+                      <Sparkles size={14} />
+                      "{latestSnapshot.quoteOfWeek}"
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Mood Summary */}
+            {moodSummary && (
+              <div className="section">
+                <div className="section-header">
+                  <Heart size={18} />
+                  <h3>Weekly Mood</h3>
+                </div>
+                <div className="mood-card">
+                  <div className="mood-display">
+                    <span className="mood-emoji">{getMoodEmoji(moodSummary.dominantMood)}</span>
+                    <span className="mood-label">Mostly {moodSummary.dominantMood}</span>
+                  </div>
+                  <div className="mood-breakdown">
+                    <span>😊 {moodSummary.positive || 0}</span>
+                    <span>😐 {moodSummary.neutral || 0}</span>
+                    <span>😔 {moodSummary.negative || 0}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Goal Progress */}
+            {goalInsights && goalInsights.activeGoals > 0 && (
+              <div className="section">
+                <div className="section-header">
+                  <Target size={18} />
+                  <h3>Goal Alignment</h3>
+                </div>
+                <div className="goals-card">
+                  <div className="goal-stat">
+                    <span className="goal-label">Alignment Rate</span>
+                    <span className="goal-value">{goalInsights.alignmentRate}%</span>
+                  </div>
+                  <div className="goal-stat">
+                    <span className="goal-label">Active Goals</span>
+                    <span className="goal-value">{goalInsights.activeGoals}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!latestSnapshot && !moodSummary && !goalInsights && (
+              <div className="empty-state">
+                <User size={32} />
+                <p>Keep browsing to build your persona!</p>
+                <p className="empty-state-sub">Your first snapshot will appear soon</p>
+              </div>
+            )}
           </>
         )}
 
@@ -235,7 +349,7 @@ const Popup = () => {
       <div className="popup-footer">
         <button className="dashboard-button" onClick={openDashboard}>
           <Search size={16} />
-          Open Memory Dashboard
+          Open Dashboard
         </button>
       </div>
     </div>

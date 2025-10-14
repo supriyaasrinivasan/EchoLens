@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart } from 'lucide-react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
 import MemoryTimeline from './components/MemoryTimeline';
 import StatsOverview from './components/StatsOverview';
 import SearchBar from './components/SearchBar';
 import InsightsPanel from './components/InsightsPanel';
+import PersonalitySnapshots from './components/PersonalitySnapshots';
+import InterestEvolutionTimeline from './components/InterestEvolutionTimeline';
+import MindSyncDashboard from './components/MindSyncDashboard';
+import GoalsManager from './components/GoalsManager';
+import DigitalTwin from './components/DigitalTwin';
 
 const Dashboard = () => {
-  const [view, setView] = useState('map'); // map, list, timeline, insights
+  const [view, setView] = useState('mindsync'); // mindsync, personality, evolution, map, list, timeline, insights, goals, twin
   const [memories, setMemories] = useState([]);
   const [filteredMemories, setFilteredMemories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -181,57 +186,90 @@ const Dashboard = () => {
       {/* Sidebar */}
       <div className="sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-icon">🌌</span>
-          <h1>EchoLens</h1>
+          <span className="sidebar-icon">✨</span>
+          <h1>SupriAI</h1>
+          <p className="sidebar-tagline">Your AI Mirror</p>
         </div>
 
         <nav className="sidebar-nav">
-          <button 
-            className={`nav-item ${view === 'map' ? 'active' : ''}`}
-            onClick={() => setView('map')}
-            title="Shortcut: 1"
-          >
-            <MapIcon size={20} />
-            <span>Knowledge Map</span>
-          </button>
-          <button 
-            className={`nav-item ${view === 'list' ? 'active' : ''}`}
-            onClick={() => setView('list')}
-            title="Shortcut: 2"
-          >
-            <List size={20} />
-            <span>Memory List</span>
-          </button>
-          <button 
-            className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
-            onClick={() => setView('timeline')}
-            title="Shortcut: 3"
-          >
-            <Calendar size={20} />
-            <span>Timeline</span>
-          </button>
-          <button 
-            className={`nav-item ${view === 'insights' ? 'active' : ''}`}
-            onClick={() => setView('insights')}
-            title="Shortcut: 4"
-          >
-            <Sparkles size={20} />
-            <span>AI Insights</span>
-          </button>
+          <div className="nav-section">
+            <div className="nav-section-label">PersonaSync</div>
+            <button 
+              className={`nav-item ${view === 'mindsync' ? 'active' : ''}`}
+              onClick={() => setView('mindsync')}
+              title="MindSync Dashboard"
+            >
+              <Heart size={20} />
+              <span>MindSync</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'personality' ? 'active' : ''}`}
+              onClick={() => setView('personality')}
+              title="Weekly Snapshots"
+            >
+              <User size={20} />
+              <span>Personality</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'evolution' ? 'active' : ''}`}
+              onClick={() => setView('evolution')}
+              title="Interest Evolution"
+            >
+              <TrendingUp size={20} />
+              <span>Evolution</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'goals' ? 'active' : ''}`}
+              onClick={() => setView('goals')}
+              title="Goal Alignment"
+            >
+              <Target size={20} />
+              <span>Goals</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'twin' ? 'active' : ''}`}
+              onClick={() => setView('twin')}
+              title="Digital Twin"
+            >
+              <Brain size={20} />
+              <span>Digital Twin</span>
+            </button>
+          </div>
+
+          <div className="nav-section">
+            <div className="nav-section-label">Memory</div>
+            <button 
+              className={`nav-item ${view === 'map' ? 'active' : ''}`}
+              onClick={() => setView('map')}
+            >
+              <MapIcon size={20} />
+              <span>Knowledge Map</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'list' ? 'active' : ''}`}
+              onClick={() => setView('list')}
+            >
+              <List size={20} />
+              <span>Memory List</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
+              onClick={() => setView('timeline')}
+            >
+              <Calendar size={20} />
+              <span>Timeline</span>
+            </button>
+            <button 
+              className={`nav-item ${view === 'insights' ? 'active' : ''}`}
+              onClick={() => setView('insights')}
+            >
+              <Sparkles size={20} />
+              <span>AI Insights</span>
+            </button>
+          </div>
         </nav>
 
         {stats && <StatsOverview stats={stats} />}
-
-        {/* <div className="sidebar-footer">
-          <button className="footer-button" onClick={handleExport} title="Shortcut: Ctrl+E">
-            <Download size={18} />
-            <span>Export Data</span>
-          </button>
-          <button className="footer-button" onClick={handleImport} style={{ marginTop: '8px' }}>
-            <Upload size={18} />
-            <span>Import Data</span>
-          </button>
-        </div> */}
       </div>
 
       {/* Main Content */}
@@ -240,56 +278,72 @@ const Dashboard = () => {
         <div className="content-header">
           <div className="header-left">
             <h2 className="page-title">
+              {view === 'mindsync' && '💭 MindSync Dashboard'}
+              {view === 'personality' && '🪞 Personality Snapshots'}
+              {view === 'evolution' && '🌱 Interest Evolution'}
+              {view === 'goals' && '🎯 Goal Alignment'}
+              {view === 'twin' && '🧠 Digital Twin'}
               {view === 'map' && '🗺️ Knowledge Map'}
               {view === 'list' && '📚 Memory Library'}
               {view === 'timeline' && '📅 Memory Timeline'}
               {view === 'insights' && '✨ AI Insights'}
             </h2>
             <p className="page-subtitle">
-              {filteredMemories.length} memories
-              {searchQuery && ` matching "${searchQuery}"`}
+              {view === 'mindsync' && 'Your weekly vibe, trending interests, and goal progress'}
+              {view === 'personality' && 'Weekly reflections of your digital identity'}
+              {view === 'evolution' && 'Watch how your curiosity has evolved over time'}
+              {view === 'goals' && 'Track your intentional browsing goals'}
+              {view === 'twin' && 'Your AI reflection trained on your patterns'}
+              {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && 
+                `${filteredMemories.length} memories${searchQuery ? ` matching "${searchQuery}"` : ''}`
+              }
             </p>
           </div>
-          <SearchBar onSearch={handleSearch} />
+          {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && (
+            <SearchBar onSearch={handleSearch} />
+          )}
         </div>
 
-        {/* Filter Bar */}
-        <div className="filter-bar">
-          <div className="filter-group">
-            <label>Time Range:</label>
-            <select 
-              value={filters.dateRange}
-              onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
-          </div>
+        {/* Filter Bar - only show for memory views */}
+        {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && (
+          <div className="filter-bar">
+            <div className="filter-group">
+              <label>Time Range:</label>
+              <select 
+                value={filters.dateRange}
+                onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
 
-          <div className="filter-group">
-            <label>Min Visits:</label>
-            <select 
-              value={filters.minVisits}
-              onChange={(e) => setFilters({...filters, minVisits: Number(e.target.value)})}
-            >
-              <option value="0">Any</option>
-              <option value="2">2+</option>
-              <option value="5">5+</option>
-              <option value="10">10+</option>
-              <option value="20">20+</option>
-            </select>
+            <div className="filter-group">
+              <label>Min Visits:</label>
+              <select 
+                value={filters.minVisits}
+                onChange={(e) => setFilters({...filters, minVisits: Number(e.target.value)})}
+              >
+                <option value="0">Any</option>
+                <option value="2">2+</option>
+                <option value="5">5+</option>
+                <option value="10">10+</option>
+                <option value="20">20+</option>
+              </select>
+            </div>
           </div>
-
-          <div className="keyboard-hint" style={{ marginLeft: 'auto', fontSize: '12px', color: '#64748b' }}>
-            💡 Press <kbd>Ctrl+K</kbd> to search, <kbd>1-4</kbd> to switch views
-          </div>
-        </div>
+        )}
 
         {/* View Content */}
         <div className="view-content">
+          {view === 'mindsync' && <MindSyncDashboard />}
+          {view === 'personality' && <PersonalitySnapshots />}
+          {view === 'evolution' && <InterestEvolutionTimeline />}
+          {view === 'goals' && <GoalsManager />}
+          {view === 'twin' && <DigitalTwin />}
           {view === 'map' && <KnowledgeMap memories={filteredMemories} />}
           {view === 'list' && <MemoryList memories={filteredMemories} />}
           {view === 'timeline' && <MemoryTimeline memories={filteredMemories} />}

@@ -1,7 +1,10 @@
-// EchoLens Background Service Worker
-// Handles data storage, AI processing, and cross-extension communication
+// SupriAI Background Service Worker
+// Handles data storage, AI processing, personality tracking, and cross-extension communication
 
 import { DatabaseManager } from './db-manager.js';
+import { PersonalityEngine } from './personality-engine.js';
+import { GoalAlignmentAI } from './goal-alignment.js';
+import { DigitalTwinAI } from './digital-twin.js';
 
 // AI Processor Class
 class AIProcessor {
@@ -184,10 +187,13 @@ class AIProcessor {
 
 // Main Background Worker Class
 
-class EchoLensBackground {
+class SupriAIBackground {
   constructor() {
     this.db = new DatabaseManager();
     this.ai = new AIProcessor();
+    this.personalityEngine = null;
+    this.goalAlignment = null;
+    this.digitalTwin = null;
     this.activeSessions = new Map();
     this.init();
   }
@@ -195,6 +201,12 @@ class EchoLensBackground {
   async init() {
     // Initialize database
     await this.db.init();
+    
+    // Initialize PersonaSync modules
+    this.personalityEngine = new PersonalityEngine(this.ai);
+    this.goalAlignment = new GoalAlignmentAI(this.ai, this.db);
+    this.digitalTwin = new DigitalTwinAI(this.ai, this.db);
+    
     // Listen for messages from content scripts
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       this.handleMessage(message, sender, sendResponse);
@@ -213,15 +225,22 @@ class EchoLensBackground {
       this.handleTabClose(tabId);
     });
 
-    // Set up periodic cleanup
+    // Set up periodic tasks
     chrome.alarms.create('cleanup', { periodInMinutes: 60 });
+    chrome.alarms.create('weeklySnapshot', { periodInMinutes: 10080 }); // Weekly
+    chrome.alarms.create('moodTracking', { periodInMinutes: 30 }); // Every 30 min
+    
     chrome.alarms.onAlarm.addListener((alarm) => {
       if (alarm.name === 'cleanup') {
         this.performCleanup();
+      } else if (alarm.name === 'weeklySnapshot') {
+        this.generateWeeklySnapshot();
+      } else if (alarm.name === 'moodTracking') {
+        this.updateMoodTracking();
       }
     });
 
-    console.log('🌌 EchoLens Background Service Worker initialized');
+    console.log('✨ SupriAI Background Service Worker initialized');
   }
 
   async handleMessage(message, sender, sendResponse) {
@@ -279,6 +298,61 @@ class EchoLensBackground {
           sendResponse({ success: true });
           break;
 
+        case 'GET_PERSONALITY_SNAPSHOTS':
+          const snapshots = await this.db.getPersonalitySnapshots(data?.limit);
+          sendResponse({ snapshots });
+          break;
+
+        case 'GET_INTEREST_EVOLUTION':
+          const evolution = await this.db.getInterestEvolution();
+          sendResponse({ evolution });
+          break;
+
+        case 'GET_MOOD_SUMMARY':
+          const moodSummary = await this.db.getWeeklyMoodSummary();
+          sendResponse({ moodSummary });
+          break;
+
+        case 'ADD_GOAL':
+          const newGoal = await this.goalAlignment.addGoal(data);
+          sendResponse({ goal: newGoal });
+          break;
+
+        case 'GET_GOALS':
+          const goals = this.goalAlignment.getGoalProgress();
+          sendResponse({ goals });
+          break;
+
+        case 'TOGGLE_GOAL':
+          await this.goalAlignment.toggleGoal(data.goalId);
+          sendResponse({ success: true });
+          break;
+
+        case 'DELETE_GOAL':
+          await this.goalAlignment.deleteGoal(data.goalId);
+          sendResponse({ success: true });
+          break;
+
+        case 'GET_GOAL_INSIGHTS':
+          const goalInsights = await this.goalAlignment.getWeeklyInsights();
+          sendResponse({ insights: goalInsights });
+          break;
+
+        case 'ASK_TWIN':
+          const twinResponse = await this.digitalTwin.askTwin(data.question);
+          sendResponse({ response: twinResponse });
+          break;
+
+        case 'GET_TWIN_SUMMARY':
+          const twinSummary = this.digitalTwin.getTwinSummary();
+          sendResponse({ summary: twinSummary });
+          break;
+
+        case 'COMPARE_INTERESTS':
+          const comparison = await this.digitalTwin.compareWithPast(data?.days || 30);
+          sendResponse({ comparison });
+          break;
+
         default:
           sendResponse({ error: 'Unknown message type' });
       }
@@ -331,6 +405,11 @@ class EchoLensBackground {
       // Extract key topics
       const topics = await this.ai.extractTopics(context.content);
 
+      // PersonaSync: Analyze tone and emotions
+      const tone = await this.personalityEngine.analyzeTone(context.content);
+      const emotions = await this.personalityEngine.detectEmotionalThemes(context.content);
+      const sentiment = await this.personalityEngine.analyzeSentiment(context.content);
+
       // Save AI insights
       await this.db.saveAIInsights(context.url, {
         summary,
@@ -339,10 +418,119 @@ class EchoLensBackground {
         timestamp: Date.now()
       });
 
+      // Save mood data
+      await this.db.saveMoodData({
+        timestamp: Date.now(),
+        sentiment: sentiment.sentiment,
+        sentimentScore: sentiment.score,
+        emotions: emotions,
+        tone: tone,
+        url: context.url
+      });
+
+      // Update digital twin
+      await this.digitalTwin.updateTwin({
+        topics,
+        tone,
+        emotions,
+        timestamp: Date.now(),
+        timeSpent: context.timeSpent,
+        category: this.categorizeContent(topics)
+      });
+
+      // Check goal alignment
+      const alignment = await this.goalAlignment.checkAlignment(
+        context.url,
+        context.title,
+        context.content,
+        context.timeSpent
+      );
+
+      // If there's a nudge, send it to content script
+      if (alignment?.showNudge) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              type: 'SHOW_NUDGE',
+              nudge: alignment
+            });
+          }
+        });
+      }
+
       console.log('✨ AI processing complete for:', context.url);
     } catch (error) {
       console.error('AI processing error:', error);
     }
+  }
+
+  // Categorize content based on topics
+  categorizeContent(topics) {
+    const categories = {
+      'tech': ['programming', 'code', 'software', 'development', 'ai', 'tech'],
+      'learning': ['learn', 'education', 'tutorial', 'course', 'study'],
+      'design': ['design', 'ui', 'ux', 'creative', 'art'],
+      'business': ['business', 'startup', 'marketing', 'finance'],
+      'entertainment': ['gaming', 'movies', 'music', 'entertainment'],
+      'news': ['news', 'current', 'events', 'politics'],
+      'personal': ['health', 'wellness', 'lifestyle', 'personal']
+    };
+
+    for (const [category, keywords] of Object.entries(categories)) {
+      if (topics.some(topic => keywords.some(kw => topic.toLowerCase().includes(kw)))) {
+        return category;
+      }
+    }
+
+    return 'other';
+  }
+
+  // Generate weekly personality snapshot
+  async generateWeeklySnapshot() {
+    try {
+      console.log('📸 Generating weekly personality snapshot...');
+      
+      const weeklyData = await this.db.getWeeklyData();
+      const snapshot = await this.personalityEngine.generateWeeklySnapshot(weeklyData);
+      
+      // Generate quote for the week
+      const quote = await this.personalityEngine.generateWeeklyQuote(snapshot);
+      snapshot.quoteOfWeek = quote;
+
+      // Save snapshot
+      await this.db.savePersonalitySnapshot(snapshot);
+
+      // Update interest evolution
+      const previousSnapshots = await this.db.getPersonalitySnapshots(10);
+      const trends = this.personalityEngine.detectTrendingInterests(
+        { topics: weeklyData.topics },
+        previousSnapshots.map(s => ({ topics: s.topTopics }))
+      );
+
+      // Save interest evolution data
+      const period = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const evolutionData = trends.map(trend => ({
+        topic: trend.topic,
+        period: period,
+        count: trend.currentCount,
+        totalTime: 0,
+        trendScore: trend.trendScore,
+        status: trend.status
+      }));
+
+      await this.db.saveInterestEvolution(evolutionData);
+
+      console.log('✅ Weekly snapshot generated successfully');
+    } catch (error) {
+      console.error('Weekly snapshot error:', error);
+    }
+  }
+
+  // Update mood tracking
+  async updateMoodTracking() {
+    // This is called periodically to ensure mood data is up to date
+    // Actual mood saving happens in processWithAI
+    console.log('💭 Mood tracking update');
   }
 
   async handleTabLoad(tabId, tab) {
@@ -436,4 +624,4 @@ class EchoLensBackground {
 }
 
 // Initialize the background service
-const echoLens = new EchoLensBackground();
+const supriAI = new SupriAIBackground();

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "EchoLens",
-  "version": "1.0.0",
-  "description": "The Web Remembers What You Forgot — Your digital memory layer for contextual browsing",
+  "name": "SupriAI",
+  "version": "2.0.0",
+  "description": "Your AI mirror — Track how your digital identity evolves and build your mindful browsing companion",
   "permissions": [
     "storage",
     "tabs",
@@ -30,7 +30,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "EchoLens — Your Digital Memory"
+    "default_title": "SupriAI — Your Digital Self-Awareness Engine"
   },
   "web_accessible_resources": [
     {

@@ -1,7 +1,7 @@
 {
-  "name": "echolens",
-  "version": "1.0.0",
-  "description": "EchoLens — The Web Remembers What You Forgot. A contextual AI memory layer for your browsing.",
+  "name": "supriai",
+  "version": "2.0.0",
+  "description": "SupriAI — Your AI mirror. Track your digital identity evolution, interests, and mindful browsing patterns.",
   "scripts": {
     "dev": "webpack --mode development --watch",
     "build": "webpack --mode production",
