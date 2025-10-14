@@ -222,7 +222,7 @@ const Dashboard = () => {
 
         {stats && <StatsOverview stats={stats} />}
 
-        <div className="sidebar-footer">
+        {/* <div className="sidebar-footer">
           <button className="footer-button" onClick={handleExport} title="Shortcut: Ctrl+E">
             <Download size={18} />
             <span>Export Data</span>
@@ -231,7 +231,7 @@ const Dashboard = () => {
             <Upload size={18} />
             <span>Import Data</span>
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Main Content */}
