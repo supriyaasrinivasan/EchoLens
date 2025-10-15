@@ -44,6 +44,24 @@ export class GoalAlignmentAI {
     return newGoal;
   }
 
+  // Update an existing goal
+  async updateGoal(updatedGoal) {
+    const index = this.activeGoals.findIndex(g => g.id === updatedGoal.id);
+    if (index !== -1) {
+      this.activeGoals[index] = {
+        ...this.activeGoals[index],
+        title: updatedGoal.title,
+        description: updatedGoal.description,
+        keywords: updatedGoal.keywords || [],
+        priority: updatedGoal.priority,
+        targetHours: updatedGoal.targetHours
+      };
+      await this.saveGoals();
+      return true;
+    }
+    return false;
+  }
+
   // Update goal progress
   async updateGoalProgress(goalId, timeSpent) {
     const goal = this.activeGoals.find(g => g.id === goalId);

@@ -318,6 +318,11 @@ class SupriAIBackground {
           sendResponse({ goal: newGoal });
           break;
 
+        case 'UPDATE_GOAL':
+          await this.goalAlignment.updateGoal(data);
+          sendResponse({ success: true });
+          break;
+
         case 'GET_GOALS':
           const goals = this.goalAlignment.getGoalProgress();
           sendResponse({ goals });
