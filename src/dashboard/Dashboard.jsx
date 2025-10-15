@@ -23,7 +23,11 @@ import {
   RiArrowRightSLine,
   RiSparklingFill,
   RiHomeLine,
-  RiDashboardLine
+  RiDashboardLine,
+  RiBookOpenLine,
+  RiTrophyLine,
+  RiBarChartLine,
+  RiMentalHealthLine
 } from '@remixicon/react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
@@ -36,9 +40,14 @@ import InterestEvolutionTimeline from './components/InterestEvolutionTimeline';
 import MindSyncDashboard from './components/MindSyncDashboard';
 import GoalsManager from './components/GoalsManager';
 import DigitalTwin from './components/DigitalTwin';
+// New Feature Components
+import SkillsDashboard from './components/SkillsDashboard';
+import AchievementsDashboard from './components/AchievementsDashboard';
+import ProgressAnalyticsDashboard from './components/ProgressAnalyticsDashboard';
+import MindfulnessDashboard from './components/MindfulnessDashboard';
 
 const Dashboard = () => {
-  const [view, setView] = useState('welcome'); // welcome, mindsync, personality, evolution, map, list, timeline, insights, goals, twin
+  const [view, setView] = useState('welcome'); // welcome, mindsync, personality, evolution, map, list, timeline, insights, goals, twin, skills, achievements, analytics, mindfulness
   const [memories, setMemories] = useState([]);
   const [filteredMemories, setFilteredMemories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -48,6 +57,7 @@ const Dashboard = () => {
   const [username, setUsername] = useState(''); // User's name
   const [personaSyncOpen, setPersonaSyncOpen] = useState(false); // PersonaSync dropdown state - closed by default
   const [echoLenzOpen, setEchoLenzOpen] = useState(false); // EchoLenz dropdown state - closed by default
+  const [newFeaturesOpen, setNewFeaturesOpen] = useState(false); // New Features dropdown state - open by default
   const [filters, setFilters] = useState({
     dateRange: 'all',
     minVisits: 0,
@@ -321,6 +331,52 @@ const Dashboard = () => {
             )}
           </div>
 
+          {/* New Features Section */}
+          <div className="nav-section">
+            <div className="nav-section-header" onClick={() => setNewFeaturesOpen(!newFeaturesOpen)}>
+              <div className="nav-section-label">
+                {newFeaturesOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
+                <span>Skillify</span>
+              </div>
+            </div>
+            {newFeaturesOpen && (
+              <div className="nav-section-items">
+                <button 
+                  className={`nav-item ${view === 'skills' ? 'active' : ''}`}
+                  onClick={() => setView('skills')}
+                  title="Skill Tracker"
+                >
+                  <RiBookOpenLine size={20} />
+                  <span>Skills</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'achievements' ? 'active' : ''}`}
+                  onClick={() => setView('achievements')}
+                  title="Achievements & Badges"
+                >
+                  <RiTrophyLine size={20} />
+                  <span>Achievements</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setView('analytics')}
+                  title="Progress Analytics"
+                >
+                  <RiBarChartLine size={20} />
+                  <span>Analytics</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'mindfulness' ? 'active' : ''}`}
+                  onClick={() => setView('mindfulness')}
+                  title="Mindfulness Center"
+                >
+                  <RiMentalHealthLine size={20} />
+                  <span>Mindfulness</span>
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* EchoLenz Section */}
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setEchoLenzOpen(!echoLenzOpen)}>
@@ -377,6 +433,10 @@ const Dashboard = () => {
               {view === 'evolution' && <RiLineChartLine size={24} className="page-title-icon" />}
               {view === 'goals' && <RiTargetLine size={24} className="page-title-icon" />}
               {view === 'twin' && <RiBrainLine size={24} className="page-title-icon" />}
+              {view === 'skills' && <RiBookOpenLine size={24} className="page-title-icon" />}
+              {view === 'achievements' && <RiTrophyLine size={24} className="page-title-icon" />}
+              {view === 'analytics' && <RiBarChartLine size={24} className="page-title-icon" />}
+              {view === 'mindfulness' && <RiMentalHealthLine size={24} className="page-title-icon" />}
               {view === 'map' && <RiMapPinLine size={24} className="page-title-icon" />}
               {view === 'list' && <RiListCheck size={24} className="page-title-icon" />}
               {view === 'timeline' && <RiCalendarLine size={24} className="page-title-icon" />}
@@ -388,6 +448,10 @@ const Dashboard = () => {
                 {view === 'evolution' && 'Interest Evolution'}
                 {view === 'goals' && 'Goal Alignment'}
                 {view === 'twin' && 'Digital Twin'}
+                {view === 'skills' && 'Skill Tracker'}
+                {view === 'achievements' && 'Achievements & Badges'}
+                {view === 'analytics' && 'Progress Analytics'}
+                {view === 'mindfulness' && 'Mindfulness Center'}
                 {view === 'map' && 'Knowledge Map'}
                 {view === 'list' && 'Memory Library'}
                 {view === 'timeline' && 'Memory Timeline'}
@@ -401,6 +465,10 @@ const Dashboard = () => {
               {view === 'evolution' && 'Watch how your curiosity has evolved over time'}
               {view === 'goals' && 'Track your intentional browsing goals'}
               {view === 'twin' && 'Your AI reflection trained on your patterns'}
+              {view === 'skills' && 'Your learning journey across different domains'}
+              {view === 'achievements' && 'Your milestones and progress'}
+              {view === 'analytics' && 'Your learning evolution over time'}
+              {view === 'mindfulness' && 'Track your mental well-being and focus'}
               {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && 
                 `${filteredMemories.length} memories${searchQuery ? ` matching "${searchQuery}"` : ''}`
               }
@@ -500,6 +568,38 @@ const Dashboard = () => {
                     <p>Your AI reflection trained on your patterns</p>
                   </div>
                   
+                  <div className="feature-card featured-new" onClick={() => setView('skills')}>
+                    <div className="feature-icon">
+                      <RiBookOpenLine size={32} />
+                    </div>
+                    <h3>Skills <span className="new-badge">NEW</span></h3>
+                    <p>Track your learning journey and progress</p>
+                  </div>
+                  
+                  <div className="feature-card featured-new" onClick={() => setView('achievements')}>
+                    <div className="feature-icon">
+                      <RiTrophyLine size={32} />
+                    </div>
+                    <h3>Achievements <span className="new-badge">NEW</span></h3>
+                    <p>Unlock badges and complete challenges</p>
+                  </div>
+                  
+                  <div className="feature-card featured-new" onClick={() => setView('analytics')}>
+                    <div className="feature-icon">
+                      <RiBarChartLine size={32} />
+                    </div>
+                    <h3>Analytics <span className="new-badge">NEW</span></h3>
+                    <p>Visualize your knowledge evolution</p>
+                  </div>
+                  
+                  <div className="feature-card featured-new" onClick={() => setView('mindfulness')}>
+                    <div className="feature-icon">
+                      <RiMentalHealthLine size={32} />
+                    </div>
+                    <h3>Mindfulness <span className="new-badge">NEW</span></h3>
+                    <p>Focus sessions and mood tracking</p>
+                  </div>
+                  
                   <div className="feature-card" onClick={() => setView('map')}>
                     <div className="feature-icon">
                       <RiMapPinLine size={32} />
@@ -526,6 +626,10 @@ const Dashboard = () => {
           {view === 'evolution' && <InterestEvolutionTimeline />}
           {view === 'goals' && <GoalsManager />}
           {view === 'twin' && <DigitalTwin />}
+          {view === 'skills' && <SkillsDashboard />}
+          {view === 'achievements' && <AchievementsDashboard />}
+          {view === 'analytics' && <ProgressAnalyticsDashboard />}
+          {view === 'mindfulness' && <MindfulnessDashboard />}
           {view === 'map' && <KnowledgeMap memories={filteredMemories} />}
           {view === 'list' && <MemoryList memories={filteredMemories} />}
           {view === 'timeline' && <MemoryTimeline memories={filteredMemories} />}

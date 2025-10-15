@@ -164,6 +164,90 @@ export class DatabaseManager {
         nudge_count INTEGER DEFAULT 0
       );
 
+      -- Skills tracking
+      CREATE TABLE IF NOT EXISTS skill_activities (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        skill TEXT NOT NULL,
+        confidence REAL DEFAULT 0,
+        keywords TEXT,
+        time_spent INTEGER DEFAULT 0,
+        timestamp INTEGER NOT NULL,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Achievements
+      CREATE TABLE IF NOT EXISTS achievements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        achievement_id TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        icon TEXT,
+        points INTEGER DEFAULT 0,
+        unlocked_at INTEGER NOT NULL
+      );
+
+      -- Streaks
+      CREATE TABLE IF NOT EXISTS streaks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        current_streak INTEGER DEFAULT 0,
+        longest_streak INTEGER DEFAULT 0,
+        last_active_date INTEGER NOT NULL,
+        updated_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Focus sessions
+      CREATE TABLE IF NOT EXISTS focus_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        start_time INTEGER NOT NULL,
+        end_time INTEGER NOT NULL,
+        duration INTEGER NOT NULL,
+        completed BOOLEAN DEFAULT 0,
+        created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000)
+      );
+
+      -- Reflection prompts and responses
+      CREATE TABLE IF NOT EXISTS reflection_prompts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prompt TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        context TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS reflection_responses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        prompt_id INTEGER NOT NULL,
+        response TEXT NOT NULL,
+        timestamp INTEGER NOT NULL,
+        FOREIGN KEY (prompt_id) REFERENCES reflection_prompts (id)
+      );
+
+      -- Weekly challenges
+      CREATE TABLE IF NOT EXISTS weekly_challenges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        challenge_id TEXT NOT NULL,
+        week_start INTEGER NOT NULL,
+        progress INTEGER DEFAULT 0,
+        target INTEGER NOT NULL,
+        completed BOOLEAN DEFAULT 0
+      );
+
+      -- Feature usage tracking
+      CREATE TABLE IF NOT EXISTS feature_usage (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        feature_name TEXT NOT NULL,
+        usage_count INTEGER DEFAULT 0,
+        last_used INTEGER NOT NULL
+      );
+
+      -- Twin interactions
+      CREATE TABLE IF NOT EXISTS twin_interactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        confidence TEXT,
+        timestamp INTEGER NOT NULL
+      );
+
       -- Indexes for better performance
       CREATE INDEX IF NOT EXISTS idx_visits_url_hash ON visits(url_hash);
       CREATE INDEX IF NOT EXISTS idx_visits_last_visit ON visits(last_visit);

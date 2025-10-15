@@ -179,3 +179,159 @@
     opacity: 1;
   }
 }
+
+/* Focus Mode Styles */
+.echolens-focus-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999998;
+  pointer-events: none;
+}
+
+.focus-mode-banner {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  pointer-events: auto;
+}
+
+.focus-mode-icon {
+  font-size: 24px;
+  animation: focus-pulse 2s infinite;
+}
+
+@keyframes focus-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.focus-mode-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.focus-mode-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.focus-mode-timer {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.focus-mode-exit {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.focus-mode-exit:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+/* Dim overlay for focus mode */
+.echolens-dim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999997;
+  pointer-events: none;
+  animation: dim-fade-in 0.5s ease-out;
+}
+
+@keyframes dim-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Focus mode body styles */
+body.echolens-focused {
+  position: relative;
+}
+
+body.echolens-focused main,
+body.echolens-focused article,
+body.echolens-focused [role="main"] {
+  position: relative;
+  z-index: 999999;
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+}
+
+/* Notification styles */
+.echolens-notification {
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 16px 20px;
+  min-width: 300px;
+  max-width: 400px;
+  z-index: 1000000;
+  transform: translateX(450px);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.echolens-notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification-content {
+  color: white;
+}
+
+.notification-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #f1f5f9;
+}
+
+.notification-message {
+  font-size: 14px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+

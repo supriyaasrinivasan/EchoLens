@@ -10,6 +10,7 @@ class ContextCapture {
     this.idleTime = 0;
     this.lastActivity = Date.now();
     this.isActive = true;
+    this.focusModeActive = false;
     
     this.init();
   }
@@ -35,6 +36,127 @@ class ContextCapture {
     
     // Send heartbeat every 30 seconds
     setInterval(() => this.sendHeartbeat(), 30000);
+    
+    // Listen for focus mode messages
+    this.setupFocusModeListener();
+  }
+
+  setupFocusModeListener() {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.type === 'FOCUS_MODE_ACTIVATED') {
+        this.activateFocusMode(message.duration);
+        sendResponse({ success: true });
+      } else if (message.type === 'FOCUS_MODE_DEACTIVATED') {
+        this.deactivateFocusMode();
+        sendResponse({ success: true });
+      }
+      return true;
+    });
+  }
+
+  activateFocusMode(duration) {
+    if (this.focusModeActive) return;
+    
+    this.focusModeActive = true;
+    
+    // Create focus mode overlay
+    const focusOverlay = document.createElement('div');
+    focusOverlay.id = 'echolens-focus-overlay';
+    focusOverlay.className = 'echolens-focus-mode';
+    
+    const endTime = Date.now() + duration;
+    const minutes = Math.floor(duration / 60000);
+    
+    focusOverlay.innerHTML = `
+      <div class="focus-mode-banner">
+        <div class="focus-mode-icon">🎯</div>
+        <div class="focus-mode-info">
+          <div class="focus-mode-title">Focus Mode Active</div>
+          <div class="focus-mode-timer" data-end="${endTime}">${minutes}:00</div>
+        </div>
+        <button class="focus-mode-exit" title="Exit Focus Mode">×</button>
+      </div>
+    `;
+    
+    document.body.appendChild(focusOverlay);
+    
+    // Add dim overlay to reduce distractions
+    const dimOverlay = document.createElement('div');
+    dimOverlay.id = 'echolens-dim-overlay';
+    dimOverlay.className = 'echolens-dim';
+    document.body.appendChild(dimOverlay);
+    
+    // Apply focus styles
+    document.body.classList.add('echolens-focused');
+    
+    // Update timer every second
+    const timerInterval = setInterval(() => {
+      const remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        this.deactivateFocusMode();
+        this.showFocusComplete();
+      } else {
+        const mins = Math.floor(remaining / 60000);
+        const secs = Math.floor((remaining % 60000) / 1000);
+        const timerEl = document.querySelector('.focus-mode-timer');
+        if (timerEl) {
+          timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+      }
+    }, 1000);
+    
+    // Exit button
+    focusOverlay.querySelector('.focus-mode-exit').addEventListener('click', () => {
+      clearInterval(timerInterval);
+      this.deactivateFocusMode();
+      chrome.runtime.sendMessage({ type: 'DEACTIVATE_FOCUS_MODE' });
+    });
+    
+    // Show notification
+    this.showNotification('🎯 Focus Mode Activated', `Stay focused for ${minutes} minutes`);
+  }
+
+  deactivateFocusMode() {
+    if (!this.focusModeActive) return;
+    
+    this.focusModeActive = false;
+    
+    // Remove overlays
+    const focusOverlay = document.getElementById('echolens-focus-overlay');
+    const dimOverlay = document.getElementById('echolens-dim-overlay');
+    
+    if (focusOverlay) focusOverlay.remove();
+    if (dimOverlay) dimOverlay.remove();
+    
+    // Remove focus styles
+    document.body.classList.remove('echolens-focused');
+  }
+
+  showFocusComplete() {
+    this.showNotification('✅ Focus Session Complete!', 'Great work! Take a short break.');
+  }
+
+  showNotification(title, message) {
+    const notification = document.createElement('div');
+    notification.className = 'echolens-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <div class="notification-title">${title}</div>
+        <div class="notification-message">${message}</div>
+      </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.classList.add('show');
+    }, 100);
+    
+    setTimeout(() => {
+      notification.classList.remove('show');
+      setTimeout(() => notification.remove(), 300);
+    }, 4000);
   }
 
   trackScrolling() {

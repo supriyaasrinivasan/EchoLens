@@ -5,6 +5,7 @@ import { DatabaseManager } from './db-manager.js';
 import { PersonalityEngine } from './personality-engine.js';
 import { GoalAlignmentAI } from './goal-alignment.js';
 import { DigitalTwinAI } from './digital-twin.js';
+import { SkillTracker } from './skill-tracker.js';
 
 // AI Processor Class
 class AIProcessor {
@@ -194,6 +195,7 @@ class SupriAIBackground {
     this.personalityEngine = null;
     this.goalAlignment = null;
     this.digitalTwin = null;
+    this.skillTracker = null;
     this.activeSessions = new Map();
     this.init();
   }
@@ -206,6 +208,7 @@ class SupriAIBackground {
     this.personalityEngine = new PersonalityEngine(this.ai);
     this.goalAlignment = new GoalAlignmentAI(this.ai, this.db);
     this.digitalTwin = new DigitalTwinAI(this.ai, this.db);
+    this.skillTracker = new SkillTracker(this.ai, this.db);
     
     // Listen for messages from content scripts
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -358,6 +361,30 @@ class SupriAIBackground {
           sendResponse({ comparison });
           break;
 
+        case 'GET_SKILL_PROGRESS':
+          const skillProgress = await this.skillTracker.getSkillProgress();
+          sendResponse(skillProgress);
+          break;
+
+        case 'GET_LEARNING_PATHS':
+          const paths = await this.skillTracker.getSkillProgress();
+          sendResponse({ 
+            success: true,
+            paths: paths.recommendations || [] 
+          });
+          break;
+
+        case 'ADD_CUSTOM_SKILL':
+          await this.db.saveSkillActivity({
+            url: 'manual',
+            skill: data.skill || message.skill,
+            confidence: 1.0,
+            keywords: '',
+            timestamp: Date.now()
+          });
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ error: 'Unknown message type' });
       }
@@ -414,6 +441,14 @@ class SupriAIBackground {
       const tone = await this.personalityEngine.analyzeTone(context.content);
       const emotions = await this.personalityEngine.detectEmotionalThemes(context.content);
       const sentiment = await this.personalityEngine.analyzeSentiment(context.content);
+
+      // Skillify: Detect and track skills
+      await this.skillTracker.detectSkills(
+        context.content,
+        context.title,
+        context.url,
+        topics
+      );
 
       // Save AI insights
       await this.db.saveAIInsights(context.url, {
