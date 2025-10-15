@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart, Sun, Moon } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart, Sun, Moon, ChevronDown, ChevronRight } from 'lucide-react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
 import MemoryTimeline from './components/MemoryTimeline';
@@ -13,13 +13,16 @@ import GoalsManager from './components/GoalsManager';
 import DigitalTwin from './components/DigitalTwin';
 
 const Dashboard = () => {
-  const [view, setView] = useState('mindsync'); // mindsync, personality, evolution, map, list, timeline, insights, goals, twin
+  const [view, setView] = useState('welcome'); // welcome, mindsync, personality, evolution, map, list, timeline, insights, goals, twin
   const [memories, setMemories] = useState([]);
   const [filteredMemories, setFilteredMemories] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState('dark'); // Theme state
+  const [username, setUsername] = useState(''); // User's name
+  const [personaSyncOpen, setPersonaSyncOpen] = useState(true); // PersonaSync dropdown state
+  const [echoLenzOpen, setEchoLenzOpen] = useState(true); // EchoLenz dropdown state
   const [filters, setFilters] = useState({
     dateRange: 'all',
     minVisits: 0,
@@ -29,12 +32,28 @@ const Dashboard = () => {
   useEffect(() => {
     loadData();
     // Load theme from storage
-    chrome.storage.sync.get(['theme'], (result) => {
+    chrome.storage.sync.get(['theme', 'username'], (result) => {
       if (result.theme) {
         setTheme(result.theme);
         document.documentElement.setAttribute('data-theme', result.theme);
       }
+      if (result.username) {
+        setUsername(result.username);
+      }
     });
+    
+    // Try to get username from Chrome profile
+    if (chrome.identity && chrome.identity.getProfileUserInfo) {
+      chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
+        if (userInfo && userInfo.email) {
+          // Extract name from email (before @)
+          const name = userInfo.email.split('@')[0];
+          const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+          setUsername(formattedName);
+          chrome.storage.sync.set({ username: formattedName });
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -207,80 +226,100 @@ const Dashboard = () => {
         </div>
 
         <nav className="sidebar-nav">
+          {/* PersonaSync Section */}
           <div className="nav-section">
-            <div className="nav-section-label">PersonaSync</div>
-            <button 
-              className={`nav-item ${view === 'mindsync' ? 'active' : ''}`}
-              onClick={() => setView('mindsync')}
-              title="MindSync Dashboard"
-            >
-              <Heart size={20} />
-              <span>MindSync</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'personality' ? 'active' : ''}`}
-              onClick={() => setView('personality')}
-              title="Weekly Snapshots"
-            >
-              <User size={20} />
-              <span>Personality</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'evolution' ? 'active' : ''}`}
-              onClick={() => setView('evolution')}
-              title="Interest Evolution"
-            >
-              <TrendingUp size={20} />
-              <span>Evolution</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'goals' ? 'active' : ''}`}
-              onClick={() => setView('goals')}
-              title="Goal Alignment"
-            >
-              <Target size={20} />
-              <span>Goals</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'twin' ? 'active' : ''}`}
-              onClick={() => setView('twin')}
-              title="Digital Twin"
-            >
-              <Brain size={20} />
-              <span>Digital Twin</span>
-            </button>
+            <div className="nav-section-header" onClick={() => setPersonaSyncOpen(!personaSyncOpen)}>
+              <div className="nav-section-label">
+                {personaSyncOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                <span>PersonaSync</span>
+              </div>
+            </div>
+            {personaSyncOpen && (
+              <div className="nav-section-items">
+                <button 
+                  className={`nav-item ${view === 'mindsync' ? 'active' : ''}`}
+                  onClick={() => setView('mindsync')}
+                  title="MindSync Dashboard"
+                >
+                  <Heart size={20} />
+                  <span>MindSync</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'personality' ? 'active' : ''}`}
+                  onClick={() => setView('personality')}
+                  title="Weekly Snapshots"
+                >
+                  <User size={20} />
+                  <span>Personality</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'evolution' ? 'active' : ''}`}
+                  onClick={() => setView('evolution')}
+                  title="Interest Evolution"
+                >
+                  <TrendingUp size={20} />
+                  <span>Evolution</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'goals' ? 'active' : ''}`}
+                  onClick={() => setView('goals')}
+                  title="Goal Alignment"
+                >
+                  <Target size={20} />
+                  <span>Goals</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'twin' ? 'active' : ''}`}
+                  onClick={() => setView('twin')}
+                  title="Digital Twin"
+                >
+                  <Brain size={20} />
+                  <span>Digital Twin</span>
+                </button>
+              </div>
+            )}
           </div>
 
+          {/* EchoLenz Section */}
           <div className="nav-section">
-            <div className="nav-section-label">Memory</div>
-            <button 
-              className={`nav-item ${view === 'map' ? 'active' : ''}`}
-              onClick={() => setView('map')}
-            >
-              <MapIcon size={20} />
-              <span>Knowledge Map</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'list' ? 'active' : ''}`}
-              onClick={() => setView('list')}
-            >
-              <List size={20} />
-              <span>Memory List</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
-              onClick={() => setView('timeline')}
-            >
-              <Calendar size={20} />
-              <span>Timeline</span>
-            </button>
-            <button 
-              className={`nav-item ${view === 'insights' ? 'active' : ''}`}
-              onClick={() => setView('insights')}
-            >
-              <Sparkles size={20} />
-              <span>AI Insights</span>
-            </button>
+            <div className="nav-section-header" onClick={() => setEchoLenzOpen(!echoLenzOpen)}>
+              <div className="nav-section-label">
+                {echoLenzOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                <span>EchoLenz</span>
+              </div>
+            </div>
+            {echoLenzOpen && (
+              <div className="nav-section-items">
+                <button 
+                  className={`nav-item ${view === 'map' ? 'active' : ''}`}
+                  onClick={() => setView('map')}
+                >
+                  <MapIcon size={20} />
+                  <span>Knowledge Map</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'list' ? 'active' : ''}`}
+                  onClick={() => setView('list')}
+                >
+                  <List size={20} />
+                  <span>Memory List</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
+                  onClick={() => setView('timeline')}
+                >
+                  <Calendar size={20} />
+                  <span>Timeline</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'insights' ? 'active' : ''}`}
+                  onClick={() => setView('insights')}
+                >
+                  <Sparkles size={20} />
+                  <span>AI Insights</span>
+                </button>
+              </div>
+            )}
           </div>
         </nav>
 
@@ -293,6 +332,7 @@ const Dashboard = () => {
         <div className="content-header">
           <div className="header-left">
             <h2 className="page-title">
+              {view === 'welcome' && '🏠 Dashboard'}
               {view === 'mindsync' && '💭 MindSync Dashboard'}
               {view === 'personality' && '🪞 Personality Snapshots'}
               {view === 'evolution' && '🌱 Interest Evolution'}
@@ -304,6 +344,7 @@ const Dashboard = () => {
               {view === 'insights' && '✨ AI Insights'}
             </h2>
             <p className="page-subtitle">
+              {view === 'welcome' && `Your personal AI companion for mindful browsing`}
               {view === 'mindsync' && 'Your weekly vibe, trending interests, and goal progress'}
               {view === 'personality' && 'Weekly reflections of your digital identity'}
               {view === 'evolution' && 'Watch how your curiosity has evolved over time'}
@@ -360,6 +401,90 @@ const Dashboard = () => {
 
         {/* View Content */}
         <div className="view-content">
+          {view === 'welcome' && (
+            <div className="welcome-view">
+              <div className="welcome-card">
+                <div className="welcome-header">
+                  <div className="welcome-icon">
+                    <Sparkles size={48} />
+                  </div>
+                  <h1 className="welcome-title">
+                    Welcome{username ? `, ${username}` : ''}!
+                  </h1>
+                  <p className="welcome-subtitle">
+                    Your personal AI companion for mindful browsing and self-discovery
+                  </p>
+                </div>
+                
+                <div className="welcome-features">
+                  <div className="feature-card" onClick={() => setView('mindsync')}>
+                    <div className="feature-icon">
+                      <Heart size={32} />
+                    </div>
+                    <h3>MindSync</h3>
+                    <p>Track your weekly vibe and trending interests</p>
+                  </div>
+                  
+                  <div className="feature-card" onClick={() => setView('personality')}>
+                    <div className="feature-icon">
+                      <User size={32} />
+                    </div>
+                    <h3>Personality</h3>
+                    <p>Weekly snapshots of your digital identity</p>
+                  </div>
+                  
+                  <div className="feature-card" onClick={() => setView('evolution')}>
+                    <div className="feature-icon">
+                      <TrendingUp size={32} />
+                    </div>
+                    <h3>Evolution</h3>
+                    <p>Watch your curiosity evolve over time</p>
+                  </div>
+                  
+                  <div className="feature-card" onClick={() => setView('twin')}>
+                    <div className="feature-icon">
+                      <Brain size={32} />
+                    </div>
+                    <h3>Digital Twin</h3>
+                    <p>Your AI reflection trained on your patterns</p>
+                  </div>
+                  
+                  <div className="feature-card" onClick={() => setView('map')}>
+                    <div className="feature-icon">
+                      <MapIcon size={32} />
+                    </div>
+                    <h3>Knowledge Map</h3>
+                    <p>Visualize your browsing patterns</p>
+                  </div>
+                  
+                  <div className="feature-card" onClick={() => setView('insights')}>
+                    <div className="feature-icon">
+                      <Sparkles size={32} />
+                    </div>
+                    <h3>AI Insights</h3>
+                    <p>Discover patterns in your browsing</p>
+                  </div>
+                </div>
+                
+                {stats && (
+                  <div className="welcome-stats">
+                    <div className="welcome-stat">
+                      <span className="stat-number">{stats.totalMemories || 0}</span>
+                      <span className="stat-text">Memories Captured</span>
+                    </div>
+                    <div className="welcome-stat">
+                      <span className="stat-number">{stats.totalTopics || 0}</span>
+                      <span className="stat-text">Topics Explored</span>
+                    </div>
+                    <div className="welcome-stat">
+                      <span className="stat-number">{stats.totalTags || 0}</span>
+                      <span className="stat-text">Tags Created</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {view === 'mindsync' && <MindSyncDashboard />}
           {view === 'personality' && <PersonalitySnapshots />}
           {view === 'evolution' && <InterestEvolutionTimeline />}

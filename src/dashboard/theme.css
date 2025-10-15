@@ -80,11 +80,11 @@
   --bg-card: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%);
   --bg-card-hover: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%);
   
-  /* Text Colors */
+  /* Text Colors - Enhanced for better readability */
   --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-tertiary: #475569;
-  --text-muted: #64748b;
+  --text-secondary: #1e293b;
+  --text-tertiary: #334155;
+  --text-muted: #475569;
   --text-inverse: #ffffff;
   
   /* Brand Colors (same in both themes) */
