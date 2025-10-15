@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Clock, Sparkles, MapPin } from 'lucide-react';
+import { RiLineChartLine, RiTimeLine, RiSparklingLine, RiMapPinLine } from '@remixicon/react';
 
 const StatsOverview = ({ stats }) => {
   const formatTime = (seconds) => {
@@ -16,7 +16,7 @@ const StatsOverview = ({ stats }) => {
       
       <div className="stat-item">
         <div className="stat-icon">
-          <MapPin size={18} />
+          <RiMapPinLine size={18} />
         </div>
         <div className="stat-info">
           <div className="stat-value">{stats.totalVisits}</div>
@@ -26,7 +26,7 @@ const StatsOverview = ({ stats }) => {
 
       <div className="stat-item">
         <div className="stat-icon">
-          <Clock size={18} />
+          <RiTimeLine size={18} />
         </div>
         <div className="stat-info">
           <div className="stat-value">{formatTime(stats.totalTimeSpent)}</div>
@@ -36,7 +36,7 @@ const StatsOverview = ({ stats }) => {
 
       <div className="stat-item">
         <div className="stat-icon">
-          <Sparkles size={18} />
+          <RiSparklingLine size={18} />
         </div>
         <div className="stat-info">
           <div className="stat-value">{stats.totalHighlights}</div>
@@ -46,7 +46,7 @@ const StatsOverview = ({ stats }) => {
 
       <div className="stat-item">
         <div className="stat-icon">
-          <TrendingUp size={18} />
+          <RiLineChartLine size={18} />
         </div>
         <div className="stat-info">
           <div className="stat-value">{stats.thisWeekVisits}</div>

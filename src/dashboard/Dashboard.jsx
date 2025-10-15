@@ -1,5 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart, Sun, Moon, ChevronDown, ChevronRight } from 'lucide-react';
+import { 
+  RiSearchLine, 
+  RiFilterLine, 
+  RiCalendarLine, 
+  RiTimeLine, 
+  RiPriceTag3Line, 
+  RiSparklingLine, 
+  RiGridLine, 
+  RiListCheck, 
+  RiMapPinLine, 
+  RiSettings3Line, 
+  RiDownloadLine, 
+  RiUploadLine, 
+  RiUserLine, 
+  RiLineChartLine, 
+  RiTargetLine, 
+  RiBrainLine, 
+  RiHeartLine, 
+  RiSunLine, 
+  RiMoonLine, 
+  RiArrowDownSLine, 
+  RiArrowRightSLine 
+} from '@remixicon/react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
 import MemoryTimeline from './components/MemoryTimeline';
@@ -207,7 +229,7 @@ const Dashboard = () => {
     return (
       <div className="dashboard-container">
         <div className="loading-screen">
-          <Sparkles size={48} className="loading-icon" />
+          <RiSparklingLine size={48} className="loading-icon" />
           <h2>Loading your memories...</h2>
           <p>Mapping your digital consciousness</p>
         </div>
@@ -230,7 +252,7 @@ const Dashboard = () => {
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setPersonaSyncOpen(!personaSyncOpen)}>
               <div className="nav-section-label">
-                {personaSyncOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {personaSyncOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
                 <span>PersonaSync</span>
               </div>
             </div>
@@ -241,7 +263,7 @@ const Dashboard = () => {
                   onClick={() => setView('mindsync')}
                   title="MindSync Dashboard"
                 >
-                  <Heart size={20} />
+                  <RiHeartLine size={20} />
                   <span>MindSync</span>
                 </button>
                 <button 
@@ -249,7 +271,7 @@ const Dashboard = () => {
                   onClick={() => setView('personality')}
                   title="Weekly Snapshots"
                 >
-                  <User size={20} />
+                  <RiUserLine size={20} />
                   <span>Personality</span>
                 </button>
                 <button 
@@ -257,7 +279,7 @@ const Dashboard = () => {
                   onClick={() => setView('evolution')}
                   title="Interest Evolution"
                 >
-                  <TrendingUp size={20} />
+                  <RiLineChartLine size={20} />
                   <span>Evolution</span>
                 </button>
                 <button 
@@ -265,7 +287,7 @@ const Dashboard = () => {
                   onClick={() => setView('goals')}
                   title="Goal Alignment"
                 >
-                  <Target size={20} />
+                  <RiTargetLine size={20} />
                   <span>Goals</span>
                 </button>
                 <button 
@@ -273,7 +295,7 @@ const Dashboard = () => {
                   onClick={() => setView('twin')}
                   title="Digital Twin"
                 >
-                  <Brain size={20} />
+                  <RiBrainLine size={20} />
                   <span>Digital Twin</span>
                 </button>
               </div>
@@ -284,7 +306,7 @@ const Dashboard = () => {
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setEchoLenzOpen(!echoLenzOpen)}>
               <div className="nav-section-label">
-                {echoLenzOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                {echoLenzOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
                 <span>EchoLenz</span>
               </div>
             </div>
@@ -294,36 +316,34 @@ const Dashboard = () => {
                   className={`nav-item ${view === 'map' ? 'active' : ''}`}
                   onClick={() => setView('map')}
                 >
-                  <MapIcon size={20} />
+                  <RiMapPinLine size={20} />
                   <span>Knowledge Map</span>
                 </button>
                 <button 
                   className={`nav-item ${view === 'list' ? 'active' : ''}`}
                   onClick={() => setView('list')}
                 >
-                  <List size={20} />
+                  <RiListCheck size={20} />
                   <span>Memory List</span>
                 </button>
                 <button 
                   className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
                   onClick={() => setView('timeline')}
                 >
-                  <Calendar size={20} />
+                  <RiCalendarLine size={20} />
                   <span>Timeline</span>
                 </button>
                 <button 
                   className={`nav-item ${view === 'insights' ? 'active' : ''}`}
                   onClick={() => setView('insights')}
                 >
-                  <Sparkles size={20} />
+                  <RiSparklingLine size={20} />
                   <span>AI Insights</span>
                 </button>
               </div>
             )}
           </div>
         </nav>
-
-        {stats && <StatsOverview stats={stats} />}
       </div>
 
       {/* Main Content */}
@@ -360,7 +380,7 @@ const Dashboard = () => {
               <SearchBar onSearch={handleSearch} />
             )}
             <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-              {theme === 'dark' ? <Sun className="theme-toggle-icon" size={20} /> : <Moon className="theme-toggle-icon" size={20} />}
+              {theme === 'dark' ? <RiSunLine className="theme-toggle-icon" size={20} /> : <RiMoonLine className="theme-toggle-icon" size={20} />}
               <span className="theme-toggle-text">{theme === 'dark' ? 'Light' : 'Dark'}</span>
             </button>
           </div>
@@ -406,7 +426,7 @@ const Dashboard = () => {
               <div className="welcome-card">
                 <div className="welcome-header">
                   <div className="welcome-icon">
-                    <Sparkles size={48} />
+                    <RiSparklingLine size={48} />
                   </div>
                   <h1 className="welcome-title">
                     Welcome{username ? `, ${username}` : ''}!
@@ -419,7 +439,7 @@ const Dashboard = () => {
                 <div className="welcome-features">
                   <div className="feature-card" onClick={() => setView('mindsync')}>
                     <div className="feature-icon">
-                      <Heart size={32} />
+                      <RiHeartLine size={32} />
                     </div>
                     <h3>MindSync</h3>
                     <p>Track your weekly vibe and trending interests</p>
@@ -427,7 +447,7 @@ const Dashboard = () => {
                   
                   <div className="feature-card" onClick={() => setView('personality')}>
                     <div className="feature-icon">
-                      <User size={32} />
+                      <RiUserLine size={32} />
                     </div>
                     <h3>Personality</h3>
                     <p>Weekly snapshots of your digital identity</p>
@@ -435,7 +455,7 @@ const Dashboard = () => {
                   
                   <div className="feature-card" onClick={() => setView('evolution')}>
                     <div className="feature-icon">
-                      <TrendingUp size={32} />
+                      <RiLineChartLine size={32} />
                     </div>
                     <h3>Evolution</h3>
                     <p>Watch your curiosity evolve over time</p>
@@ -443,7 +463,7 @@ const Dashboard = () => {
                   
                   <div className="feature-card" onClick={() => setView('twin')}>
                     <div className="feature-icon">
-                      <Brain size={32} />
+                      <RiBrainLine size={32} />
                     </div>
                     <h3>Digital Twin</h3>
                     <p>Your AI reflection trained on your patterns</p>
@@ -451,7 +471,7 @@ const Dashboard = () => {
                   
                   <div className="feature-card" onClick={() => setView('map')}>
                     <div className="feature-icon">
-                      <MapIcon size={32} />
+                      <RiMapPinLine size={32} />
                     </div>
                     <h3>Knowledge Map</h3>
                     <p>Visualize your browsing patterns</p>
@@ -459,29 +479,14 @@ const Dashboard = () => {
                   
                   <div className="feature-card" onClick={() => setView('insights')}>
                     <div className="feature-icon">
-                      <Sparkles size={32} />
+                      <RiSparklingLine size={32} />
                     </div>
                     <h3>AI Insights</h3>
                     <p>Discover patterns in your browsing</p>
                   </div>
                 </div>
                 
-                {stats && (
-                  <div className="welcome-stats">
-                    <div className="welcome-stat">
-                      <span className="stat-number">{stats.totalMemories || 0}</span>
-                      <span className="stat-text">Memories Captured</span>
-                    </div>
-                    <div className="welcome-stat">
-                      <span className="stat-number">{stats.totalTopics || 0}</span>
-                      <span className="stat-text">Topics Explored</span>
-                    </div>
-                    <div className="welcome-stat">
-                      <span className="stat-number">{stats.totalTags || 0}</span>
-                      <span className="stat-text">Tags Created</span>
-                    </div>
-                  </div>
-                )}
+                {stats && <StatsOverview stats={stats} />}
               </div>
             </div>
           )}

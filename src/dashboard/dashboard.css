@@ -229,6 +229,29 @@ body {
   border-top: 1px solid var(--border-primary);
 }
 
+/* Stats Overview in Welcome View */
+.welcome-view .stats-overview {
+  padding: 32px;
+  background: var(--button-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-secondary);
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.welcome-view .stats-title {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .stats-title {
   font-size: 13px;
   font-weight: 600;
@@ -250,6 +273,23 @@ body {
   border-bottom: none;
 }
 
+/* Stat Item in Welcome View */
+.welcome-view .stat-item {
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  border-bottom: none;
+  background: var(--card-bg);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.welcome-view .stat-item:hover {
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
 .stat-icon {
   width: 36px;
   height: 36px;
@@ -261,8 +301,22 @@ body {
   color: var(--brand-primary);
 }
 
+/* Stat Icon in Welcome View */
+.welcome-view .stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--button-hover);
+  margin-bottom: 12px;
+}
+
 .stat-info {
   flex: 1;
+}
+
+/* Stat Info in Welcome View */
+.welcome-view .stat-info {
+  text-align: center;
 }
 
 .stat-value {
@@ -271,9 +325,26 @@ body {
   color: var(--text-primary);
 }
 
+/* Stat Value in Welcome View */
+.welcome-view .stat-value {
+  font-size: 32px;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
 .stat-label {
   font-size: 11px;
   color: var(--text-muted);
+}
+
+/* Stat Label in Welcome View */
+.welcome-view .stat-label {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-weight: 500;
 }
 
 .sidebar-footer {
