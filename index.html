@@ -1,0 +1,6062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Complete HTML & CSS Learning Guide - From basics to advanced concepts">
+  <meta name="keywords" content="HTML, CSS, web development, tutorial, guide, learn HTML, learn CSS">
+  <meta name="author" content="Jayani">
+  <title>Complete HTML & CSS Learning Guide</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #667eea;
+      --secondary: #764ba2;
+      --accent: #f093fb;
+      --bg-light: #f8fafc;
+      --bg-dark: #1e293b;
+      --text-dark: #1e293b;
+      --text-light: #64748b;
+      --white: #ffffff;
+      --border: #e2e8f0;
+      --shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+      --shadow-hover: 0 20px 40px rgba(102, 126, 234, 0.2);
+      --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+      --gradient-accent: linear-gradient(135deg, var(--accent), var(--primary));
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      color: var(--text-dark);
+      background: var(--bg-light);
+      overflow-x: hidden;
+    }
+
+    /* Update all elements to use Poppins */
+    h1, h2, h3, h4, h5, h6,
+    p, a, span, div, li, td, th,
+    input, button, textarea, select {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -320px;
+      width: 320px;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: var(--white);
+      z-index: 1005;
+      transition: left 0.3s ease, width 0.3s ease;
+      overflow-y: auto;
+      box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .sidebar-toggle, .sidebar-toggle-expand {
+      background: none;
+      border: none;
+      color: var(--white);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    
+    .sidebar-toggle:hover, .sidebar-toggle-expand:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar.collapsed .sidebar-content {
+      display: none;
+    }
+    
+    .sidebar.collapsed {
+      width: 60px;
+    }
+    
+    .sidebar.collapsed .logo {
+      display: none;
+    }
+    
+    .sidebar.collapsed .sidebar-toggle-expand i {
+      transform: rotate(180deg);
+    }
+
+    .sidebar-content {
+      padding: 0;
+    }
+
+    .tab-item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-header {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--white);
+      padding: 1.2rem 1.5rem;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab-header:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-header.active {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .tab-header i:last-child {
+      margin-left: auto;
+      transition: transform 0.3s ease;
+    }
+
+    .tab-header.active i:last-child {
+      transform: rotate(180deg);
+    }
+
+    .tab-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-content.active {
+      max-height: 500px;
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar-nav li {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .sidebar-nav li:last-child {
+      border-bottom: none;
+    }
+
+    .sidebar-nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 2rem;
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      border-left-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-nav a.current-section {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: var(--white);
+      border-left-color: var(--white);
+      font-weight: 600;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1004;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Sidebar open button */
+    .sidebar-open {
+      background: none;
+      border: none;
+      color: var(--text-dark);
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+      margin-right: 1rem;
+    }
+
+    .sidebar-open:hover {
+      background-color: rgba(102, 126, 234, 0.1);
+      color: var(--primary);
+    }
+
+    /* Main content adjustment when sidebar is active */
+    .main-content {
+      transition: margin-left 0.3s ease;
+    }
+
+    /* Navigation */
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      z-index: 1000;
+      padding: 1rem 0;
+      transition: all 0.3s ease;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .navbar.scrolled {
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: var(--shadow);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-links {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 500;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .mobile-menu span {
+      width: 25px;
+      height: 3px;
+      background: var(--text-dark);
+      margin: 3px 0;
+      transition: 0.3s;
+    }
+
+    /* Hero Section */
+    .hero {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gradient);
+      color: var(--white);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="25" cy="75" r="1" fill="rgba(255,255,255,0.05)"/><circle cx="75" cy="25" r="1" fill="rgba(255,255,255,0.05)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .hero-content {
+      max-width: 800px;
+      z-index: 1;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: 4rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      animation: slideUp 1s ease-out;
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+      animation: slideUp 1s ease-out 0.2s both;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: var(--white);
+      color: var(--primary);
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      animation: slideUp 1s ease-out 0.4s both;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Main Content */
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 4rem 2rem;
+    }
+
+    .section {
+      margin-bottom: 4rem;
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.6s ease;
+    }
+
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .section-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-light);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 968px) {
+      .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      /* Adjust main content for mobile */
+      .main-content {
+        margin-left: 0 !important;  /* Override desktop styles */
+        width: 100% !important;     /* Take full width */
+        padding: 1rem;
+      }
+
+      /* Adjust navbar for mobile */
+      .navbar .nav-container {
+        margin-left: 0 !important;  /* Override desktop styles */
+        width: 100% !important;     /* Take full width */
+        padding: 0 1rem;
+      }
+
+      /* Ensure sidebar stays at full width on mobile */
+      .sidebar {
+        width: 100% !important;     /* Full width sidebar */
+      }
+
+      /* Hide sidebar toggle on mobile */
+      .sidebar-toggle-expand {
+        display: none;
+      }
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--gradient);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    .card h3 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-dark);
+    }
+
+    .card p {
+      color: var(--text-light);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 2rem 1.5rem;  /* Increased padding */
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+      position: relative;
+      line-height: 1.6;      /* Better line height */
+      tab-size: 2;           /* Consistent tab size */
+      -moz-tab-size: 2;
+      white-space: pre;      /* Preserve formatting */
+    }
+
+    .code-block::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: #2d2d2d;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .code-block::after {
+      content: '● ● ●';
+      position: absolute;
+      top: 8px;
+      left: 15px;
+      color: #666;
+      font-size: 12px;
+    }
+
+    .code-content {
+      margin-top: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+    }
+
+    /* Add CSS for better code highlighting */
+    .code-block .keyword      { color: #c678dd; }
+    .code-block .property    { color: #e06c75; }
+    .code-block .value       { color: #98c379; }
+    .code-block .punctuation { color: #abb2bf; }
+    .code-block .comment     { color: #5c6370; font-style: italic; }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--white);
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--gradient);
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    /* Lists */
+    .styled-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .styled-list li {
+      position: relative;
+      padding: 0.5rem 0 0.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .styled-list li:last-child {
+      border-bottom: none;
+    }
+
+    .styled-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      top: 0.5rem;
+      width: 20px;
+      height: 20px;
+      background: var(--gradient);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      z-index: 1001;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--gradient);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--bg-dark);
+      color: var(--white);
+      text-align: center;
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer h3 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+    }
+
+    .footer p {
+      opacity: 0.8;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .social-links a {
+      width: 50px;
+      height: 50px;
+      background: var(--gradient);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-links a:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Animations */
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Custom Scrollbar Styles */
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-light);
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--gradient);
+      border-radius: 10px;
+      border: 2px solid var(--bg-light);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gradient-accent);
+    }
+
+    /* Code block scrollbar */
+    .code-block::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+
+    .code-block::-webkit-scrollbar-track {
+      background: #2d2d2d;
+      border-radius: 4px;
+    }
+
+    .code-block::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 4px;
+    }
+
+    .code-block::-webkit-scrollbar-thumb:hover {
+      background: #777;
+    }
+
+    /* Table container scrollbar */
+    .table-container::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    /* Mobile Breadcrumb */
+    .mobile-breadcrumb {
+      display: none;
+      position: fixed;
+      top: 70px;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 999;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+      color: var(--text-light);
+      transform: translateY(-100%);
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-breadcrumb.visible {
+      transform: translateY(0);
+    }
+
+    .mobile-breadcrumb .breadcrumb-current {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .mobile-breadcrumb .breadcrumb-separator {
+      margin: 0 0.5rem;
+      color: var(--text-light);
+    }
+
+    /* Mobile Navigation */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(20px);
+      z-index: 1001;
+      transition: left 0.3s ease;
+      padding-top: 80px;
+    }
+
+    .mobile-nav.active {
+      left: 0;
+    }
+
+    .mobile-nav ul {
+      list-style: none;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .mobile-nav a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-size: 1.2rem;
+      font-weight: 600;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .mobile-nav a:hover {
+      color: var(--primary);
+      padding-left: 1rem;
+    }
+
+    .mobile-nav a.current-section {
+      color: var(--primary);
+      background: rgba(102, 126, 234, 0.1);
+      padding-left: 1rem;
+      border-left: 4px solid var(--primary);
+    }
+
+    .mobile-nav a.current-section::after {
+      content: '📍';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .mobile-menu.active span:nth-child(1) {
+      transform: rotate(-45deg) translate(-5px, 6px);
+    }
+
+    .mobile-menu.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .mobile-menu.active span:nth-child(3) {
+      transform: rotate(45deg) translate(-5px, -6px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 968px) {
+      .cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+      }
+
+      .section-title {
+        font-size: 2.2rem;
+      }
+
+      .sidebar {
+        width: 280px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .mobile-menu {
+        display: flex;
+        z-index: 1002;
+      }
+
+      .mobile-nav {
+        display: block;
+      }
+
+      .mobile-breadcrumb {
+        display: block;
+      }
+
+      .sidebar {
+        width: 100%;
+        left: -100%;
+      }
+
+      .sidebar-open {
+        display: block;
+      }
+
+      .hero {
+        padding: 0 1rem;
+        min-height: 100vh;
+        margin-top: 0;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .cta-button {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+
+      .main-content {
+        padding: 2rem 1rem;
+        margin-top: 40px; /* Account for breadcrumb */
+      }
+
+      .section {
+        scroll-margin-top: 140px; /* Account for navbar + breadcrumb */
+      }
+
+      .section-title {
+        font-size: 2rem;
+      }
+
+      .section-subtitle {
+        font-size: 1rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+        border-radius: 15px;
+      }
+
+      .card-icon {
+        font-size: 2rem;
+      }
+
+      .card h3 {
+        font-size: 1.2rem;
+      }
+
+      .code-block {
+        font-size: 0.8rem;
+        padding: 1rem;
+      }
+
+      .table-container {
+        margin: 1rem 0;
+      }
+
+      th, td {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+      }
+
+      .footer {
+        padding: 2rem 1rem;
+      }
+
+      .social-links a {
+        width: 45px;
+        height: 45px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .sidebar-open {
+        display: none;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        box-shadow: none;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .main-content {
+        margin-left: 320px;
+        transition: margin-left 0.3s ease;
+        width: calc(100% - 320px);
+        max-width: 100%;
+      }
+
+      .navbar .nav-container {
+        margin-left: 320px;
+        transition: margin-left 0.3s ease;
+        width: calc(100% - 320px);
+      }
+      
+      /* Adjust content when sidebar is collapsed but keep header static */
+      .sidebar.collapsed ~ .main-content {
+        margin-left: 60px;
+        width: calc(100% - 60px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 0.8rem 0;
+      }
+
+      .nav-container {
+        padding: 0 1rem;
+      }
+
+      .logo {
+        font-size: 1.3rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+      }
+
+      .hero p {
+        font-size: 1rem;
+      }
+
+      .cta-button {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.85rem;
+      }
+
+      .main-content {
+        padding: 1.5rem 0.75rem;
+      }
+
+      .section {
+        margin-bottom: 3rem;
+      }
+
+      .section-header {
+        margin-bottom: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+        line-height: 1.3;
+      }
+
+      .section-subtitle {
+        font-size: 0.95rem;
+      }
+
+      .card {
+        padding: 1.2rem;
+        border-radius: 12px;
+      }
+
+      .card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+      }
+
+      .card p {
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+      }
+
+      .styled-list li {
+        padding: 0.4rem 0 0.4rem 1.8rem;
+        font-size: 0.9rem;
+      }
+
+      .styled-list li::before {
+        width: 18px;
+        height: 18px;
+        font-size: 0.7rem;
+      }
+
+      .code-block {
+        font-size: 0.75rem;
+        padding: 0.8rem;
+        margin: 0.8rem 0;
+      }
+
+      .code-content {
+        margin-top: 15px;
+      }
+
+      th, td {
+        padding: 0.4rem;
+        font-size: 0.8rem;
+      }
+
+      .footer h3 {
+        font-size: 1.3rem;
+      }
+
+      .footer p {
+        font-size: 0.9rem;
+      }
+
+      .social-links {
+        gap: 0.8rem;
+      }
+
+      .social-links a {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+
+      .main-content {
+        padding: 1rem 0.5rem;
+      }
+
+      .card {
+        padding: 1rem;
+      }
+
+      .section-title {
+        font-size: 1.6rem;
+      }
+
+      .code-block {
+        font-size: 0.7rem;
+        padding: 0.7rem;
+      }
+    }
+
+    /* Utility Classes */
+    .text-center { text-align: center; }
+    .mt-2 { margin-top: 2rem; }
+    .mb-2 { margin-bottom: 2rem; }
+    .highlight { background: var(--gradient-accent); color: var(--white); padding: 0.2rem 0.5rem; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <!-- Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <i class="fas fa-code"></i> Web Guide
+      </div>
+      <div class="sidebar-controls">
+        <button class="sidebar-toggle-expand" id="sidebarToggleExpand" title="Expand/Collapse Sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="sidebar-content">
+      <!-- HTML Tab -->
+      <div class="tab-item">
+        <button class="tab-header active" data-tab="html">
+          <i class="fab fa-html5"></i>
+          <span>HTML</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="tab-content active" id="html-content">
+          <ul class="sidebar-nav">
+            <li><a href="#intro" data-section="intro"><i class="fas fa-play-circle"></i> Introduction</a></li>
+            <li><a href="#head" data-section="head"><i class="fas fa-cog"></i> Head & Meta</a></li>
+            <li><a href="#attributes" data-section="attributes"><i class="fas fa-sliders-h"></i> Attributes</a></li>
+            <li><a href="#elements" data-section="elements"><i class="fas fa-th-large"></i> Elements</a></li>
+            <li><a href="#media" data-section="media"><i class="fas fa-photo-video"></i> Media</a></li>
+            <li><a href="#links" data-section="links"><i class="fas fa-link"></i> Links</a></li>
+            <li><a href="#tables" data-section="tables"><i class="fas fa-table"></i> Tables & Lists</a></li>
+            <li><a href="#forms" data-section="forms"><i class="fas fa-wpforms"></i> Forms</a></li>
+            <li><a href="#embedding" data-section="embedding"><i class="fas fa-code"></i> Embedding</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- CSS Tab -->
+      <div class="tab-item">
+        <button class="tab-header" data-tab="css">
+          <i class="fab fa-css3-alt"></i>
+          <span>CSS</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="tab-content" id="css-content">
+          <ul class="sidebar-nav">
+            <li><a href="#css-intro" data-section="css-intro"><i class="fas fa-paint-brush"></i> Introduction</a></li>
+            <li><a href="#css-selectors" data-section="css-selectors"><i class="fas fa-crosshairs"></i> Selectors</a></li>
+            <li><a href="#css-box-model" data-section="css-box-model"><i class="fas fa-cube"></i> Box Model</a></li>
+            <li><a href="#css-layout" data-section="css-layout"><i class="fas fa-th"></i> Layout</a></li>
+            <li><a href="#css-flexbox" data-section="css-flexbox"><i class="fas fa-arrows-alt"></i> Flexbox</a></li>
+            <li><a href="#css-grid" data-section="css-grid"><i class="fas fa-th-large"></i> Grid</a></li>
+            <li><a href="#css-responsive" data-section="css-responsive"><i class="fas fa-mobile-alt"></i> Responsive Design</a></li>
+            <li><a href="#css-animations" data-section="css-animations"><i class="fas fa-magic"></i> Animations</a></li>
+            <li><a href="#css-advanced" data-section="css-advanced"><i class="fas fa-star"></i> Advanced CSS</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- JavaScript Tab -->
+      <div class="tab-item">
+        <button class="tab-header" data-tab="javascript">
+          <i class="fab fa-js"></i>
+          <span>JavaScript</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="tab-content" id="javascript-content">
+          <ul class="sidebar-nav">
+            <li><a href="#js-intro-basics" data-section="js-intro-basics"><i class="fas fa-play-circle"></i> Introduction</a></li>
+            <li><a href="#js-control-flow" data-section="js-control-flow"><i class="fas fa-project-diagram"></i> Control Flow & Data Structures</a></li>
+            <li><a href="#js-functions-scope" data-section="js-functions-scope"><i class="fas fa-cube"></i> Functions & Scope</a></li>
+            <li><a href="#js-advanced" data-section="js-advanced"><i class="fas fa-star"></i> Advanced Concepts</a></li>
+            <li><a href="#js-projects" data-section="js-projects"><i class="fas fa-tools"></i> Practical Applications & Projects</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <button class="sidebar-open" id="sidebarOpen">
+        <i class="faals fa-bars"></i>
+      </button>
+      <div class="logo">
+        <i class="fas fa-code"></i> Web Guide
+      </div>
+      <ul class="nav-links">
+        <li><a href="#intro">HTML</a></li>
+        <li><a href="#css-intro">CSS</a></li>
+        <li><a href="#js-intro-basics">JavaScript</a></li>
+      </ul>
+      <!-- <div class="mobile-menu" id="mobileMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div> -->
+    </div>
+  </nav>
+
+  <!-- Mobile Navigation Menu -->
+  <div class="mobile-nav" id="mobileNav">
+    <ul>
+      <li><a href="#intro" data-section="intro">📖 Introduction</a></li>
+      <li><a href="#head" data-section="head">🔧 Head & Meta</a></li>
+      <li><a href="#attributes" data-section="attributes">⚙️ Attributes</a></li>
+      <li><a href="#elements" data-section="elements">🧱 Elements</a></li>
+      <li><a href="#media" data-section="media">🎬 Media</a></li>
+      <li><a href="#links" data-section="links">🔗 Links</a></li>
+      <li><a href="#tables" data-section="tables">📊 Tables & Lists</a></li>
+      <li><a href="#forms" data-section="forms">📝 Forms</a></li>
+      <li><a href="#embedding" data-section="embedding">🌐 Embedding</a></li>
+    </ul>
+  </div>
+
+  <!-- Mobile Breadcrumb -->
+  <div class="mobile-breadcrumb" id="mobileBreadcrumb">
+    <span>HTML Guide</span>
+    <span class="breadcrumb-separator">›</span>
+    <span class="breadcrumb-current" id="currentSection">Introduction</span>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1><i class="fas fa-code"></i> Complete HTML & CSS Learning Guide</h1>
+      <p>Master HTML and CSS from basics to advanced concepts with interactive examples and modern best practices</p>
+      <a href="#intro" class="cta-button">Start Learning <i class="fas fa-arrow-down"></i></a>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    
+    <!-- Introduction Section -->
+    <section id="intro" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-play-circle"></i> HTML Introduction</h2>
+        <p class="section-subtitle">Learn the fundamental building blocks of web development</p>
+      </div>
+      
+      <div class="cards-grid">
+        <!-- New Beginner Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-graduation-cap"></i></div>
+          <h3>New to HTML?</h3>
+          <p>Don't worry! HTML is like building with blocks. Here's what you need to know:</p>
+          <ul class="styled-list">
+            <li>HTML = HyperText Markup Language</li>
+            <li>It's used to create web pages</li>
+            <li>Tags look like &lt;this&gt;</li>
+            <li>Most tags have opening and closing parts</li>
+          </ul>
+        </div>
+
+        <!-- Quick Start Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-rocket"></i></div>
+          <h3>Quick Start Guide</h3>
+          <p>Here's your first HTML page:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;My First Page&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+    &lt;p&gt;This is my first webpage.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-info-circle"></i></div>
+          <h3>What are HTML Tags?</h3>
+          <p>HTML tags define the structure and content of a web page. They are enclosed in angle brackets and tell the browser how to display content.</p>
+          <div class="code-block">
+            <div class="code-content">&lt;tagname&gt; Content &lt;/tagname&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cut"></i></div>
+          <h3>Tag Syntax</h3>
+          <p>Tags typically come in pairs with opening and closing tags:</p>
+          <ul class="styled-list">
+            <li><code>&lt;tagname&gt;</code> — Opening Tag</li>
+            <li><code>&lt;/tagname&gt;</code> — Closing Tag</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-building"></i></div>
+          <h3>Basic HTML Structure</h3>
+          <p>Every HTML document follows this basic structure:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;Page Title&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello World!&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-star"></i></div>
+          <h3>Essential Tags</h3>
+          <p>Core HTML elements every developer should know:</p>
+          <ul class="styled-list">
+            <li><code>&lt;!DOCTYPE html&gt;</code> – Declares HTML5</li>
+            <li><code>&lt;html&gt;</code> – Root element</li>
+            <li><code>&lt;head&gt;</code> – Contains metadata</li>
+            <li><code>&lt;title&gt;</code> – Sets browser title</li>
+            <li><code>&lt;body&gt;</code> – Page content</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-file-alt"></i></div>
+          <h3>Content Tags</h3>
+          <p>Tags for structuring your page content:</p>
+          <ul class="styled-list">
+            <li><code>&lt;h1&gt; to &lt;h6&gt;</code> – Headings</li>
+            <li><code>&lt;p&gt;</code> – Paragraph</li>
+            <li><code>&lt;a&gt;</code> – Anchor (link)</li>
+            <li><code>&lt;img&gt;</code> – Image</li>
+            <li><code>&lt;br&gt;</code> – Line break</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-list"></i></div>
+          <h3>List Tags</h3>
+          <p>Organize content with lists:</p>
+          <ul class="styled-list">
+            <li><code>&lt;ul&gt;</code> – Unordered List</li>
+            <li><code>&lt;ol&gt;</code> – Ordered List</li>
+            <li><code>&lt;li&gt;</code> – List Item</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-text-height"></i></div>
+          <h3>Text Formatting Tags</h3>
+          <p>Style and format your text content:</p>
+          <ul class="styled-list">
+            <li><code>&lt;strong&gt;</code> – Bold (important)</li>
+            <li><code>&lt;em&gt;</code> – Italic (emphasis)</li>
+            <li><code>&lt;mark&gt;</code> – Highlighted text</li>
+            <li><code>&lt;small&gt;</code> – Small text</li>
+            <li><code>&lt;del&gt;</code> – Deleted text</li>
+            <li><code>&lt;ins&gt;</code> – Inserted text</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Semantic HTML5 Tags</h3>
+          <p>Modern semantic elements for better structure:</p>
+          <ul class="styled-list">
+            <li><code>&lt;header&gt;</code> – Page/section header</li>
+            <li><code>&lt;nav&gt;</code> – Navigation links</li>
+            <li><code>&lt;main&gt;</code> – Main content area</li>
+            <li><code>&lt;section&gt;</code> – Content section</li>
+            <li><code>&lt;article&gt;</code> – Independent content</li>
+            <li><code>&lt;aside&gt;</code> – Sidebar content</li>
+            <li><code>&lt;footer&gt;</code> – Page/section footer</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-comment"></i></div>
+          <h3>HTML Comments</h3>
+          <p>Add notes to your code that won't display on the page:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- This is a comment --&gt;</div>
+          </div>
+          <p><strong>Use cases:</strong> Code documentation, temporary content removal, notes for developers</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Head & Metadata Section -->
+    <section id="head" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-cog"></i> HTML Head & Metadata</h2>
+        <p class="section-subtitle">Essential metadata and document configuration</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-head-side-brain"></i></div>
+          <h3>The &lt;head&gt; Tag</h3>
+          <p>The head tag contains metadata and resources that are not displayed directly on the page but help browsers, search engines, and social media understand your content.</p>
+          <div class="code-block">
+            <div class="code-content">&lt;head&gt;
+  &lt;!-- Metadata goes here --&gt;
+&lt;/head&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-tags"></i></div>
+          <h3>Meta Tags</h3>
+          <p>Essential meta tags for modern web development:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;meta name="description" content="Page description"&gt;
+&lt;meta name="keywords" content="html, tutorial, guide"&gt;
+&lt;meta name="author" content="Your Name"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-link"></i></div>
+          <h3>External Resources</h3>
+          <p>Link external CSS files and set page icons:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;link rel="stylesheet" href="styles.css"&gt;
+&lt;link rel="icon" href="favicon.ico" type="image/x-icon"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>Internal Styles & Scripts</h3>
+          <p>Embed CSS and JavaScript directly in the head:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;style&gt;
+  body { background-color: #f2f2f2; }
+&lt;/style&gt;
+
+&lt;script&gt;
+  console.log("Hello from the head!");
+&lt;/script&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-share-alt"></i></div>
+          <h3>Social Media Meta Tags</h3>
+          <p>Open Graph and Twitter Card meta tags for social sharing:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Open Graph --&gt;
+&lt;meta property="og:title" content="Page Title"&gt;
+&lt;meta property="og:description" content="Page description"&gt;
+&lt;meta property="og:image" content="image.jpg"&gt;
+&lt;meta property="og:url" content="https://example.com"&gt;
+
+&lt;!-- Twitter Cards --&gt;
+&lt;meta name="twitter:card" content="summary_large_image"&gt;
+&lt;meta name="twitter:title" content="Page Title"&gt;
+&lt;meta name="twitter:description" content="Description"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-rocket"></i></div>
+          <h3>Performance & SEO Meta Tags</h3>
+          <p>Tags for better performance and search engine optimization:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Preload critical resources --&gt;
+&lt;link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin&gt;
+
+&lt;!-- DNS prefetch for external domains --&gt;
+&lt;link rel="dns-prefetch" href="//fonts.googleapis.com"&gt;
+
+&lt;!-- Canonical URL --&gt;
+&lt;link rel="canonical" href="https://example.com/page"&gt;
+
+&lt;!-- Robots meta --&gt;
+&lt;meta name="robots" content="index, follow"&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Attributes Section -->
+    <section id="attributes" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-sliders-h"></i> HTML Attributes</h2>
+        <p class="section-subtitle">Add behavior and functionality to your HTML elements</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-question-circle"></i></div>
+          <h3>What are Attributes?</h3>
+          <p>HTML Attributes provide additional information about HTML elements to define their behavior, appearance, or functionality.</p>
+          <div class="code-block">
+            <div class="code-content">&lt;tagname attribute="value"&gt;Content&lt;/tagname&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-globe"></i></div>
+          <h3>Global Attributes</h3>
+          <p>Attributes that can be used with any HTML element:</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>id</strong></td>
+                  <td>Unique identifier</td>
+                  <td><code>&lt;div id="header"&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>class</strong></td>
+                  <td>CSS class name</td>
+                  <td><code>&lt;p class="note"&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>style</strong></td>
+                  <td>Inline CSS styling</td>
+                  <td><code>&lt;h1 style="color:blue;"&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>title</strong></td>
+                  <td>Tooltip text on hover</td>
+                  <td><code>&lt;a title="Go home"&gt;</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-image"></i></div>
+          <h3>Image Attributes</h3>
+          <p>Essential attributes for the <code>&lt;img&gt;</code> tag:</p>
+          <ul class="styled-list">
+            <li><strong>src</strong>: Image file path</li>
+            <li><strong>alt</strong>: Alternative text for accessibility</li>
+            <li><strong>width, height</strong>: Image dimensions</li>
+            <li><strong>title</strong>: Tooltip text</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">&lt;img src="logo.jpg" alt="Company Logo" width="200" height="100"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-wpforms"></i></div>
+          <h3>Form Input Attributes</h3>
+          <p>Attributes that control form behavior:</p>
+          <ul class="styled-list">
+            <li><strong>type</strong>: Input type (text, password, email)</li>
+            <li><strong>name</strong>: Form submission identifier</li>
+            <li><strong>value</strong>: Default value</li>
+            <li><strong>placeholder</strong>: Hint text</li>
+            <li><strong>required</strong>: Makes field mandatory</li>
+            <li><strong>readonly</strong>: Prevents editing</li>
+            <li><strong>disabled</strong>: Disables the field</li>
+            <li><strong>maxlength</strong>: Character limit</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-link"></i></div>
+          <h3>Anchor Attributes</h3>
+          <p>Essential attributes for anchor tags:</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>href</strong></td>
+                  <td>Link destination</td>
+                  <td><code>href="page.html"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>target</strong></td>
+                  <td>Where to open link</td>
+                  <td><code>target="_blank"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>rel</strong></td>
+                  <td>Relationship between pages</td>
+                  <td><code>rel="noopener"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>download</strong></td>
+                  <td>Force file download</td>
+                  <td><code>download="filename.pdf"</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-universal-access"></i></div>
+          <h3>Accessibility Attributes</h3>
+          <p>ARIA attributes for better accessibility:</p>
+          <ul class="styled-list">
+            <li><strong>aria-label</strong>: Accessible name for element</li>
+            <li><strong>aria-describedby</strong>: References description</li>
+            <li><strong>role</strong>: Element's purpose</li>
+            <li><strong>tabindex</strong>: Tab order control</li>
+            <li><strong>aria-hidden</strong>: Hide from screen readers</li>
+            <li><strong>aria-expanded</strong>: Collapsible state</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">&lt;button aria-label="Close dialog" aria-expanded="false"&gt;
+&lt;img src="icon.png" alt="Close" aria-hidden="true"&gt;
+&lt;/button&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Block vs Inline Elements -->
+    <section id="elements" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-th-large"></i> Block vs Inline Elements</h2>
+        <p class="section-subtitle">Understanding how HTML elements behave and display</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-square"></i></div>
+          <h3>Block-Level Elements</h3>
+          <p>Elements that create structure and layout:</p>
+          <ul class="styled-list">
+            <li>Always start on a new line</li>
+            <li>Take up 100% of the width</li>
+            <li>Can contain inline or other block elements</li>
+            <li>Used for page structure</li>
+          </ul>
+          <p><strong>Examples:</strong> <code>&lt;div&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;h1-h6&gt;</code>, <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code></p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-minus"></i></div>
+          <h3>Inline Elements</h3>
+          <p>Elements for styling text within blocks:</p>
+          <ul class="styled-list">
+            <li>Do NOT start on a new line</li>
+            <li>Only take up necessary width</li>
+            <li>Cannot contain block-level elements</li>
+            <li>Used for text styling</li>
+          </ul>
+          <p><strong>Examples:</strong> <code>&lt;span&gt;</code>, <code>&lt;a&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;img&gt;</code></p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-balance-scale"></i></div>
+          <h3>Comparison Table</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Block Element</th>
+                  <th>Inline Element</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>New line</td>
+                  <td>✅ Yes</td>
+                  <td>❌ No</td>
+                </tr>
+                <tr>
+                  <td>Full width</td>
+                  <td>✅ Yes</td>
+                  <td>❌ Content width only</td>
+                </tr>
+                <tr>
+                  <td>Can contain blocks</td>
+                  <td>✅ Yes</td>
+                  <td>❌ No</td>
+                </tr>
+                <tr>
+                  <td>Primary use</td>
+                  <td>Structure/Layout</td>
+                  <td>Text styling</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Images and Media -->
+    <section id="media" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-photo-video"></i> Images and Media</h2>
+        <p class="section-subtitle">Embed images, audio, and video content</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-image"></i></div>
+          <h3>Images (&lt;img&gt;)</h3>
+          <p>Display images on your webpage:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;img src="path/to/image.jpg" alt="Description" width="300" height="200"&gt;</div>
+          </div>
+          <p><strong>Key attributes:</strong></p>
+          <ul class="styled-list">
+            <li><code>src</code>: Image source path</li>
+            <li><code>alt</code>: Alternative text</li>
+            <li><code>width/height</code>: Dimensions</li>
+            <li><code>title</code>: Tooltip text</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-volume-up"></i></div>
+          <h3>Audio (&lt;audio&gt;)</h3>
+          <p>Embed audio files with playback controls:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;audio controls&gt;
+  &lt;source src="audio.mp3" type="audio/mpeg"&gt;
+  Your browser does not support audio.
+&lt;/audio&gt;</div>
+          </div>
+          <p><strong>Attributes:</strong> <code>controls</code>, <code>autoplay</code>, <code>loop</code>, <code>muted</code></p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-video"></i></div>
+          <h3>Video (&lt;video&gt;)</h3>
+          <p>Embed video content with player controls:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;video width="640" height="360" controls&gt;
+  &lt;source src="video.mp4" type="video/mp4"&gt;
+  &lt;source src="video.webm" type="video/webm"&gt;
+  Your browser does not support video.
+&lt;/video&gt;</div>
+          </div>
+          <p><strong>Attributes:</strong> <code>controls</code>, <code>autoplay</code>, <code>loop</code>, <code>muted</code>, <code>poster</code></p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-image"></i></div>
+          <h3>Advanced Image Techniques</h3>
+          <p>Responsive images and modern formats:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Responsive images --&gt;
+&lt;img src="small.jpg" 
+     srcset="small.jpg 300w, medium.jpg 600w, large.jpg 1200w"
+     sizes="(max-width: 600px) 300px, (max-width: 1200px) 600px, 1200px"
+     alt="Responsive image"&gt;
+
+&lt;!-- Picture element for art direction --&gt;
+&lt;picture&gt;
+  &lt;source media="(min-width: 800px)" srcset="large.jpg"&gt;
+  &lt;source media="(min-width: 400px)" srcset="medium.jpg"&gt;
+  &lt;img src="small.jpg" alt="Flexible image"&gt;
+&lt;/picture&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-play-circle"></i></div>
+          <h3>Interactive Media Elements</h3>
+          <p>Create engaging multimedia experiences:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Audio with multiple sources --&gt;
+&lt;audio controls preload="metadata"&gt;
+  &lt;source src="audio.mp3" type="audio/mpeg"&gt;
+  &lt;source src="audio.ogg" type="audio/ogg"&gt;
+  &lt;track kind="captions" src="captions.vtt" srclang="en" label="English"&gt;
+&lt;/audio&gt;
+
+&lt;!-- Video with poster and tracks --&gt;
+&lt;video controls poster="thumbnail.jpg" preload="none"&gt;
+  &lt;source src="video.mp4" type="video/mp4"&gt;
+  &lt;track kind="subtitles" src="subtitles.vtt" srclang="en" label="English"&gt;
+&lt;/video&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Anchor Tags and Links -->
+    <section id="links" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-link"></i> Links and Anchors</h2>
+        <p class="section-subtitle">Create navigation and link to other content</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-anchor"></i></div>
+          <h3>Anchor Tag (&lt;a&gt;)</h3>
+          <p>Create hyperlinks to navigate between pages:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;a href="https://example.com"&gt;Link Text&lt;/a&gt;</div>
+          </div>
+          <p><strong>Structure:</strong></p>
+          <ul class="styled-list">
+            <li><code>&lt;a&gt;</code>: Anchor tag</li>
+            <li><code>href</code>: Destination URL</li>
+            <li>Link text: Clickable content</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-external-link-alt"></i></div>
+          <h3>Link Attributes</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Attribute</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>href</strong></td>
+                  <td>Link destination</td>
+                  <td><code>href="page.html"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>target</strong></td>
+                  <td>Where to open link</td>
+                  <td><code>target="_blank"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>title</strong></td>
+                  <td>Hover tooltip</td>
+                  <td><code>title="Visit site"</code></td>
+                </tr>
+                <tr>
+                  <td><strong>download</strong></td>
+                  <td>Force download</td>
+                  <td><code>download</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-list-alt"></i></div>
+          <h3>Types of Links</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>External</strong></td>
+                  <td><code>&lt;a href="https://google.com"&gt;Google&lt;/a&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Internal</strong></td>
+                  <td><code>&lt;a href="about.html"&gt;About&lt;/a&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Email</strong></td>
+                  <td><code>&lt;a href="mailto:user@example.com"&gt;Email&lt;/a&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Phone</strong></td>
+                  <td><code>&lt;a href="tel:+1234567890"&gt;Call&lt;/a&gt;</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Page Jump</strong></td>
+                  <td><code>&lt;a href="#section"&gt;Go to Section&lt;/a&gt;</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-download"></i></div>
+          <h3>Download Links & File Types</h3>
+          <p>Create download links for various file types:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- PDF download --&gt;
+&lt;a href="document.pdf" download="my-document.pdf"&gt;Download PDF&lt;/a&gt;
+
+&lt;!-- Image download --&gt;
+&lt;a href="photo.jpg" download&gt;Download Image&lt;/a&gt;
+
+&lt;!-- ZIP file --&gt;
+&lt;a href="files.zip" download&gt;Download Archive&lt;/a&gt;
+
+&lt;!-- With file size info --&gt;
+&lt;a href="video.mp4" download&gt;Download Video (25 MB)&lt;/a&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-external-link-alt"></i></div>
+          <h3>Link Security & Performance</h3>
+          <p>Best practices for external links:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Secure external link --&gt;
+&lt;a href="https://external-site.com" 
+   target="_blank" 
+   rel="noopener noreferrer"&gt;
+   External Link
+&lt;/a&gt;
+
+&lt;!-- SEO link attributes --&gt;
+&lt;a href="https://example.com" rel="nofollow"&gt;Sponsored Link&lt;/a&gt;
+&lt;a href="https://example.com" rel="sponsored"&gt;Ad Link&lt;/a&gt;
+
+&lt;!-- Prefetch for performance --&gt;
+&lt;a href="next-page.html" rel="prefetch"&gt;Next Page&lt;/a&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tables and Lists -->
+    <section id="tables" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-table"></i> Tables and Lists</h2>
+        <p class="section-subtitle">Organize and structure your data effectively</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-list-ul"></i></div>
+          <h3>Unordered Lists (&lt;ul&gt;)</h3>
+          <p>Create bulleted lists when order doesn't matter:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;ul&gt;
+  &lt;li&gt;Item 1&lt;/li&gt;
+  &lt;li&gt;Item 2&lt;/li&gt;
+  &lt;li&gt;Item 3&lt;/li&gt;
+&lt;/ul&gt;</div>
+          </div>
+          <p><strong>Use cases:</strong> Navigation menus, feature lists, grocery lists</p>
+        </div>
+
+        <div class=card>
+                   <div class="card-icon"><i class="fas fa-list-ol"></i></div>
+          <h3>Ordered Lists (&lt;ol&gt;)</h3>
+          <p>Create numbered lists when sequence matters:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;ol&gt;
+  &lt;li&gt;First step&lt;/li&gt;
+  &lt;li&gt;Second step&lt;/li&gt;
+  &lt;li&gt;Third step&lt;/li&gt;
+&lt;/ol&gt;</div>
+          </div>
+          <p><strong>Attributes:</strong></p>
+          <ul class="styled-list">
+            <li><code>type</code>: Number style (1, A, a, I, i)</li>
+            <li><code>start</code>: Starting value</li>
+            <li><code>reversed</code>: Count down</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-book"></i></div>
+          <h3>Description Lists (&lt;dl&gt;)</h3>
+          <p>Create term and definition pairs:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;dl&gt;
+  &lt;dt&gt;HTML&lt;/dt&gt;
+  &lt;dd&gt;HyperText Markup Language&lt;/dd&gt;
+  &lt;dt&gt;CSS&lt;/dt&gt;
+  &lt;dd&gt;Cascading Style Sheets&lt;/dd&gt;
+&lt;/dl&gt;</div>
+          </div>
+          <p><strong>Use cases:</strong> Glossaries, FAQs, metadata</p>
+        </div>
+
+       
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-th"></i></div>
+          <h3>Tables (&lt;table&gt;)</h3>
+          <p>Organize data in rows and columns:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Name&lt;/th&gt;
+      &lt;th&gt;Age&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;John&lt;/td&gt;
+      &lt;td&gt;25&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cogs"></i></div>
+          <h3>Table Elements</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Element</th>
+                  <th>Purpose</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>&lt;table&gt;</code></td>
+                  <td>Container for table</td>
+                </tr>
+                <tr>
+                  <td><code>&lt;thead&gt;</code></td>
+                  <td>Table header section</td>
+                </tr>
+                <tr>
+                  <td><code>&lt;tbody&gt;</code></td>
+                  <td>Table body section</td>
+                </tr>
+                <tr>
+                  <td><code>&lt;tr&gt;</code></td>
+                  <td>Table row</td>
+                </tr>
+                <tr>
+                  <td><code>&lt;th&gt;</code></td>
+                  <td>Header cell</td>
+                </tr>
+                <tr>
+                  <td><code>&lt;td&gt;</code></td>
+                  <td>Data cell</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-table"></i></div>
+          <h3>Advanced Table Structure</h3>
+          <p>Create complex tables with semantic structure:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;table class="data-table"&gt;
+  &lt;caption&gt;Sales Report Q4 2023&lt;/caption&gt;
+  &lt;colgroup&gt;
+    &lt;col style="width: 30%"&gt;
+    &lt;col span="3" style="width: 20%"&gt;
+    &lt;col style="width: 10%"&gt;
+  &lt;/colgroup&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;Product&lt;/th&gt;
+      &lt;th scope="col"&gt;October&lt;/th&gt;
+      &lt;th scope="col"&gt;November&lt;/th&gt;
+      &lt;th scope="col"&gt;December&lt;/th&gt;
+      &lt;th scope="col"&gt;Total&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;Laptops&lt;/th&gt;
+      &lt;td&gt;$12,000&lt;/td&gt;
+      &lt;td&gt;$15,000&lt;/td&gt;
+      &lt;td&gt;$18,000&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;$45,000&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;Grand Total&lt;/th&gt;
+      &lt;td colspan="4"&gt;&lt;strong&gt;$45,000&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Responsive Tables</h3>
+          <p>Make tables mobile-friendly:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Scrollable table wrapper --&gt;
+&lt;div class="table-wrapper"&gt;
+  &lt;table&gt;
+    &lt;thead&gt;
+      &lt;tr&gt;
+        &lt;th&gt;Name&lt;/th&gt;
+        &lt;th&gt;Email&lt;/th&gt;
+        &lt;th&gt;Phone&lt;/th&gt;
+        &lt;th&gt;Department&lt;/th&gt;
+      &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;tr&gt;
+        &lt;td data-label="Name"&gt;John Doe&lt;/td&gt;
+        &lt;td data-label="Email"&gt;john@company.com&lt;/td&gt;
+        &lt;td data-label="Phone"&gt;+1234567890&lt;/td&gt;
+        &lt;td data-label="Department"&gt;Engineering&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/tbody&gt;
+  &lt;/table&gt;
+&lt;/div&gt;
+
+&lt;!-- CSS for responsive behavior --&gt;
+&lt;style&gt;
+.table-wrapper {
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .table-wrapper table, thead, tbody, th, td, tr {
+    display: block;
+  }
+  td:before {
+    content: attr(data-label) ": ";
+    font-weight: bold;
+  }
+}
+&lt;/style&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-tasks"></i></div>
+          <h3>Interactive Lists</h3>
+          <p>Create task lists and interactive elements:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Task list with checkboxes --&gt;
+&lt;ul class="task-list"&gt;
+  &lt;li&gt;
+    &lt;input type="checkbox" id="task1" checked&gt;
+    &lt;label for="task1"&gt;Complete HTML tutorial&lt;/label&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;input type="checkbox" id="task2"&gt;
+    &lt;label for="task2"&gt;Learn CSS Grid&lt;/label&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;input type="checkbox" id="task3"&gt;
+    &lt;label for="task3"&gt;Build responsive website&lt;/label&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- Nested navigation menu --&gt;
+&lt;ul class="nav-menu"&gt;
+  &lt;li&gt;
+    &lt;a href="#"&gt;Frontend Development&lt;/a&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;a href="#"&gt;HTML5&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;&lt;a href="#"&gt;CSS3&lt;/a&gt;&lt;/li&gt;
+      &lt;li&gt;
+        &lt;a href="#"&gt;JavaScript&lt;/a&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="#"&gt;ES6+&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;React&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="#"&gt;Vue&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-star"></i></div>
+          <h3>Table Best Practices</h3>
+          <p>Important tips for creating accessible and semantic tables:</p>
+          <ul class="styled-list">
+            <li>Always use <code>&lt;th&gt;</code> for header cells</li>
+            <li>Include <code>scope</code> attributes for complex tables</li>
+            <li>Use <code>&lt;caption&gt;</code> to describe table content</li>
+            <li>Group related rows with <code>&lt;thead&gt;</code>, <code>&lt;tbody&gt;</code>, <code>&lt;tfoot&gt;</code></li>
+            <li>Consider <code>&lt;colgroup&gt;</code> for column styling</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Accessible table example --&gt;
+&lt;table&gt;
+  &lt;caption&gt;Employee Contact Information&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th scope="col"&gt;Name&lt;/th&gt;
+      &lt;th scope="col"&gt;Email&lt;/th&gt;
+      &lt;th scope="col"&gt;Department&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th scope="row"&gt;Sarah Johnson&lt;/th&gt;
+      &lt;td&gt;sarah@company.com&lt;/td&gt;
+      &lt;td&gt;Marketing&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-list-alt"></i></div>
+          <h3>List Styling Examples</h3>
+          <p>Different list types and their styling options:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Custom numbered list --&gt;
+&lt;ol type="A" start="3"&gt;
+  &lt;li&gt;Third item (starts with C)&lt;/li&gt;
+  &lt;li&gt;Fourth item (D)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;!-- Reversed list --&gt;
+&lt;ol reversed&gt;
+  &lt;li&gt;Last step&lt;/li&gt;
+  &lt;li&gt;Second to last&lt;/li&gt;
+  &lt;li&gt;First step&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;!-- Mixed content list --&gt;
+&lt;ul&gt;
+  &lt;li&gt;Text item&lt;/li&gt;
+  &lt;li&gt;
+    &lt;img src="icon.png" alt="Icon"&gt; Item with image
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;strong&gt;Bold item&lt;/strong&gt; with &lt;em&gt;emphasis&lt;/em&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Forms and Input Elements -->
+    <section id="forms" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-wpforms"></i> Forms and Input Elements</h2>
+        <p class="section-subtitle">Collect user input and create interactive experiences</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-file-alt"></i></div>
+          <h3>Form Structure</h3>
+          <p>Forms are containers for collecting user input:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;form action="submit.php" method="post"&gt;
+  &lt;!-- Form elements go here --&gt;
+&lt;/form&gt;</div>
+          </div>
+          <p><strong>Key attributes:</strong></p>
+          <ul class="styled-list">
+            <li><code>action</code>: Where to send form data</li>
+            <li><code>method</code>: HTTP method (GET or POST)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-keyboard"></i></div>
+          <h3>Text Inputs</h3>
+          <p>Various input types for text data:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;input type="text" name="username" placeholder="Username"&gt;
+&lt;input type="password" name="password" placeholder="Password"&gt;
+&lt;input type="email" name="email" placeholder="Email"&gt;
+&lt;input type="number" name="age" min="0" max="100"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+          <h3>Selection Inputs</h3>
+          <p>Radio buttons, checkboxes, and dropdowns:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Radio buttons --&gt;
+&lt;input type="radio" name="gender" value="male"&gt; Male
+&lt;input type="radio" name="gender" value="female"&gt; Female
+
+&lt;!-- Checkboxes --&gt;
+&lt;input type="checkbox" name="hobbies" value="reading"&gt; Reading
+
+&lt;!-- Dropdown --&gt;
+&lt;select name="country"&gt;
+  &lt;option value="us"&gt;United States&lt;/option&gt;
+  &lt;option value="uk"&gt;United Kingdom&lt;/option&gt;
+&lt;/select&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-upload"></i></div>
+          <h3>Advanced Inputs</h3>
+          <p>File uploads, dates, and text areas:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;input type="file" name="resume"&gt;
+&lt;input type="date" name="birthday"&gt;
+&lt;textarea name="message" rows="4" cols="50"&gt;&lt;/textarea&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-paper-plane"></i></div>
+          <h3>Form Buttons</h3>
+          <p>Submit and reset buttons:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;input type="submit" value="Submit Form"&gt;
+&lt;input type="reset" value="Clear Form"&gt;
+&lt;button type="button"&gt;Custom Button&lt;/button&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+          <h3>Input Validation</h3>
+          <p>Built-in validation attributes:</p>
+          <ul class="styled-list">
+            <li><code>required</code>: Makes field mandatory</li>
+            <li><code>readonly</code>: Prevents editing</li>
+            <li><code>disabled</code>: Disables field</li>
+            <li><code>maxlength</code>: Character limit</li>
+            <li><code>min/max</code>: Value range</li>
+            <li><code>pattern</code>: Regex validation</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-tags"></i></div>
+          <h3>Form Labels & Accessibility</h3>
+          <p>Proper labeling for accessibility:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Method 1: Label with for attribute --&gt;
+&lt;label for="username"&gt;Username:*&lt;/label&gt;
+&lt;input type="text" id="username" name="username" required&gt;
+
+&lt;!-- Method 2: Nested label --&gt;
+&lt;label&gt;
+  Email:
+  &lt;input type="email" name="email" required&gt;
+&lt;/label&gt;
+
+&lt;!-- Fieldset for grouping --&gt;
+&lt;fieldset&gt;
+  &lt;legend&gt;Personal Information&lt;/legend&gt;
+  &lt;label for="fname"&gt;First Name:&lt;/label&gt;
+  &lt;input type="text" id="fname" name="firstname"&gt;
+  
+  &lt;label for="lname"&gt;Last Name:&lt;/label&gt;
+  &lt;input type="text" id="lname" name="lastname"&gt;
+&lt;/fieldset&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-check-double"></i></div>
+          <h3>Advanced Input Types</h3>
+          <p>HTML5 input types with built-in validation:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- URL input --&gt;
+&lt;input type="url" name="website" placeholder="https://example.com"&gt;
+
+&lt;!-- Tel input --&gt;
+&lt;input type="tel" name="phone" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"&gt;
+
+&lt;!-- Search input --&gt;
+&lt;input type="search" name="query" placeholder="Search..."&gt;
+
+&lt;!-- Color picker --&gt;
+&lt;input type="color" name="favorite-color" value="#ff0000"&gt;
+
+&lt;!-- Range slider --&gt;
+&lt;input type="range" name="volume" min="0" max="100" value="50"&gt;
+
+&lt;!-- Date and time inputs --&gt;
+&lt;input type="datetime-local" name="appointment"&gt;
+&lt;input type="time" name="alarm"&gt;
+&lt;input type="week" name="vacation-week"&gt;
+&lt;input type="month" name="birth-month"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cog"></i></div>
+          <h3>Form Attributes & Features</h3>
+          <p>Advanced form functionality:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Form with validation --&gt;
+&lt;form action="/submit" method="post" novalidate&gt;
+  &lt;!-- Autocomplete --&gt;
+  &lt;input type="email" name="email" autocomplete="email"&gt;
+  
+  &lt;!-- Input with datalist --&gt;
+  &lt;input list="browsers" name="browser"&gt;
+  &lt;datalist id="browsers"&gt;
+    &lt;option value="Chrome"&gt;
+    &lt;option value="Firefox"&gt;
+    &lt;option value="Safari"&gt;
+    &lt;option value="Edge"&gt;
+  &lt;/datalist&gt;
+  
+  &lt;!-- Multiple file upload --&gt;
+  &lt;input type="file" name="photos" multiple accept="image/*"&gt;
+  
+  &lt;!-- Form validation with pattern --&gt;
+  &lt;input type="text" 
+         name="zipcode" 
+         pattern="[0-9]{5}" 
+         title="5-digit zip code"
+         placeholder="12345"&gt;
+         
+  &lt;!-- Required with custom message --&gt;
+  &lt;input type="email" 
+         name="email" 
+         required 
+         title="Please enter a valid email address"&gt;
+&lt;/form&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Mobile-Friendly Forms</h3>
+          <p>Optimize forms for mobile devices:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Input modes for mobile keyboards --&gt;
+&lt;input type="text" name="name" inputmode="text"&gt;
+&lt;input type="email" name="email" inputmode="email"&gt;
+&lt;input type="tel" name="phone" inputmode="tel"&gt;
+&lt;input type="number" name="amount" inputmode="numeric"&gt;
+&lt;input type="url" name="website" inputmode="url"&gt;
+&lt;input type="search" name="query" inputmode="search"&gt;
+
+&lt;!-- Autocapitalize for text inputs --&gt;
+&lt;input type="text" name="fullname" autocapitalize="words"&gt;
+&lt;textarea name="message" autocapitalize="sentences"&gt;&lt;/textarea&gt;
+
+&lt;!-- Prevent autocorrect for usernames/codes --&gt;
+&lt;input type="text" name="username" autocorrect="off"&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-file-contract"></i></div>
+          <h3>Complete Form Example</h3>
+          <p>A comprehensive contact form with validation:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;form action="/submit" method="post" enctype="multipart/form-data"&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Contact Information&lt;/legend&gt;
+    
+    &lt;label for="fullname"&gt;Full Name *&lt;/label&gt;
+    &lt;input type="text" id="fullname" name="fullname" required 
+           placeholder="Enter your full name"&gt;
+    
+    &lt;label for="email"&gt;Email Address *&lt;/label&gt;
+    &lt;input type="email" id="email" name="email" required
+           placeholder="your.email@example.com"&gt;
+    
+    &lt;label for="phone"&gt;Phone Number&lt;/label&gt;
+    &lt;input type="tel" id="phone" name="phone"
+           pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+           placeholder="123-456-7890"&gt;
+  &lt;/fieldset&gt;
+  
+  &lt;fieldset&gt;
+    &lt;legend&gt;Message Details&lt;/legend&gt;
+    
+    &lt;label for="subject"&gt;Subject&lt;/label&gt;
+    &lt;select id="subject" name="subject" required&gt;
+      &lt;option value=""&gt;Select a topic&lt;/option&gt;
+      &lt;option value="support"&gt;Technical Support&lt;/option&gt;
+      &lt;option value="sales"&gt;Sales Inquiry&lt;/option&gt;
+      &lt;option value="feedback"&gt;Feedback&lt;/option&gt;
+    &lt;/select&gt;
+    
+    &lt;label for="message"&gt;Message *&lt;/label&gt;
+    &lt;textarea id="message" name="message" rows="5" 
+              required placeholder="Type your message here..."&gt;&lt;/textarea&gt;
+    
+    &lt;label for="attachment"&gt;Attachment (optional)&lt;/label&gt;
+    &lt;input type="file" id="attachment" name="attachment"
+           accept=".pdf,.doc,.docx,.txt"&gt;
+  &lt;/fieldset&gt;
+  
+  &lt;label&gt;
+    &lt;input type="checkbox" name="newsletter" value="yes"&gt;
+    Subscribe to our newsletter
+  &lt;/label&gt;
+  
+  &lt;button type="submit"&gt;Send Message&lt;/button&gt;
+  &lt;button type="reset"&gt;Clear Form&lt;/button&gt;
+&lt;/form&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+          <h3>Form Validation Techniques</h3>
+          <p>Client-side validation with HTML5 and custom messages:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Custom validation messages --&gt;
+&lt;input type="email" 
+       name="email" 
+       required 
+       title="Please enter a valid email address"
+       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"&gt;
+
+&lt;!-- Number with range validation --&gt;
+&lt;input type="number" 
+       name="age" 
+       min="18" 
+       max="120" 
+       required
+       title="Age must be between 18 and 120"&gt;
+
+&lt;!-- Password with strength requirements --&gt;
+&lt;input type="password" 
+       name="password" 
+       required
+       minlength="8"
+       pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+       title="Must contain at least one number, one uppercase and lowercase letter, and at least 8 characters"&gt;
+
+&lt;!-- Custom validation with JavaScript --&gt;
+&lt;input type="text" 
+       name="username" 
+       required
+       pattern="[a-zA-Z0-9_-]{3,16}"
+       title="Username must be 3-16 characters long and contain only letters, numbers, underscores, and hyphens"&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Embedding Content -->
+    <section id="embedding" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-code"></i> Embedding Content</h2>
+        <p class="section-subtitle">Include external content and multimedia</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-window-maximize"></i></div>
+          <h3>Iframe (&lt;iframe&gt;)</h3>
+          <p>Embed external websites and services:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;iframe src="https://example.com" 
+        width="600" 
+        height="400"
+        title="External Content"&gt;
+&lt;/iframe&gt;</div>
+          </div>
+          <p><strong>Use cases:</strong> YouTube videos, Google Maps, external tools</p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-file-pdf"></i></div>
+          <h3>Embed (&lt;embed&gt;)</h3>
+          <p>Embed documents and multimedia files:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;embed src="document.pdf" 
+       type="application/pdf" 
+       width="600" 
+       height="400"&gt;</div>
+          </div>
+          <p><strong>Common types:</strong> PDF files, audio/video files, plugins</p>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cube"></i></div>
+          <h3>Object (&lt;object&gt;)</h3>
+          <p>More versatile embedding with fallback content:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;object data="file.pdf" 
+        type="application/pdf" 
+        width="600" 
+        height="400"&gt;
+  &lt;p&gt;PDF cannot be displayed&lt;/p&gt;
+&lt;/object&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-map-marked-alt"></i></div>
+          <h3>Common Embedding Examples</h3>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Content Type</th>
+                  <th>Best Tag</th>
+                  <th>Use Case</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>YouTube Video</td>
+                  <td><code>&lt;iframe&gt;</code></td>
+                  <td>Video tutorials</td>
+                </tr>
+                <tr>
+                  <td>Google Maps</td>
+                  <td><code>&lt;iframe&gt;</code></td>
+                  <td>Location display</td>
+                </tr>
+                <tr>
+                  <td>PDF Document</td>
+                  <td><code>&lt;embed&gt;</code></td>
+                  <td>Document viewer</td>
+                </tr>
+                <tr>
+                  <td>External Website</td>
+                  <td><code>&lt;iframe&gt;</code></td>
+                  <td>Widget integration</td>
+                </tr>
+                <tr>
+                  <td>Media Player</td>
+                  <td><code>&lt;video&gt;</code></td>
+                  <td>Native playback</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+          <h3>Secure Embedding</h3>
+          <p>Security considerations for embedded content:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Secure iframe with sandbox --&gt;
+&lt;iframe src="https://example.com" 
+        sandbox="allow-scripts allow-same-origin"
+        referrerpolicy="no-referrer"
+        loading="lazy"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- CSP-friendly embedding --&gt;
+&lt;iframe src="https://trusted-site.com"
+        sandbox="allow-scripts allow-forms"
+        allow="accelerometer; camera; microphone"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Prevent clickjacking --&gt;
+&lt;iframe src="https://example.com"
+        sandbox="allow-scripts"
+        style="pointer-events: none;"&gt;
+&lt;/iframe&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-video"></i></div>
+          <h3>Modern Media Embedding</h3>
+          <p>Responsive and accessible media:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Responsive YouTube embed --&gt;
+&lt;div class="video-container"&gt;
+  &lt;iframe src="https://www.youtube.com/embed/VIDEO_ID"
+          title="Video Title"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;
+
+&lt;!-- Lazy loading iframe --&gt;
+&lt;iframe src="https://example.com"
+        loading="lazy"
+        width="600"
+        height="400"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Progressive enhancement for PDF --&gt;
+&lt;object data="document.pdf" type="application/pdf"&gt;
+  &lt;iframe src="https://docs.google.com/viewer?url=document.pdf&embedded=true"&gt;
+    &lt;p&gt;
+      &lt;a href="document.pdf"&gt;Download PDF&lt;/a&gt;
+    &lt;/p&gt;
+  &lt;/iframe&gt;
+&lt;/object&gt;
+
+&lt;style&gt;
+.video-container {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+&lt;/style&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>Interactive Embedding</h3>
+          <p>Embed interactive content and widgets:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- CodePen embed --&gt;
+&lt;iframe height="300" 
+        style="width: 100%;" 
+        scrolling="no" 
+        title="Demo" 
+        src="https://codepen.io/username/embed/abcdef"
+        frameborder="no" 
+        loading="lazy"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Google Maps with custom styling --&gt;
+&lt;iframe src="https://www.google.com/maps/embed?pb=..."
+        width="100%" 
+        height="450" 
+        style="border:0;" 
+        allowfullscreen="" 
+        loading="lazy" 
+        referrerpolicy="no-referrer-when-downgrade"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Social media embeds --&gt;
+&lt;blockquote class="twitter-tweet"&gt;
+  &lt;p&gt;Tweet content...&lt;/p&gt;
+  &lt;a href="https://twitter.com/username/status/123"&gt;Link&lt;/a&gt;
+&lt;/blockquote&gt;
+&lt;script async src="https://platform.twitter.com/widgets.js"&gt;&lt;/script&gt;
+
+&lt;!-- Custom widget with fallback --&gt;
+&lt;div class="widget-container"&gt;
+  &lt;iframe src="https://widget.example.com/embed"
+          onload="this.style.visibility='visible'"
+          style="visibility:hidden"&gt;
+    &lt;div class="fallback"&gt;
+      &lt;p&gt;Widget not available. &lt;a href="https://widget.example.com"&gt;Visit directly&lt;/a&gt;&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/iframe&gt;
+&lt;/div&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-chart-bar"></i></div>
+          <h3>Data Visualization Embedding</h3>
+          <p>Embed charts, graphs, and data visualizations:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Google Charts embed --&gt;
+&lt;iframe width="600" height="371" seamless frameborder="0" scrolling="no" 
+        src="https://docs.google.com/spreadsheets/d/spreadsheet-id/pubchart?oid=chart-id&format=interactive"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Tableau Public embed --&gt;
+&lt;div class='tableauPlaceholder' style='position: relative'&gt;
+  &lt;iframe src='https://public.tableau.com/views/dashboard'
+          width='1000' height='827' frameborder='0'&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+&lt;!-- Chart.js canvas (requires JavaScript) --&gt;
+&lt;canvas id="myChart" width="400" height="200"&gt;&lt;/canvas&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/chart.js"&gt;&lt;/script&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+          <h3>Third-Party Service Integration</h3>
+          <p>Embed external services and applications:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Google Calendar embed --&gt;
+&lt;iframe src="https://calendar.google.com/calendar/embed?src=calendar-id"
+        style="border: 0" width="800" height="600" frameborder="0" scrolling="no"&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Calendly scheduling --&gt;
+&lt;div class="calendly-inline-widget" 
+     data-url="https://calendly.com/your-link" 
+     style="min-width:320px;height:630px;"&gt;
+&lt;/div&gt;
+&lt;script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js"&gt;&lt;/script&gt;
+
+&lt;!-- Typeform embed --&gt;
+&lt;div data-tf-widget="typeform-id" data-tf-opacity="100" data-tf-iframe-props="title=Form" 
+     data-tf-transitive-search-params data-tf-medium="snippet" style="width:100%;height:400px;"&gt;
+&lt;/div&gt;
+&lt;script src="//embed.typeform.com/next/embed.js"&gt;&lt;/script&gt;
+
+&lt;!-- PayPal payment button --&gt;
+&lt;div id="paypal-button-container"&gt;&lt;/div&gt;
+&lt;script src="https://www.paypal.com/sdk/js?client-id=your-client-id"&gt;&lt;/script&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-shield-virus"></i></div>
+          <h3>Security & Performance Best Practices</h3>
+          <p>Important considerations when embedding content:</p>
+          <ul class="styled-list">
+            <li><strong>Always validate sources:</strong> Only embed content from trusted domains</li>
+            <li><strong>Use sandbox attributes:</strong> Restrict iframe capabilities</li>
+            <li><strong>Implement CSP:</strong> Content Security Policy headers</li>
+            <li><strong>Loading optimization:</strong> Use lazy loading for performance</li>
+            <li><strong>Fallback content:</strong> Provide alternatives when embedding fails</li>
+            <li><strong>HTTPS only:</strong> Always use secure connections</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Secure iframe with sandbox --&gt;
+&lt;iframe src="https://example.com" 
+        sandbox="allow-scripts allow-same-origin"
+        loading="lazy"
+        referrerpolicy="strict-origin-when-downgrade"
+        allow="accelerometer 'none'; camera 'none'; microphone 'none'"
+        title="Secure embedded content"&gt;
+  &lt;p&gt;Your browser doesn't support iframes. 
+     &lt;a href="https://trusted-domain.com/content"&gt;View content directly&lt;/a&gt;
+  &lt;/p&gt;
+&lt;/iframe&gt;
+
+&lt;!-- Performance-optimized embedding --&gt;
+&lt;div class="embed-container"&gt;
+  &lt;iframe data-src="https://example.com/heavy-content"
+          class="lazy-iframe"
+          loading="lazy"
+          onload="this.style.opacity='1'"
+          style="opacity:0;transition:opacity 0.3s"&gt;
+  &lt;/iframe&gt;
+  &lt;noscript&gt;
+    &lt;iframe src="https://example.com/heavy-content"&gt;&lt;/iframe&gt;
+  &lt;/noscript&gt;
+&lt;/div&gt;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Introduction Section -->
+    <section id="css-intro" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fab fa-css3-alt"></i> CSS Introduction</h2>
+        <p class="section-subtitle">Cascading Style Sheets - The language that styles the web</p>
+      </div>
+      
+      <div class="cards-grid">
+        <!-- New CSS Beginner Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-paint-brush"></i></div>
+          <h3>CSS for Beginners</h3>
+          <p>CSS is like painting and decorating your HTML. Here's how it works:</p>
+          <div class="code-block">
+            <div class="code-content">/* This makes all paragraphs blue */
+p {
+  color: blue;
+}
+
+/* This makes a class called 'highlight' yellow */
+.highlight {
+  background-color: yellow;
+}</div>
+          </div>
+        </div>
+
+        <!-- CSS Quick Tips Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-lightbulb"></i></div>
+          <h3>CSS Quick Tips</h3>
+          <ul class="styled-list">
+            <li>CSS controls how things look</li>
+            <li>You can change colors, sizes, and layouts</li>
+            <li>Use classes to style multiple elements</li>
+            <li>Use IDs to style unique elements</li>
+            <li>Properties: what you want to change</li>
+            <li>Values: how you want to change it</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-info-circle"></i></div>
+          <h3>What is CSS?</h3>
+          <p>CSS (Cascading Style Sheets) is a stylesheet language used to describe the presentation of a document written in HTML. It controls layout, colors, fonts, and visual appearance.</p>
+          <div class="code-block">
+            <div class="code-content">/* CSS Syntax */
+selector {
+  property: value;
+  property: value;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-plus"></i></div>
+          <h3>Adding CSS to HTML</h3>
+          <p>Three ways to include CSS in your HTML:</p>
+          <div class="code-block">
+            <div class="code-content"><!-- 1. External CSS -->
+&lt;link rel="stylesheet" href="styles.css"&gt;
+
+<!-- 2. Internal CSS -->
+&lt;style&gt;
+  body { background: #f0f0f0; }
+&lt;/style&gt;
+
+<!-- 3. Inline CSS -->
+&lt;p style="color: red;"&gt;Red text&lt;/p&gt;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-palette"></i></div>
+          <h3>CSS Properties</h3>
+          <p>Essential CSS properties every developer should know:</p>
+          <ul class="styled-list">
+            <li><strong>color</strong>: Text color</li>
+            <li><strong>background</strong>: Background styling</li>
+            <li><strong>font-size</strong>: Text size</li>
+            <li><strong>margin</strong>: Outer spacing</li>
+            <li><strong>padding</strong>: Inner spacing</li>
+            <li><strong>border</strong>: Element borders</li>
+            <li><strong>display</strong>: Layout behavior</li>
+            <li><strong>position</strong>: Element positioning</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-link"></i></div>
+          <h3>CSS Units</h3>
+          <p>Different units for measurements:</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Unit</th>
+                  <th>Type</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>px</strong></td>
+                  <td>Absolute</td>
+                  <td>Pixels - fixed size</td>
+                </tr>
+                <tr>
+                  <td><strong>%</strong></td>
+                  <td>Relative</td>
+                  <td>Percentage of parent</td>
+                </tr>
+                <tr>
+                  <td><strong>em</strong></td>
+                  <td>Relative</td>
+                  <td>Relative to font size</td>
+                </tr>
+                <tr>
+                  <td><strong>rem</strong></td>
+                  <td>Relative</td>
+                  <td>Relative to root font</td>
+                </tr>
+                <tr>
+                  <td><strong>vh/vw</strong></td>
+                  <td>Viewport</td>
+                  <td>Viewport height/width</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-paint-brush"></i></div>
+          <h3>Colors in CSS</h3>
+          <p>Different ways to specify colors:</p>
+          <div class="code-block">
+            <div class="code-content">/* Color Keywords */
+color: red;
+color: blue;
+
+/* Hexadecimal */
+color: #ff0000;
+color: #00f;
+
+/* RGB */
+color: rgb(255, 0, 0);
+color: rgba(255, 0, 0, 0.5);
+
+/* HSL */
+color: hsl(0, 100%, 50%);
+color: hsla(0, 100%, 50%, 0.5);</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-font"></i></div>
+          <h3>Typography</h3>
+          <p>Styling text with CSS:</p>
+          <div class="code-block">
+            <div class="code-content">/* Font Properties */
+font-family: Arial, sans-serif;
+font-size: 16px;
+font-weight: bold;
+font-style: italic;
+line-height: 1.5;
+letter-spacing: 1px;
+text-align: center;
+text-decoration: underline;
+text-transform: uppercase;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Selectors Section -->
+    <section id="css-selectors" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-crosshairs"></i> CSS Selectors</h2>
+        <p class="section-subtitle">Target specific HTML elements with precision</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-bullseye"></i></div>
+          <h3>Basic Selectors</h3>
+          <p>Fundamental CSS selectors:</p>
+          <div class="code-block">
+            <div class="code-content">/* Element Selector */
+p {
+  color: blue;
+}
+
+/* Class Selector */
+.highlight {
+  background: yellow;
+}
+
+/* ID Selector */
+#header {
+  font-size: 24px;
+}
+
+/* Universal Selector */
+* {
+  margin: 0;
+  padding: 0;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Combinator Selectors</h3>
+          <p>Select elements based on relationships:</p>
+          <div class="code-block">
+            <div class="code-content">/* Descendant Selector */
+div p {
+  color: red;
+}
+
+/* Child Selector */
+div > p {
+  font-weight: bold;
+}
+
+/* Adjacent Sibling */
+h1 + p {
+  margin-top: 0;
+}
+
+/* General Sibling */
+h1 ~ p {
+  color: gray;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-filter"></i></div>
+          <h3>Attribute Selectors</h3>
+          <p>Select elements by their attributes:</p>
+          <div class="code-block">
+            <div class="code-content">/* Has attribute */
+[title] {
+  cursor: help;
+}
+
+/* Exact value */
+[type="text"] {
+  border: 1px solid;
+}
+
+/* Contains value */
+[class*="btn"] {
+  padding: 10px;
+}
+
+/* Starts with */
+[href^="https"] {
+  color: green;
+}
+
+/* Ends with */
+[src$=".jpg"] {
+  border: 2px solid;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-magic"></i></div>
+          <h3>Pseudo-classes</h3>
+          <p>Select elements based on their state:</p>
+          <div class="code-block">
+            <div class="code-content">/* Hover state */
+a:hover {
+  color: red;
+}
+
+/* First child */
+li:first-child {
+  font-weight: bold;
+}
+
+/* Last child */
+li:last-child {
+  margin-bottom: 0;
+}
+
+/* Nth child */
+tr:nth-child(even) {
+  background: #f0f0f0;
+}
+tr:nth-child(odd) {
+  background: white;
+}
+
+/* Focus state */
+input:focus {
+  outline: 2px solid blue;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-puzzle-piece"></i></div>
+          <h3>Pseudo-elements</h3>
+          <p>Style specific parts of elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* ::before and ::after */
+.quote::before {
+  content: '"';
+  font-size: 2em;
+  color: #999;
+}
+
+.quote::after {
+  content: '"';
+  font-size: 2em;
+  color: #999;
+}
+
+/* Create shapes */
+.triangle::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid black;
+}
+
+/* ::first-line and ::first-letter */
+.article::first-line {
+  font-weight: bold;
+  color: #333;
+}
+
+.article::first-letter {
+  font-size: 3em;
+  float: left;
+  margin-right: 0.5em;
+}
+
+/* ::selection */
+::selection {
+  background-color: #007acc;
+  color: white;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+          <h3>Selector Specificity</h3>
+          <p>Understanding CSS specificity hierarchy:</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Selector Type</th>
+                  <th>Specificity</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Inline styles</td>
+                  <td>1000</td>
+                  <td><code>style="color: red"</code></td>
+                </tr>
+                <tr>
+                  <td>IDs</td>
+                  <td>100</td>
+                  <td><code>#header</code></td>
+                </tr>
+                <tr>
+                  <td>Classes</td>
+                  <td>10</td>
+                  <td><code>.nav</code></td>
+                </tr>
+                <tr>
+                  <td>Elements</td>
+                  <td>1</td>
+                  <td><code>div</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Box Model Section -->
+    <section id="css-box-model" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-cube"></i> CSS Box Model</h2>
+        <p class="section-subtitle">Understanding how elements are sized and spaced</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-square"></i></div>
+          <h3>Box Model Components</h3>
+          <p>Every element is a rectangular box with four parts:</p>
+          <ul class="styled-list">
+            <li><strong>Content</strong>: The actual content</li>
+            <li><strong>Padding</strong>: Space inside the element</li>
+            <li><strong>Border</strong>: The border around the element</li>
+            <li><strong>Margin</strong>: Space outside the element</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">/* Box model properties */
+width: 300px;
+height: 200px;
+padding: 20px;
+border: 2px solid black;
+margin: 10px;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-expand-arrows-alt"></i></div>
+          <h3>Margin and Padding</h3>
+          <p>Control spacing around and inside elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* Margin - shorthand */
+margin: 10px;              /* all sides */
+margin: 10px 20px;         /* top/bottom left/right */
+margin: 10px 20px 15px;    /* top left/right bottom */
+margin: 10px 20px 15px 25px; /* top right bottom left */
+
+/* Individual margins */
+margin-top: 10px;
+margin-right: 20px;
+margin-bottom: 15px;
+margin-left: 25px;
+
+/* Padding works the same way */
+padding: 20px;
+padding: 10px 20px;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-border-style"></i></div>
+          <h3>Borders</h3>
+          <p>Add borders around elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* Border shorthand */
+border: 2px solid black;
+
+/* Individual properties */
+border-width: 2px;
+border-style: solid;
+border-color: black;
+
+/* Border styles */
+border-style: solid;    /* solid line */
+border-style: dashed;   /* dashed line */
+border-style: dotted;   /* dotted line */
+border-style: double;   /* double line */
+
+/* Individual borders */
+border-top: 1px solid red;
+border-right: 2px dashed blue;
+border-bottom: 3px dotted green;
+border-left: 4px double yellow;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cog"></i></div>
+          <h3>Box Sizing</h3>
+          <p>Control how the total size is calculated:</p>
+          <div class="code-block">
+            <div class="code-content">/* Default box-sizing: content-box */
+/* Total width = width + padding + border */
+.content-box {
+  width: 300px;
+  padding: 20px;
+  border: 5px solid;
+  /* Total width = 300 + 40 + 10 = 350px */
+}
+
+/* Alternative: border-box */
+/* Total width = width (includes padding and border) */
+.border-box {
+  box-sizing: border-box;
+  width: 300px;
+  padding: 20px;
+  border: 5px solid;
+  /* Total width = 300px */
+}
+
+/* Apply to all elements */
+* {
+  box-sizing: border-box;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-arrows-alt-h"></i></div>
+          <h3>Width and Height</h3>
+          <p>Control element dimensions:</p>
+          <div class="code-block">
+            <div class="code-content">/* Fixed dimensions */
+width: 300px;
+height: 200px;
+
+/* Percentage dimensions */
+width: 50%;
+height: 100vh;
+
+/* Min and max dimensions */
+min-width: 200px;
+max-width: 800px;
+min-height: 100px;
+max-height: 500px;
+
+/* Auto sizing */
+width: auto;    /* default */
+height: auto;   /* default */</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-compress-arrows-alt"></i></div>
+          <h3>Margin Collapse</h3>
+          <p>Understanding vertical margin behavior:</p>
+          <div class="code-block">
+            <div class="code-content">/* Margin collapse example */
+.box1 {
+  margin-bottom: 20px;
+}
+
+.box2 {
+  margin-top: 30px;
+}
+
+/* Resulting margin between boxes: 30px (not 50px) */
+/* The larger margin wins */
+
+/* Prevent margin collapse */
+.parent {
+  padding: 1px; /* or border */
+}
+
+.parent {
+  overflow: hidden; /* creates BFC */
+}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Layout Section -->
+    <section id="css-layout" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-th"></i> CSS Layout</h2>
+        <p class="section-subtitle">Positioning and arranging elements on the page</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-eye"></i></div>
+          <h3>Display Property</h3>
+          <p>Control how elements are displayed:</p>
+          <div class="code-block">
+            <div class="code-content">/* Block elements */
+display: block;     /* takes full width */
+
+/* Inline elements */
+display: inline;    /* flows with text */
+
+/* Inline-block */
+display: inline-block; /* inline but can have width/height */
+
+/* Hide elements */
+display: none;      /* completely hidden */
+
+/* Table display */
+display: table;
+display: table-cell;
+display: table-row;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-map-pin"></i></div>
+          <h3>Position Property</h3>
+          <p>Control element positioning:</p>
+          <div class="code-block">
+            <div class="code-content">/* Static positioning (default) */
+position: static;
+
+/* Relative positioning */
+position: relative;
+top: 10px;
+left: 20px;
+
+/* Absolute positioning */
+position: absolute;
+top: 0;
+right: 0;
+
+/* Fixed positioning */
+position: fixed;
+bottom: 20px;
+right: 20px;
+
+/* Sticky positioning */
+position: sticky;
+top: 0;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Z-Index</h3>
+          <p>Control stacking order of positioned elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* Higher z-index appears on top */
+.modal {
+  position: fixed;
+  z-index: 1000;
+}
+
+.overlay {
+  position: fixed;
+  z-index: 999;
+}
+
+.header {
+  position: relative;
+  z-index: 100;
+}
+
+/* Negative z-index goes behind */
+.background {
+  position: absolute;
+  z-index: -1;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-water"></i></div>
+          <h3>Float and Clear</h3>
+          <p>Legacy layout technique (now replaced by Flexbox/Grid):</p>
+          <div class="code-block">
+            <div class="code-content">/* Float elements */
+.left-column {
+  float: left;
+  width: 70%;
+}
+
+.right-sidebar {
+  float: right;
+  width: 30%;
+}
+
+/* Clear floats */
+.clearfix::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Modern alternative: Use Flexbox instead */
+.container {
+  display: flex;
+}
+
+.main { flex: 70%; }
+.sidebar { flex: 30%; }</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-center-align"></i></div>
+          <h3>Centering Elements</h3>
+          <p>Different ways to center content:</p>
+          <div class="code-block">
+            <div class="code-content">/* Horizontal centering */
+.text-center {
+  text-align: center; /* for inline content */
+}
+
+.block-center {
+  width: 300px;
+  margin: 0 auto; /* for block elements */
+}
+
+/* Vertical centering with Flexbox */
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Absolute centering */
+.absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-columns"></i></div>
+          <h3>Multi-Column Layout</h3>
+          <p>Create newspaper-style columns:</p>
+          <div class="code-block">
+            <div class="code-content">/* Multi-column layout */
+.article {
+  column-count: 3;
+  column-gap: 2em;
+  column-rule: 1px solid #ccc;
+}
+
+/* Column width instead of count */
+.responsive-columns {
+  column-width: 250px;
+  column-gap: 1.5em;
+}
+
+/* Prevent breaks inside elements */
+.no-break {
+  break-inside: avoid;
+}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Flexbox Section -->
+    <section id="css-flexbox" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-arrows-alt"></i> CSS Flexbox</h2>
+        <p class="section-subtitle">Flexible box layout for modern responsive design</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-expand"></i></div>
+          <h3>Flexbox Basics</h3>
+          <p>Create flexible layouts with ease:</p>
+          <div class="code-block">
+            <div class="code-content">/* Make container a flex container */
+.container {
+  display: flex;
+}
+
+/* Flex direction */
+.container {
+  flex-direction: row;        /* default */
+  flex-direction: column;
+  flex-direction: row-reverse;
+  flex-direction: column-reverse;
+}
+
+/* Flex wrap */
+.container {
+  flex-wrap: nowrap;   /* default */
+  flex-wrap: wrap;
+  flex-wrap: wrap-reverse;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-align-justify"></i></div>
+          <h3>Main Axis Alignment</h3>
+          <p>Control alignment along the main axis:</p>
+          <div class="code-block">
+            <div class="code-content">/* Justify content (main axis) */
+.container {
+  justify-content: flex-start;   /* default */
+  justify-content: flex-end;
+  justify-content: center;
+  justify-content: space-between;
+  justify-content: space-around;
+  justify-content: space-evenly;
+}
+
+/* Visual examples:
+flex-start:    [1][2][3]------
+center:        ---[1][2][3]---
+space-between: [1]----[2]----[3]
+space-around:  -[1]--[2]--[3]-
+space-evenly:  --[1]--[2]--[3]--
+*/</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-align-center"></i></div>
+          <h3>Cross Axis Alignment</h3>
+          <p>Control alignment along the cross axis:</p>
+          <div class="code-block">
+            <div class="code-content">/* Align items (cross axis) */
+.container {
+  align-items: stretch;      /* default */
+  align-items: flex-start;
+  align-items: flex-end;
+  align-items: center;
+  align-items: baseline;
+}
+
+/* Align individual item */
+.item {
+  align-self: flex-start;
+  align-self: center;
+  align-self: flex-end;
+  align-self: stretch;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-expand-arrows-alt"></i></div>
+          <h3>Flex Item Properties</h3>
+          <p>Control how flex items grow and shrink:</p>
+          <div class="code-block">
+            <div class="code-content">/* Flex grow - how much to grow */
+.item1 { flex-grow: 1; }     /* grows 1 unit */
+.item2 { flex-grow: 2; }     /* grows 2 units */
+
+/* Flex shrink - how much to shrink */
+.item { flex-shrink: 1; }    /* default */
+.item { flex-shrink: 0; }    /* don't shrink */
+
+/* Flex basis - initial size */
+.item { flex-basis: 200px; }
+.item { flex-basis: 30%; }
+
+/* Flex shorthand */
+.item { flex: 1; }           /* flex: 1 1 0 */
+.item { flex: 0 0 200px; }   /* fixed width */
+.item { flex: none; }        /* don't flex */</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-grip-lines"></i></div>
+          <h3>Common Flexbox Patterns</h3>
+          <p>Practical flexbox layouts:</p>
+          <div class="code-block">
+            <div class="code-content">/* Horizontal navigation */
+.nav {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Centered content */
+.hero {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Sidebar layout */
+.layout {
+  display: flex;
+}
+.sidebar { flex: 0 0 250px; }
+.main { flex: 1; }
+
+/* Card grid */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.card { flex: 1 1 300px; }</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Responsive Flexbox</h3>
+          <p>Flexbox for responsive design:</p>
+          <div class="code-block">
+            <div class="code-content">/* Responsive navigation */
+.nav {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .nav {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+/* Responsive grid */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.grid-item {
+  flex: 1 1 100%;  /* mobile: full width */
+}
+
+@media (min-width: 768px) {
+  .grid-item { flex: 1 1 calc(50% - 0.5rem); }
+}
+
+@media (min-width: 1024px) {
+  .grid-item { flex: 1 1 calc(33.333% - 0.667rem); }
+}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Grid Section -->
+    <section id="css-grid" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-th-large"></i> CSS Grid</h2>
+        <p class="section-subtitle">Two-dimensional layout system for complex designs</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-grid-3x3"></i></div>
+          <h3>Grid Basics</h3>
+          <p>Create powerful two-dimensional layouts:</p>
+          <div class="code-block">
+            <div class="code-content">/* Make container a grid */
+.container {
+  display: grid;
+}
+
+/* Define columns */
+.container {
+  grid-template-columns: 200px 1fr 100px;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Define rows */
+.container {
+  grid-template-rows: 100px auto 50px;
+  grid-template-rows: repeat(3, 100px);
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-th"></i></div>
+          <h3>Grid Template Areas</h3>
+          <p>Named grid areas for semantic layouts:</p>
+          <div class="code-block">
+            <div class="code-content">/* Define grid template */
+.container {
+  display: grid;
+  grid-template-areas:
+    "header header header"
+    "sidebar main main"
+    "footer footer footer";
+  grid-template-columns: 200px 1fr 1fr;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* Assign areas to items */
+.header { grid-area: header; }
+.sidebar { grid-area: sidebar; }
+.main { grid-area: main; }
+.footer { grid-area: footer; }</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-arrows-alt"></i></div>
+          <h3>Grid Item Placement</h3>
+          <p>Position items precisely in the grid:</p>
+          <div class="code-block">
+            <div class="code-content">/* Grid line placement */
+.item1 {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  grid-row-start: 1;
+  grid-row-end: 2;
+}
+
+/* Shorthand */
+.item2 {
+  grid-column: 1 / 3;  /* start / end */
+  grid-row: 2 / 4;
+}
+
+/* Span syntax */
+.item3 {
+  grid-column: span 2;  /* span 2 columns */
+  grid-row: span 3;     /* span 3 rows */
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-expand-arrows-alt"></i></div>
+          <h3>Grid Gaps and Alignment</h3>
+          <p>Control spacing and alignment:</p>
+          <div class="code-block">
+            <div class="code-content">/* Grid gaps */
+.container {
+  gap: 1rem;                /* both row and column */
+  row-gap: 1rem;           /* row gap only */
+  column-gap: 2rem;        /* column gap only */
+}
+
+/* Align entire grid */
+.container {
+  justify-content: center; /* horizontal */
+  align-content: center;   /* vertical */
+}
+
+/* Align individual items */
+.container {
+  justify-items: center;   /* horizontal */
+  align-items: center;     /* vertical */
+}
+
+/* Align individual item */
+.item {
+  justify-self: start;
+  align-self: end;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-magic"></i></div>
+          <h3>Grid Auto Properties</h3>
+          <p>Control automatic placement and sizing:</p>
+          <div class="code-block">
+            <div class="code-content">/* Auto rows and columns */
+.container {
+  grid-auto-rows: 100px;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: row; /* or column */
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Responsive Grid Layouts</h3>
+          <p>Grid layouts that adapt to screen size:</p>
+          <div class="code-block">
+            <div class="code-content">/* Mobile-first grid */
+.layout {
+  display: grid;
+  grid-template-areas:
+    "header"
+    "main"
+    "sidebar"
+    "footer";
+  gap: 1rem;
+}
+
+/* Tablet layout */
+@media (min-width: 768px) {
+  .layout {
+    grid-template-areas:
+      "header header"
+      "main sidebar"
+      "footer footer";
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Desktop layout */
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-areas:
+      "header header header"
+      "sidebar main main"
+      "footer footer footer";
+    grid-template-columns: 250px 1fr 1fr;
+  }
+}
+</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Responsive Design Section -->
+    <section id="css-responsive" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-mobile-alt"></i> Responsive Design</h2>
+        <p class="section-subtitle">Create websites that work on all devices</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-desktop"></i></div>
+          <h3>Media Queries</h3>
+          <p>Apply styles based on device characteristics:</p>
+          <div class="code-block">
+            <div class="code-content">/* Basic media query */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+}
+
+/* Min-width (mobile-first) */
+@media (min-width: 768px) {
+  .sidebar {
+    display: block;
+  }
+}
+
+/* Range queries */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-arrows-alt-h"></i></div>
+          <h3>Common Breakpoints</h3>
+          <p>Standard responsive breakpoints:</p>
+          <div class="code-block">
+            <div class="code-content">/* Mobile devices */
+@media (max-width: 480px) { }
+
+/* Tablets */
+@media (min-width: 481px) and (max-width: 768px) { }
+
+/* Small laptops */
+@media (min-width: 769px) and (max-width: 1024px) { }
+
+/* Desktops */
+@media (min-width: 1025px) and (max-width: 1200px) { }
+
+/* Large screens */
+@media (min-width: 1201px) { }
+
+/* Modern approach with em units */
+@media (min-width: 30em) { }    /* 480px */
+@media (min-width: 48em) { }    /* 768px */
+@media (min-width: 64em) { }    /* 1024px */</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-expand-arrows-alt"></i></div>
+          <h3>Responsive Units</h3>
+          <p>Units that scale with the viewport:</p>
+          <div class="code-block">
+            <div class="code-content">/* Viewport units */
+.hero {
+  height: 100vh;    /* 100% of viewport height */
+  width: 100vw;     /* 100% of viewport width */
+}
+
+.sidebar {
+  width: 25vw;      /* 25% of viewport width */
+  min-height: 50vh; /* 50% of viewport height */
+}
+
+/* Relative units */
+.text {
+  font-size: 1.2rem;   /* relative to root font size */
+  margin: 1em;         /* relative to element font size */
+  width: 80%;          /* relative to parent width */
+}
+
+/* Modern viewport units */
+.mobile-header {
+  height: 100dvh;   /* dynamic viewport height */
+  width: 100svw;    /* small viewport width */
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-images"></i></div>
+          <h3>Responsive Images</h3>
+          <p>Images that adapt to different screens:</p>
+          <div class="code-block">
+            <div class="code-content">/* Basic responsive image */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive background images */
+.hero {
+  background-image: url('mobile.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    background-image: url('tablet.jpg');
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    background-image: url('desktop.jpg');
+  }
+}
+
+/* Responsive images with srcset */
+/* Use in HTML:
+<img src="small.jpg" 
+     srcset="small.jpg 300w, 
+             medium.jpg 600w, 
+             large.jpg 1200w"
+     sizes="(max-width: 600px) 300px,
+            (max-width: 1200px) 600px,
+            1200px"
+     alt="Responsive image">
+*/</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-font"></i></div>
+          <h3>Responsive Typography</h3>
+          <p>Text that scales smoothly across devices:</p>
+          <div class="code-block">
+            <div class="code-content">/* Fluid typography with clamp() */
+h1 {
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  /* min: 1.5rem, preferred: 4vw, max: 3rem */
+}
+
+/* Media query approach */
+.title {
+  font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .title {
+    font-size: 2.5rem;
+  }
+}
+
+/* Scale everything proportionally */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html { font-size: 16px; }
+}
+
+@media (min-width: 1024px) {
+  html { font-size: 18px; }
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile"></i></div>
+          <h3>Mobile-First Approach</h3>
+          <p>Design for mobile devices first, then enhance:</p>
+          <div class="code-block">
+            <div class="code-content">/* Mobile-first base styles */
+.container {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  display: none; /* hidden on mobile */
+}
+
+.nav-toggle {
+  display: block;
+}
+
+/* Enhance for larger screens */
+@media (min-width: 768px) {
+  .container {
+    padding: 2rem;
+    flex-direction: row;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .nav {
+    display: flex;
+  }
+  
+  .nav-toggle {
+    display: none;
+  }
+}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CSS Animations Section -->
+    <section id="css-animations" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-magic"></i> CSS Animations</h2>
+        <p class="section-subtitle">Bring your designs to life with motion</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-arrow-right"></i></div>
+          <h3>CSS Transitions</h3>
+          <p>Smooth changes between property values:</p>
+          <div class="code-block">
+            <div class="code-content">/* Basic transition */
+.button {
+  background-color: blue;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: red;
+}
+
+/* Multiple properties */
+.card {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.card:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* All properties */
+.element {
+  transition: all 0.3s ease-in-out;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cog"></i></div>
+          <h3>Transition Properties</h3>
+          <p>Fine-tune your transitions:</p>
+          <div class="code-block">
+            <div class="code-content">/* Transition properties */
+.element {
+  transition-property: transform;     /* what to animate */
+  transition-duration: 0.5s;         /* how long */
+  transition-timing-function: ease;   /* easing function */
+  transition-delay: 0.1s;            /* delay before start */
+}
+
+/* Timing functions */
+transition-timing-function: ease;        /* default */
+transition-timing-function: linear;
+transition-timing-function: ease-in;
+transition-timing-function: ease-out;
+transition-timing-function: ease-in-out;
+
+/* Custom cubic-bezier */
+transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+/* Steps */
+transition-timing-function: steps(4, end);</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-play"></i></div>
+          <h3>CSS Keyframe Animations</h3>
+          <p>Create complex, multi-step animations:</p>
+          <div class="code-block">
+            <div class="code-content">/* Define keyframes */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Multi-step animation */
+@keyframes bounce {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-20px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+/* Apply animation */
+.element {
+  animation: slideIn 0.5s ease-out;
+}
+
+.bouncing {
+  animation: bounce 1s infinite;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-sliders-h"></i></div>
+          <h3>Animation Properties</h3>
+          <p>Control animation behavior:</p>
+          <div class="code-block">
+            <div class="code-content">/* Animation shorthand */
+.element {
+  animation: name duration timing-function delay iteration-count direction fill-mode;
+}
+
+/* Individual properties */
+.element {
+  animation-name: slideIn;
+  animation-duration: 1s;
+  animation-timing-function: ease-in-out;
+  animation-delay: 0.5s;
+  animation-iteration-count: infinite; /* or number */
+  animation-direction: alternate;       /* or reverse, alternate-reverse */
+  animation-fill-mode: forwards;        /* or backwards, both */
+  animation-play-state: paused;         /* or running */
+}
+
+/* Multiple animations */
+.element {
+  animation: slideIn 1s ease-out, fadeIn 0.5s ease-in 0.5s;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cube"></i></div>
+          <h3>Transform Functions</h3>
+          <p>Transform elements in 2D and 3D space:</p>
+          <div class="code-block">
+            <div class="code-content">/* 2D Transforms */
+transform: translate(50px, 100px);      /* move */
+transform: translateX(50px);
+transform: translateY(100px);
+
+transform: scale(1.5);                  /* resize */
+transform: scaleX(0.5);
+transform: scaleY(2);
+
+transform: rotate(45deg);               /* rotate */
+transform: skew(30deg, 20deg);          /* skew */
+
+/* 3D Transforms */
+transform: translateZ(50px);
+transform: rotateX(45deg);
+transform: rotateY(45deg);
+transform: rotateZ(45deg);
+
+/* Multiple transforms */
+transform: translateX(50px) rotate(45deg) scale(1.2);
+
+/* Transform origin */
+transform-origin: center;               /* default */
+transform-origin: top left;
+transform-origin: 50% 50%;
+transform-origin: 10px 20px;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-star"></i></div>
+          <h3>Common Animation Patterns</h3>
+          <p>Useful animation examples:</p>
+          <div class="code-block">
+            <div class="code-content">/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide up */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Pulse */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Advanced CSS Section -->
+    <section id="css-advanced" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-star"></i> Advanced CSS</h2>
+        <p class="section-subtitle">Master advanced techniques and modern CSS features</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-palette"></i></div>
+          <h3>CSS Custom Properties (Variables)</h3>
+          <p>Create reusable values throughout your CSS:</p>
+          <div class="code-block">
+            <div class="code-content">/* Define custom properties */
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --font-size-large: 2rem;
+  --spacing-unit: 1rem;
+  --border-radius: 8px;
+}
+
+/* Use custom properties */
+.button {
+  background-color: var(--primary-color);
+  font-size: var(--font-size-large);
+  padding: var(--spacing-unit);
+  border-radius: var(--border-radius);
+}
+
+/* Fallback values */
+.element {
+  color: var(--text-color, #333);
+}
+
+/* Dynamic updates with JavaScript */
+document.documentElement.style.setProperty('--primary-color', '#e74c3c');</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-calculator"></i></div>
+          <h3>CSS Functions</h3>
+          <p>Built-in functions for calculations and values:</p>
+          <div class="code-block">
+            <div class="code-content">/* calc() - calculations */
+.element {
+  width: calc(100% - 2rem);
+  height: calc(100vh - 60px);
+  margin: calc(1rem + 5px);
+}
+
+/* min() and max() */
+.responsive {
+  width: min(90%, 1200px);      /* smaller of the two */
+  font-size: max(1rem, 4vw);    /* larger of the two */
+}
+
+/* clamp() - constrained values */
+.title {
+  font-size: clamp(1rem, 4vw, 3rem);
+  /* min: 1rem, preferred: 4vw, max: 3rem */
+}
+
+/* Other functions */
+.element {
+  transform: rotate(calc(var(--rotation) * 1deg));
+  background: url('image.jpg');
+  color: hsl(var(--hue), 70%, 50%);
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>CSS Pseudo-elements</h3>
+          <p>Style specific parts of elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* ::before and ::after */
+.quote::before {
+  content: '"';
+  font-size: 2em;
+  color: #999;
+}
+
+.quote::after {
+  content: '"';
+  font-size: 2em;
+  color: #999;
+}
+
+/* Create shapes */
+.triangle::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid black;
+}
+
+/* ::first-line and ::first-letter */
+.article::first-line {
+  font-weight: bold;
+  color: #333;
+}
+
+.article::first-letter {
+  font-size: 3em;
+  float: left;
+  margin-right: 0.5em;
+}
+
+/* ::selection */
+::selection {
+  background-color: #007acc;
+  color: white;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-magic"></i></div>
+          <h3>CSS Filters and Effects</h3>
+          <p>Apply visual effects to elements:</p>
+          <div class="code-block">
+            <div class="code-content">/* Filter functions */
+.image {
+  filter: blur(5px);
+  filter: brightness(1.5);
+  filter: contrast(200%);
+  filter: grayscale(100%);
+  filter: hue-rotate(90deg);
+  filter: invert(100%);
+  filter: opacity(50%);
+  filter: saturate(200%);
+  filter: sepia(100%);
+}
+
+/* Multiple filters */
+.photo {
+  filter: brightness(1.2) contrast(1.1) saturate(1.3);
+}
+
+/* Backdrop filter */
+.modal {
+  backdrop-filter: blur(10px) brightness(0.8);
+}
+
+/* Drop shadow */
+.card {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+/* Hover effects */
+.image:hover {
+  filter: grayscale(0%) brightness(1.1);
+  transition: filter 0.3s ease;
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-shapes"></i></div>
+          <h3>CSS Shapes and Clip Path</h3>
+          <p>Create custom shapes and clipping paths:</p>
+          <div class="code-block">
+            <div class="code-content">/* Clip path shapes */
+.circle {
+  clip-path: circle(50% at center);
+}
+
+.triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.hexagon {
+  clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+}
+
+/* Custom polygon */
+.custom-shape {
+  clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
+}
+
+/* Shape outside (for text wrapping) */
+.float-element {
+  float: left;
+  width: 200px;
+  height: 200px;
+  shape-outside: circle(50%);
+  clip-path: circle(50%);
+}
+
+/* Mask */
+.masked {
+  mask: linear-gradient(45deg, transparent 40%, black 60%);
+}</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-mobile-alt"></i></div>
+          <h3>Modern CSS Features</h3>
+          <p>Cutting-edge CSS features for modern browsers:</p>
+          <div class="code-block">
+            <div class="code-content">/* Container queries */
+@container (min-width: 400px) {
+  .card {
+    display: flex;
+  }
+}
+
+/* Logical properties */
+.element {
+  margin-inline-start: 1rem;    /* margin-left in LTR */
+  margin-inline-end: 1rem;      /* margin-right in LTR */
+  margin-block-start: 2rem;     /* margin-top */
+  margin-block-end: 2rem;       /* margin-bottom */
+}
+
+/* Scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+.scrollable {
+  scroll-snap-type: y mandatory;
+}
+
+.section {
+  scroll-snap-align: start;
+}
+
+/* Aspect ratio */
+.video-container {
+  aspect-ratio: 16 / 9;
+}
+
+/* CSS nesting (future) */
+.card {
+  padding: 1rem;
+  
+  & .title {
+    font-size: 1.5rem;
+    
+    &:hover {
+      color: blue;
+    }
+  }
+}</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-rocket"></i></div>
+          <h3>Performance Optimization</h3>
+          <p>CSS techniques for better performance:</p>
+          <div class="code-block">
+            <div class="code-content">/* Efficient animations */
+.element {
+  /* Use transform and opacity for smooth animations */
+  transform: translateX(0);
+  opacity: 1;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* GPU acceleration */
+.accelerated {
+  transform: translateZ(0); /* or translate3d(0,0,0) */
+  will-change: transform;   /* hint to browser */
+}
+
+/* Contain layout shifts */
+.container {
+  contain: layout style;
+}
+
+/* Critical CSS inlining */
+/* Inline critical above-the-fold CSS */
+/* Load non-critical CSS asynchronously */
+
+/* Minimize reflows */
+.efficient {
+  /* Batch DOM reads and writes */
+  /* Use transform instead of changing position */
+  /* Avoid complex selectors */
+}
+
+/* CSS loading optimization */
+/* <link rel="preload" href="critical.css" as="style"> */
+/* <link rel="stylesheet" href="non-critical.css" media="print" onload="this.media='all'"> */</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-tools"></i></div>
+          <h3>CSS Methodologies</h3>
+          <p>Organizational approaches for scalable CSS:</p>
+          <div class="code-block">
+            <div class="code-content">/* BEM (Block Element Modifier) */
+.card { }                    /* Block */
+.card__title { }            /* Element */
+.card__title--large { }     /* Modifier */
+.card--featured { }         /* Block modifier */
+
+/* OOCSS (Object-Oriented CSS) */
+.media { }                  /* Structure */
+.media-object { }           /* Content */
+
+/* Atomic CSS / Utility-first */
+.text-center { text-align: center; }
+.p-4 { padding: 1rem; }
+.bg-blue { background-color: blue; }
+
+/* CSS Modules */
+.button { }                 /* Scoped to component */
+:global(.global-style) { }  /* Global scope */
+
+/* CSS-in-JS example structure */
+const Button = styled.button`
+  background: ${props => props.primary ? 'blue' : 'gray'};
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+`;</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-graduation-cap"></i></div>
+          <h3>CSS Best Practices</h3>
+          <p>Guidelines for writing maintainable CSS:</p>
+          <ul class="styled-list">
+            <li><strong>Use consistent naming conventions</strong> (BEM, camelCase, etc.)</li>
+            <li><strong>Organize CSS logically</strong> (base, components, utilities)</li>
+            <li><strong>Avoid !important</strong> unless absolutely necessary</li>
+            <li><strong>Use shorthand properties</strong> when appropriate</li>
+            <li><strong>Comment complex code</strong> and document decisions</li>
+            <li><strong>Minimize nesting depth</strong> (max 3-4 levels)</li>
+            <li><strong>Use CSS custom properties</strong> for reusable values</li>
+            <li><strong>Test across browsers</strong> and devices</li>
+            <li><strong>Optimize for performance</strong> (critical CSS, minification)</li>
+            <li><strong>Use a CSS linter</strong> (stylelint) for consistency</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- JavaScript Introduction Section -->
+    <section id="js-intro-basics" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fab fa-js"></i> JavaScript Introduction</h2>
+        <p class="section-subtitle">JavaScript helps to create interactive and dynamic content on websites</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Basic JavaScript Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>What is JavaScript?</h3>
+          <p>JavaScript is a programming language that enables interactive web content like:</p>
+          <ul class="styled-list">
+            <li>Dynamic HTML updates</li>
+            <li>User interaction handling</li>
+            <li>Form validation</li>
+            <li>Animations and effects</li>
+            <li>Data manipulation</li>
+          </ul>
+        </div>
+
+        <!-- Development Environment Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-laptop-code"></i></div>
+          <h3>Development Environment</h3>
+          <p>You can write and run JavaScript code using:</p>
+          <ul class="styled-list">
+            <li><strong>Browser Console:</strong> Press F12 or right-click and select "Inspect" to open DevTools</li>
+            <li><strong>Text Editor/IDE:</strong> Use Visual Studio Code or similar for writing scripts</li>
+            <li><strong>Online Playgrounds:</strong> Try CodePen or JSFiddle for quick experiments</li>
+          </ul>
+        </div>
+
+        <!-- Getting Started Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-play"></i></div>
+          <h3>Getting Started</h3>
+          <p>Add JavaScript to your HTML:</p>
+          <div class="code-block">
+            <div class="code-content">&lt;!-- Internal JavaScript --&gt;
+&lt;script&gt;
+  console.log("Hello World!");
+&lt;/script&gt;
+
+&lt;!-- External JavaScript --&gt;
+&lt;script src="script.js"&gt;&lt;/script&gt;</div>
+          </div>
+        </div>
+
+        <!-- Basic Syntax Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>Basic Syntax</h3>
+          <p>Key points about JavaScript syntax:</p>
+          <ul class="styled-list">
+            <li>Statements end with semicolons (;)</li>
+            <li>Case sensitivity matters (e.g., name vs Name)</li>
+            <li>Comments use // or /* */</li>
+            <li>Code blocks are enclosed in curly braces {}</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// Single line comment
+/* Multi-line
+   comment */</div>
+          </div>
+        </div>
+
+        <!-- Variables Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-box"></i></div>
+          <h3>Variables: let, const, var</h3>
+          <p>Variables store data values:</p>
+          <ul class="styled-list">
+            <li><code>let</code> allows declaring variables that can be changed later</li>
+            <li><code>const</code> declares variables with values that cannot be reassigned</li>
+            <li><code>var</code> is an older way to declare variables (less commonly used now)</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// Using let for variables that can change
+let age = 25;
+console.log(age);
+
+// Using const for variables that won't change
+const birthYear = 2000;
+console.log(birthYear);
+
+// var is older syntax but still works
+var city = "New York";
+console.log(city);</div>
+          </div>
+        </div>
+
+        <!-- Data Types Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cube"></i></div>
+          <h3>Data Types</h3>
+          <p>Explore basic kinds of data in JavaScript:</p>
+          <ul class="styled-list">
+            <li><code>String</code>: text enclosed in quotes, e.g., "hello"</li>
+            <li><code>Number</code>: integers and decimals, e.g., 42 or 3.14</li>
+            <li><code>Boolean</code>: true or false values</li>
+            <li><code>Null</code>: represents "no value"</li>
+            <li><code>Undefined</code>: a variable declared but not assigned a value</li>
+            <li><code>Object</code>: complex data structures, introduced in later weeks</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">let name = "Alice";        // String
+let price = 19.99;         // Number (decimal)
+let isAvailable = true;    // Boolean
+let emptyValue = null;     // Null
+let notDefined;            // Undefined (no value assigned yet)
+
+console.log(name, price, isAvailable, emptyValue, notDefined);</div>
+          </div>
+        </div>
+
+        <!-- Basic Operators Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-calculator"></i></div>
+          <h3>Basic Operators and Expressions</h3>
+          <p>Learn how to manipulate data with operators:</p>
+          <ul class="styled-list">
+            <li>Arithmetic operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>)</li>
+            <li>Assignment operators (<code>=</code>, <code>+=</code>, <code>-=</code>)</li>
+            <li>Comparison operators (<code>==</code>, <code>===</code>, <code>!=</code>, <code>!==</code>, <code>></code>, <code><</code>)</li>
+            <li>Logical operators (<code>&&</code> for AND, <code>||</code> for OR, <code>!</code> for NOT)</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">let a = 10, b = 5;
+
+console.log(a + b);  // Addition: 15
+console.log(a - b);  // Subtraction: 5
+console.log(a * b);  // Multiplication: 50
+console.log(a / b);  // Division: 2
+console.log(a % b);  // Modulus (Remainder): 0
+console.log(a = = b);  // false (equality)
+console.log(a ! = b);  // true (not equal)
+console.log(a > b);   // true (greater than)
+console.log(a < b);   // false (less than)
+
+// Logical operators
+console.log(a > 5 && b < 10);  // true (AND)
+console.log(a > 15 || b < 10); // true (OR)
+console.log(!(a = = b));         // true (NOT)
+
+// Hello World program
+console.log("Hello, World!");  // Prints: Hello, World!
+
+// Case sensitivity example
+let name = "John";
+let Name = "Jane";  // Different variable</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conditional Statements Section -->
+    <section id="js-conditionals" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-code-branch"></i> Conditional Statements</h2>
+        <p class="section-subtitle">Control the flow of your program with conditional statements</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- If Statements Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-random"></i></div>
+          <h3>If Statements</h3>
+          <p>Execute code based on specific conditions using if, else if, and else statements.</p>
+          <div class="code-block">
+            <div class="code-content">let age = 18;
+
+// Basic if statement
+if (age >= 18) {
+    console.log("You are an adult");
+} else {
+    console.log("You are a minor");
+}
+
+// if-else if-else
+let score = 85;
+if (score >= 90) {
+    console.log("Grade: A");
+} else if (score >= 80) {
+    console.log("Grade: B");
+} else {
+    console.log("Grade: C or below");
+}</div>
+          </div>
+          <ul class="styled-list">
+            <li>Use <code>if</code> for a single condition</li>
+            <li>Add <code>else if</code> for additional conditions</li>
+            <li>Use <code>else</code> for all other cases</li>
+            <li>Conditions must be boolean or evaluate to boolean</li>
+          </ul>
+        </div>
+
+        <!-- Loops Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-sync"></i></div>
+          <h3>Loops</h3>
+          <p>Loops execute the same block of code repeatedly based on conditions:</p>
+          <ul class="styled-list">
+            <li><code>for</code> loop: Used when the number of iterations is known</li>
+            <li><code>while</code> loop: Repeats while a condition is true</li>
+            <li><code>do-while</code> loop: Executes once before checking the condition</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// For loop to print numbers 1 to 5
+for (let i = 1; i <= 5; i++) {
+  console.log(i);
+}
+
+// While loop
+let n = 1;
+while (n <= 5) {
+  console.log(n);
+  n++;
+}
+
+// Do-while loop
+let m = 1;
+do {
+  console.log(m);
+  m++;
+} while (m <= 5);</div>
+          </div>
+        </div>
+
+        <!-- Arrays Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Arrays</h3>
+          <p>Arrays store multiple values in a single variable:</p>
+          <ul class="styled-list">
+            <li>Ordered collection of values</li>
+            <li>Zero-based indexing</li>
+            <li>Can store mixed data types</li>
+            <li>Dynamic length</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// Create an array
+let fruits = ["apple", "banana", "cherry"];
+console.log(fruits[0]);  // apple
+console.log(fruits.length); // 3
+
+// Add element
+fruits.push("date");
+console.log(fruits);
+
+// Loop through array
+for (let i = 0; i < fruits.length; i++) {
+  console.log(fruits[i]);
+}</div>
+          </div>
+        </div>
+
+        <!-- Objects Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cube"></i></div>
+          <h3>Objects</h3>
+          <p>Objects store data as key-value pairs:</p>
+          <ul class="styled-list">
+            <li>Properties defined as key-value pairs</li>
+            <li>Access values using dot notation or brackets</li>
+            <li>Great for representing real-world entities</li>
+            <li>Keys must be unique within an object</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// Create an object
+let person = {
+  name: "Alice",
+  age: 30,
+  city: "New York"
+};
+
+console.log(person.name);    // Alice
+console.log(person["age"]); // 30</div>
+          </div>
+        </div>
+
+        <!-- Type Conversion Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+          <h3>Type Conversion and Coercion</h3>
+          <p>JavaScript can convert values from one type to another:</p>
+          <ul class="styled-list">
+            <li><strong>Type Coercion:</strong> Automatic type conversion</li>
+            <li><strong>Type Conversion:</strong> Explicit conversion using methods</li>
+            <li>Different operators can cause different coercion rules</li>
+          </ul>
+          <div class="code-block">
+            <div class="code-content">// Type coercion (automatic)
+console.log("5" + 2);  // "52" (string concatenation)
+console.log("5" - 2);  // 3 (string converted to number)
+
+// Explicit type conversion
+console.log(Number("5"));  // 5
+console.log(String(5));    // "5"
+console.log(Boolean(0));   // false (explicit conversion)
+console.log(Boolean(1));   // true
+console.log(Boolean(""));  // false
+console.log(Boolean("hi")); // true</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Functions and Scope Section -->
+    <section id="js-functions-scope" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-cube"></i> Functions and Scope</h2>
+        <p class="section-subtitle">Functions are reusable blocks of code designed to perform a specific task</p>
+      </div>
+
+      <div class="cards-grid">
+        <!-- Function Basics Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cube"></i></div>
+          <h3>Function Basics</h3>
+          <p>Functions are building blocks of reusable code:</p>
+          <div class="code-block">
+            <div class="code-content">// Function Declaration
+function greet(name) {
+    return "Hello, " + name + "!");
+}
+
+// Function Expression
+const add = function(a, b) {
+    return a + b;
+};
+
+// Arrow Function
+const multiply = (x, y) => x * y;
+
+// Calling Functions
+console.log(greet("John"));     // Hello, John!
+console.log(add(5, 3));         // 8
+console.log(multiply(4, 2));    // 8</div>
+          </div>
+        </div>
+
+        <!-- Parameters and Arguments Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+          <h3>Parameters and Arguments</h3>
+          <p>Functions can take inputs (parameters) and return outputs:</p>
+          <div class="code-block">
+            <div class="code-content">// Parameters with default values
+function welcome(name = "Guest") {
+    return `Welcome, ${name}!`;
+}
+
+// Multiple parameters
+function calculateArea(length, width) {
+    return length * width;
+}
+
+// Rest parameters
+function sum(...numbers) {
+    return numbers.reduce((total, num) => total + num, 0);
+}
+
+console.log(welcome());              // Welcome, Guest!
+console.log(calculateArea(5, 3));    // 15
+console.log(sum(1, 2, 3, 4));       // 10</div>
+          </div>
+        </div>
+
+        <!-- Function Scope Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-layer-group"></i></div>
+          <h3>Function Scope</h3>
+          <p>Understanding variable scope in functions:</p>
+          <div class="code-block">
+            <div class="code-content">// Global scope
+let globalVar = "I'm global";
+
+function testScope() {
+    // Function scope
+    let localVar = "I'm local";
+    console.log(globalVar);  // Accessible
+    console.log(localVar);   // Accessible
+}
+
+// Block scope
+if (true) {
+    let blockVar = "I'm block-scoped";
+}
+// console.log(blockVar); // Error: blockVar is not defined</div>
+          </div>
+        </div>
+
+        <!-- Closures Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-lock"></i></div>
+          <h3>Closures</h3>
+          <p>Functions that remember their outer scope:</p>
+          <div class="code-block">
+            <div class="code-content">function createCounter() {
+    let count = 0;
+    return {
+        increment: function() {
+            count++;
+            return count;
+        },
+        getCount: function() {
+            return count;
+        }
+    };
+}
+
+const counter = createCounter();
+console.log(counter.increment()); // 1
+console.log(counter.increment()); // 2
+console.log(counter.getCount()); // 2</div>
+          </div>
+        </div>
+
+        <!-- Advanced Functions Card -->
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code-branch"></i></div>
+          <h3>Advanced Function Concepts</h3>
+          <p>Higher-order functions and callbacks:</p>
+          <div class="code-block">
+            <div class="code-content">// Higher-order function
+function operateOnNumbers(a, b, operation) {
+    return operation(a, b);
+}
+
+// Callback functions
+const add = (x, y) => x + y;
+const subtract = (x, y) => x - y;
+
+console.log(operateOnNumbers(5, 3, add));      // 8
+console.log(operateOnNumbers(5, 3, subtract)); // 2
+
+// Array methods with callbacks
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(num => num * 2);
+const evens = numbers.filter(num => num % 2 === 0);</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Advanced Concepts Section -->
+    <section id="js-advanced" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-brain"></i> Advanced Concepts</h2>
+        <p class="section-subtitle">Advanced concepts that build on basics, including objects, ES6+ features, asynchronous programming, modules, and DOM manipulation</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-cubes"></i></div>
+          <h3>Objects, Methods, and Prototypes</h3>
+          <p>Objects can have methods and inherit properties through prototypes:</p>
+          <div class="code-block">
+            <div class="code-content">// Object with methods
+const person = {
+  name: "Alice",
+  age: 25,
+  greet: function() {
+    console.log("Hello, " + this.name);
+  }
+};
+
+person.greet();  // Output: Hello, Alice
+
+// Constructor function
+function Animal(name) {
+  this.name = name;
+}
+
+// Adding method to prototype
+Animal.prototype.speak = function() {
+  console.log(this.name + " makes a sound");
+};
+
+// Inheritance
+function Dog(name, breed) {
+  Animal.call(this, name);  // Call parent constructor
+  this.breed = breed;
+}
+
+// Set up prototype chain
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
+
+// Add method specific to Dog
+Dog.prototype.bark = function() {
+  console.log("Woof!");
+};
+
+const rex = new Dog("Rex", "German Shepherd");
+rex.speak();  // Rex makes a sound
+rex.bark();   // Woof!</div>
+          </div>
+          <ul class="styled-list">
+            <li>Objects can have methods (functions as properties)</li>
+            <li>Prototypes enable inheritance between objects</li>
+            <li>Constructor functions create object templates</li>
+            <li>The <code>this</code> keyword refers to the current object</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>ES6+ Features</h3>
+          <p>Modern JavaScript introduces convenient syntax and features:</p>
+          <div class="code-block">
+            <div class="code-content">// Destructuring
+const [a, b] = [1, 2];
+const {name, age} = {name: "Bob", age: 30};
+console.log(a, b);       // 1 2
+console.log(name, age);  // Bob 30
+
+// Spread and Rest operators
+const arr1 = [1, 2];
+const arr2 = [...arr1, 3, 4];
+console.log(arr2);  // [1, 2, 3, 4]
+
+function sum(...numbers) {
+  return numbers.reduce((acc, curr) => acc + curr, 0);
+}
+console.log(sum(1,2,3));  // 6
+
+// Template literals
+const name = "Alice";
+console.log(`Hello, ${name}!`); // Hello, Alice!</div>
+          </div>
+          <ul class="styled-list">
+            <li>Destructuring extracts values from arrays/objects</li>
+            <li>Spread operator (...) expands elements</li>
+            <li>Rest parameters gather remaining arguments</li>
+            <li>Template literals enable string interpolation</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-clock"></i></div>
+          <h3>Asynchronous JavaScript</h3>
+          <p>Handle operations that take time without blocking code execution:</p>
+          <div class="code-block">
+            <div class="code-content">// Promise example
+function fetchData() {
+  return new Promise(resolve => {
+    setTimeout(() => resolve("Data received"), 1000);
+  });
+}
+
+fetchData().then(data => console.log(data));
+
+// Using async/await
+async function getData() {
+  const result = await fetchData();
+  console.log(result);
+}
+
+getData();
+
+// Error handling with try/catch
+async function fetchWithError() {
+  try {
+    const data = await fetchData();
+    console.log(data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}</div>
+          </div>
+          <ul class="styled-list">
+            <li>Callbacks: Functions passed as arguments</li>
+            <li>Promises: Handle future values</li>
+            <li>async/await: Write cleaner async code</li>
+            <li>Error handling with try/catch</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-code"></i></div>
+          <h3>Modules and Import/Export</h3>
+          <p>Organize code into separate files:</p>
+          <div class="code-block">
+            <div class="code-content">// math.js - Exporting
+export function add(a, b) {
+  return a + b;
+}
+
+export const PI = 3.14159;
+
+export default class Calculator {
+  multiply(a, b) {
+    return a * b;
+  }
+}
+
+// main.js - Importing
+import Calculator, { add, PI } from './math.js';
+
+console.log(add(2, 3));      // 5
+console.log(PI);             // 3.14159
+
+const calc = new Calculator();
+console.log(calc.multiply(4, 2));  // 8</div>
+          </div>
+          <ul class="styled-list">
+            <li>Use <code>export</code> to share code</li>
+            <li>Use <code>import</code> to use exported code</li>
+            <li>One default export per module</li>
+            <li>Multiple named exports allowed</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-sitemap"></i></div>
+          <h3>DOM Manipulation and Events</h3>
+          <p>Interact with HTML elements using JavaScript:</p>
+          <div class="code-block">
+            <div class="code-content">// Selecting elements
+const element = document.getElementById('demo');
+const elements = document.querySelectorAll('.item');
+
+// Modifying content
+element.textContent = 'New text';
+element.innerHTML = '<strong>Bold text</strong>';
+
+// Event handling
+document.getElementById("myBtn").addEventListener("click", function() {
+  document.getElementById("demo").textContent = "Button clicked!";
+});
+
+// Creating elements
+const div = document.createElement('div');
+div.textContent = 'New element';
+document.body.appendChild(div);
+
+// Modifying styles
+element.style.color = 'blue';
+element.classList.add('highlight');</div>
+          </div>
+          <ul class="styled-list">
+            <li>Select elements using query methods</li>
+            <li>Modify content and attributes</li>
+            <li>Handle user interactions with events</li>
+            <li>Create and modify DOM elements</li>
+          </ul>
+        </div>
+      
+    </section>
+
+    <!-- Practical Applications & Projects Section -->
+    <section id="js-projects" class="section">
+      <div class="section-header">
+        <h2 class="section-title"><i class="fas fa-tools"></i> Practical Applications & Projects</h2>
+        <p class="section-subtitle">Build interactive web applications while managing data and network communication effectively</p>
+      </div>
+            <div class="cards-grid">
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+          <h3>JSON and AJAX Basics</h3>
+          <p>Understanding data interchange formats and asynchronous requests:</p>
+          <div class="code-block">
+            <div class="code-content">// JSON (JavaScript Object Notation)
+const user = {
+  "name": "Alice",
+  "age": 25,
+  "email": "alice@example.com"
+};
+console.log(user.name);  // Alice
+
+// Converting between JSON and JavaScript objects
+const userString = JSON.stringify(user);  // Convert to JSON string
+console.log(userString);  // {"name":"Alice","age":25,"email":"alice@example.com"}
+
+const userObject = JSON.parse(userString);  // Convert back to JavaScript object
+console.log(userObject.email);  // alice@example.com
+
+// AJAX using Fetch API
+fetch('https://jsonplaceholder.typicode.com/users/1')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));
+
+// AJAX with async/await
+async function fetchUser() {
+  try {
+    const response = await fetch('https://jsonplaceholder.typicode.com/users/1');
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+fetchUser();
+</div>
+          </div>
+          <ul class="styled-list">
+            <li>JSON is a lightweight data interchange format</li>
+            <li>Use <code>JSON.stringify()</code> to convert objects to JSON strings</li>
+            <li>Use <code>JSON.parse()</code> to parse JSON strings into objects</li>
+            <li>Fetch API provides a modern way to make HTTP requests</li>
+            <li>Async/await makes asynchronous code more readable</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-database"></i></div>
+          <h3>Browser Storage APIs</h3>
+          <p>Store data locally in the user's browser:</p>
+          <div class="code-block">
+            <div class="code-content">// localStorage - persists even after browser is closed
+// Store data
+localStorage.setItem("username", "Alice");
+localStorage.setItem("isLoggedIn", "true");
+
+// Retrieve data
+const username = localStorage.getItem("username");
+console.log(username);  // Alice
+
+// Remove single item
+localStorage.removeItem("username");
+
+// Clear all stored data
+localStorage.clear();
+
+// sessionStorage - clears when browser session ends
+sessionStorage.setItem("tempData", "Session value");
+console.log(sessionStorage.getItem("tempData"));
+
+// Store complex data (objects/arrays)
+const user = { name: "Bob", age: 25, roles: ["admin", "editor"] };
+localStorage.setItem("user", JSON.stringify(user));
+
+// Retrieve and parse complex data
+const storedUser = JSON.parse(localStorage.getItem("user"));
+console.log(storedUser.name);  // Bob
+console.log(storedUser.roles[0]);  // admin</div>
+          </div>
+          <ul class="styled-list">
+            <li><code>localStorage</code>: Persists even after browser is closed</li>
+            <li><code>sessionStorage</code>: Clears when browser session ends</li>
+            <li>Only stores strings (use JSON for complex data)</li>
+            <li>Storage limit is typically around 5-10MB</li>
+            <li>Useful for user preferences, form data, authentication tokens</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-clipboard-list"></i></div>
+          <h3>Simple To-Do List</h3>
+          <p>Build a basic to-do list application:</p>
+          <div class="code-block">
+            <div class="code-content">
+
+// JavaScript Implementation
+
+document.addEventListener('DOMContentLoaded', () => {
+  const taskInput = document.getElementById('taskInput');
+  const addBtn = document.getElementById('addBtn');
+  const taskList = document.getElementById('taskList');
+  
+  // Load tasks from localStorage
+  const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+  
+  // Display saved tasks
+  savedTasks.forEach(task => {
+    addTaskToDOM(task);
+  });
+  
+  // Add task button click handler
+  addBtn.addEventListener('click', () => {
+    addNewTask();
+  });
+  
+  // Enter key handler
+  taskInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addNewTask();
+    }
+  });
+  
+  // Add new task function
+  function addNewTask() {
+    const taskText = taskInput.value.trim();
+    if (taskText) {
+      // Add to DOM
+      addTaskToDOM(taskText);
+      
+      // Save to localStorage
+      savedTasks.push(taskText);
+      localStorage.setItem('tasks', JSON.stringify(savedTasks));
+      
+      // Clear input
+      taskInput.value = '';
+      taskInput.focus();
+    }
+  }
+  
+  // Add task to DOM function
+  function addTaskToDOM(text) {
+    const li = document.createElement('li');
+    li.textContent = text;
+    
+    // Add delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = '✖';
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.addEventListener('click', () => {
+      // Remove from DOM
+      li.remove();
+      
+      // Remove from array and localStorage
+      const taskIndex = savedTasks.indexOf(text);
+      if (taskIndex > -1) {
+        savedTasks.splice(taskIndex, 1);
+        localStorage.setItem('tasks', JSON.stringify(savedTasks));
+      }
+    });
+    
+    // Add completion toggle
+    li.addEventListener('click', function(e) {
+      if (e.target !== deleteBtn) {
+        this.classList.toggle('completed');
+      }
+    });
+    
+    li.appendCh ild(deleteBtn);
+    taskList.appendChild(li);
+  }
+});</div>
+          </div>
+          <ul class="styled-list">
+            <li>Demonstrates DOM manipulation with JavaScript</li>
+            <li>Uses event listeners for user interactions</li>
+            <li>Implements localStorage for data persistence</li>
+            <li>Includes task completion and deletion functionality</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-calculator"></i></div>
+          <h3>Simple Calculator</h3>
+          <p>Create a basic calculator application:</p>
+          <div class="code-block">
+            <div class="code-content">// HTML Structure
+
+
+// JavaScript Implementation
+document.addEventListener('DOMContentLoaded', () => {
+  const display = document.getElementById('display');
+  const numberButtons = document.querySelectorAll('.number');
+  const operatorButtons = document.querySelectorAll('.operator');
+  const equalsButton = document.querySelector('.equals');
+  const clearButton = document.querySelector('.clear');
+  
+  let currentInput = '';
+  let previousInput = '';
+  let operation = undefined;
+  
+  // Number button click handlers
+  numberButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      appendNumber(button.textContent);
+      updateDisplay();
+    });
+  });
+  
+  // Operator button click handlers
+  operatorButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      chooseOperation(button.textContent);
+      updateDisplay();
+    });
+  });
+  
+  // Equals button handler
+  equalsButton.addEventListener('click', () => {
+    calculate();
+    updateDisplay();
+  });
+  
+  // Clear button handler
+  clearButton.addEventListener('click', () => {
+    clear();
+    updateDisplay();
+  });
+  
+  function appendNumber(number) {
+    // Prevent multiple decimal points
+    if (number === '.' && currentInput.includes('.')) return;
+    currentInput = currentInput.toString() + number.toString();
+  }
+  
+  function chooseOperation(selectedOperation) {
+    if (currentInput === '') return;
+    
+    if (previousInput !== '') {
+      calculate();
+    }
+    
+    operation = selectedOperation;
+    previousInput = currentInput;
+    currentInput = '';
+  }
+  
+  function calculate() {
+    let computation;
+    const prev = parseFloat(previousInput);
+    const current = parseFloat(currentInput);
+    
+    if (isNaN(prev) || isNaN(current)) return;
+    
+    switch (operation) {
+      case '+':
+        computation = prev + current;
+        break;
+      case '-':
+        computation = prev - current;
+        break;
+      case '*':
+        computation = prev * current;
+        break;
+      case '/':
+        computation = prev / current;
+        break;
+      default:
+        return;
+    }
+    
+    currentInput = computation;
+    operation = undefined;
+    previousInput = '';
+  }
+  
+  function clear() {
+    currentInput = '';
+    previousInput = '';
+    operation = undefined;
+  }
+  
+  function updateDisplay() {
+    display.value = currentInput;
+  }
+});</div>
+          </div>
+          <ul class="styled-list">
+            <li>Implements a simple calculator with basic operations</li>
+            <li>Demonstrates event handling for multiple elements</li>
+            <li>Shows how to manage application state</li>
+            <li>Handles user input validation</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-icon"><i class="fas fa-check-square"></i></div>
+          <h3>JavaScript Best Practices</h3>
+          <p>Guidelines for writing clean, maintainable JavaScript code:</p>
+          <div class="code-block">
+            <div class="code-content">// Use meaningful variable and function names
+const userProfile = {
+  firstName: "John",
+  lastName: "Doe",
+  getFullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+};
+
+// Use modern variable declarations
+// Good:
+const PI = 3.14159;  // For values that won't change
+let score = 0;      // For values that will change
+// Avoid:
+var oldWay = "don't use this";  // Old syntax with scope issues
+
+// Keep functions small and focused
+function validateEmail(email) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
+function validateForm() {
+  const email = document.getElementById("email").value;
+  const isValid = validateEmail(email);
+  // Handle validation result...
+}
+
+// Consistent formatting
+// Good - consistent indentation and spacing
+function calculateTotal(items) {
+  let sum = 0;
+  for (let i = 0; i < items.length; i++) {
+    sum += items[i].price;
+  }
+  return sum;
+}
+
+// Use comments for complex logic
+function getDaysBetween(startDate, endDate) {
+  // Convert both dates to milliseconds
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  
+  // Calculate the difference in milliseconds
+  const diffMs = Math.abs(end - start);
+  
+  // Convert milliseconds to days
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+// Use modern JavaScript features
+// Template literals
+const greeting = `Hello ${user.name}!`;
+
+// Arrow functions
+const double = x => x * 2;
+
+// Destructuring
+const { name, age } = user;
+const [first, second] = array;</div>
+          </div>
+          <ul class="styled-list">
+            <li>Use meaningful names for variables and functions</li>
+            <li>Prefer <code>const</code> and <code>let</code> over <code>var</code></li>
+            <li>Keep functions small and focused on a single task</li>
+            <li>Use consistent code formatting and indentation</li>
+            <li>Add comments for complex logic or important decisions</li>
+            <li>Avoid global variables when possible</li>
+            <li>Embrace modern JavaScript features (ES6+)</li>
+          </ul>
+        </div>
+     
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <h3><i class="fas fa-graduation-cap"></i> You've Mastered HTML & CSS!</h3>
+    <p>Congratulations on completing this comprehensive HTML and CSS guide. You now have the foundation to build amazing websites and web applications. Keep practicing and exploring advanced topics!</p>
+    
+    <div class="social-links">
+      <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+      <a href="#" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+      <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+      <a href="#" title="Email"><i class="fas fa-envelope"></i></a>
+    </div>
+
+    <p>&copy; 2025 Complete HTML, CSS and JavaScript Learning Guide | Crafted with 💙 by <strong> Syraa Corp </strong></p>
+  </footer>
+
+
+  <script>
+    // Progress Bar Animation
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.pageYOffset;
+      const docHeight = document.body.offsetHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+      document.getElementById('progressBar').style.width = scrollPercent + '%';
+    });
+
+    // Navbar Scroll Effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.getElementById('navbar');
+      if (window.scrollY > 100) {
+        navbar.classList.add('scrolled');
+      } else {
+        navbar.classList.remove('scrolled');
+      }
+    });
+
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarToggleExpand = document.getElementById('sidebarToggleExpand');
+    const sidebarOpen = document.getElementById('sidebarOpen');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const tabHeaders = document.querySelectorAll('.tab-header');
+    
+    // Toggle sidebar expand/collapse
+    sidebarToggleExpand.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+    
+    // Open sidebar
+    sidebarOpen.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      sidebarOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      // Ensure sidebar is expanded when opened
+      sidebar.classList.remove('collapsed');
+    });
+
+    // Close sidebar
+    function closeSidebar() {
+      sidebar.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    sidebarToggle.addEventListener('click', closeSidebar);
+    sidebarOverlay.addEventListener('click', closeSidebar);
+
+    // Tab functionality
+    tabHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const tabId = header.getAttribute('data-tab');
+        const tabContent = document.getElementById(tabId + '-content');
+        
+        // Toggle active state
+        if (header.classList.contains('active')) {
+          header.classList.remove('active');
+          tabContent.classList.remove('active');
+        } else {
+          // Close other tabs
+          tabHeaders.forEach(h => h.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          
+          // Open selected tab
+          header.classList.add('active');
+          tabContent.classList.add('active');
+          
+          // Populate sidebar navigation based on selected tab
+          if (tabId === 'css') {
+            const cssNav = document.querySelector('#css-content .sidebar-nav');
+            cssNav.innerHTML = `
+              <li><a href="#css-intro" data-section="css-intro"><i class="fas fa-paint-brush"></i> Introduction</a></li>
+              <li><a href="#css-selectors" data-section="css-selectors"><i class="fas fa-crosshairs"></i> Selectors</a></li>
+              <li><a href="#css-box-model" data-section="css-box-model"><i class="fas fa-cube"></i> Box Model</a></li>
+              <li><a href="#css-layout" data-section="css-layout"><i class="fas fa-th"></i> Layout</a></li>
+              <li><a href="#css-flexbox" data-section="css-flexbox"><i class="fas fa-arrows-alt"></i> Flexbox</a></li>
+              <li><a href="#css-grid" data-section="css-grid"><i class="fas fa-th-large"></i> Grid</a></li>
+              <li><a href="#css-responsive" data-section="css-responsive"><i class="fas fa-mobile-alt"></i> Responsive Design</a></li>
+              <li><a href="#css-animations" data-section="css-animations"><i class="fas fa-magic"></i> Animations</a></li>
+              <li><a href="#css-advanced" data-section="css-advanced"><i class="fas fa-star"></i> Advanced CSS</a></li>
+            `;
+            
+            // Add event listeners for navigation
+            document.querySelectorAll('#css-content .sidebar-nav a').forEach(link => {
+              link.addEventListener('click', () => {
+                closeSidebar();
+                const targetSection = document.querySelector(link.getAttribute('href'));
+                if (targetSection) {
+                  targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              });
+            });
+          } else if (tabId === 'html') {
+            const htmlNav = document.querySelector('#html-content .sidebar-nav');
+            htmlNav.innerHTML = `
+              <li><a href="#intro" data-section="intro"><i class="fas fa-play-circle"></i> Introduction</a></li>
+              <li><a href="#head" data-section="head"><i class="fas fa-cog"></i> Head & Meta</a></li>
+              <li><a href="#attributes" data-section="attributes"><i class="fas fa-sliders-h"></i> Attributes</a></li>
+              <li><a href="#elements" data-section="elements"><i class="fas fa-th-large"></i> Elements</a></li>
+              <li><a href="#media" data-section="media"><i class="fas fa-photo-video"></i> Media</a></li>
+              <li><a href="#links" data-section="links"><i class="fas fa-link"></i> Links</a></li>
+              <li><a href="#tables" data-section="tables"><i class="fas fa-table"></i> Tables & Lists</a></li>
+              <li><a href="#forms" data-section="forms"><i class="fas fa-wpforms"></i> Forms</a></li>
+              <li><a href="#embedding" data-section="embedding"><i class="fas fa-code"></i> Embedding</a></li>
+            `;
+            
+            // Add event listeners for navigation
+            document.querySelectorAll('#html-content .sidebar-nav a').forEach(link => {
+              link.addEventListener('click', () => {
+                closeSidebar();
+                const targetSection = document.querySelector(link.getAttribute('href'));
+                if (targetSection) {
+                  targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              });
+            });
+          } else if (tabId === 'javascript') {
+            const jsNav = document.querySelector('#javascript-content .sidebar-nav');
+                       jsNav.innerHTML = `
+              <li><a href="#js-intro-basics" data-section="js-intro-basics"><i class="fab fa-js"></i> Introduction</a></li>
+              <li><a href="#js-conditionals" data-section="js-conditionals"><i class="fas fa-code-branch"></i> Conditionals & Loops</a></li>
+              <li><a href="#js-functions-scope" data-section="js-functions-scope"><i class="fas fa-cube"></i> Functions & Scope</a></li>
+              <li><a href="#js-advanced" data-section="js-advanced"><i class="fas fa-brain"></i> Advanced Concepts</a></li>
+              <li><a href="#js-projects" data-section="js-projects"><i class="fas fa-tools"></i> Projects</a></li>
+            `;
+            
+            // Add event listeners for navigation
+            document.querySelectorAll('#javascript-content .sidebar-nav a').forEach(link => {
+              link.addEventListener('click', () => {
+                closeSidebar();
+                const targetSection = document.querySelector(link.getAttribute('href'));
+                if (targetSection) {
+                  targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              });
+            });
+          }
+        }
+      });
+    });
+
+    // Initialize HTML tab by default
+    document.querySelector('.tab-header[data-tab="html"]').click();
+
+    // Close sidebar when clicking on navigation links
+    document.querySelectorAll('.sidebar-nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        closeSidebar();
+      });
+    });
+  </script>
+</body>
+</html>
+
