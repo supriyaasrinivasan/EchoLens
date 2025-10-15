@@ -20,7 +20,10 @@ import {
   RiSunLine, 
   RiMoonLine, 
   RiArrowDownSLine, 
-  RiArrowRightSLine 
+  RiArrowRightSLine,
+  RiSparklingFill,
+  RiHomeLine,
+  RiDashboardLine
 } from '@remixicon/react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
@@ -242,12 +245,28 @@ const Dashboard = () => {
       {/* Sidebar */}
       <div className="sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-icon">✨</span>
-          <h1>SupriAI</h1>
-          <p className="sidebar-tagline">Your AI Mirror</p>
+          <div className="sidebar-brand">
+            <RiSparklingFill size={28} className="sidebar-icon" />
+            <div className="sidebar-brand-text">
+              <h1>SupriAI</h1>
+              <p className="sidebar-tagline">Your AI Mirror</p>
+            </div>
+          </div>
         </div>
 
         <nav className="sidebar-nav">
+          {/* Dashboard Home */}
+          <div className="nav-section">
+            <button 
+              className={`nav-item nav-item-featured ${view === 'welcome' ? 'active' : ''}`}
+              onClick={() => setView('welcome')}
+              title="Dashboard Home"
+            >
+              <RiDashboardLine size={20} />
+              <span>Dashboard</span>
+            </button>
+          </div>
+
           {/* PersonaSync Section */}
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setPersonaSyncOpen(!personaSyncOpen)}>
@@ -351,18 +370,30 @@ const Dashboard = () => {
         {/* Header */}
         <div className="content-header">
           <div className="header-left">
-            <h2 className="page-title">
-              {view === 'welcome' && '🏠 Dashboard'}
-              {view === 'mindsync' && '💭 MindSync Dashboard'}
-              {view === 'personality' && '🪞 Personality Snapshots'}
-              {view === 'evolution' && '🌱 Interest Evolution'}
-              {view === 'goals' && '🎯 Goal Alignment'}
-              {view === 'twin' && '🧠 Digital Twin'}
-              {view === 'map' && '🗺️ Knowledge Map'}
-              {view === 'list' && '📚 Memory Library'}
-              {view === 'timeline' && '📅 Memory Timeline'}
-              {view === 'insights' && '✨ AI Insights'}
-            </h2>
+            <div className="page-title-wrapper">
+              {view === 'welcome' && <RiHomeLine size={24} className="page-title-icon" />}
+              {view === 'mindsync' && <RiHeartLine size={24} className="page-title-icon" />}
+              {view === 'personality' && <RiUserLine size={24} className="page-title-icon" />}
+              {view === 'evolution' && <RiLineChartLine size={24} className="page-title-icon" />}
+              {view === 'goals' && <RiTargetLine size={24} className="page-title-icon" />}
+              {view === 'twin' && <RiBrainLine size={24} className="page-title-icon" />}
+              {view === 'map' && <RiMapPinLine size={24} className="page-title-icon" />}
+              {view === 'list' && <RiListCheck size={24} className="page-title-icon" />}
+              {view === 'timeline' && <RiCalendarLine size={24} className="page-title-icon" />}
+              {view === 'insights' && <RiSparklingLine size={24} className="page-title-icon" />}
+              <h2 className="page-title">
+                {view === 'welcome' && 'Dashboard'}
+                {view === 'mindsync' && 'MindSync Dashboard'}
+                {view === 'personality' && 'Personality Snapshots'}
+                {view === 'evolution' && 'Interest Evolution'}
+                {view === 'goals' && 'Goal Alignment'}
+                {view === 'twin' && 'Digital Twin'}
+                {view === 'map' && 'Knowledge Map'}
+                {view === 'list' && 'Memory Library'}
+                {view === 'timeline' && 'Memory Timeline'}
+                {view === 'insights' && 'AI Insights'}
+              </h2>
+            </div>
             <p className="page-subtitle">
               {view === 'welcome' && `Your personal AI companion for mindful browsing`}
               {view === 'mindsync' && 'Your weekly vibe, trending interests, and goal progress'}

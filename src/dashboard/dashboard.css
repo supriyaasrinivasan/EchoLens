@@ -107,30 +107,47 @@ body {
 }
 
 .sidebar-header {
-  padding: 32px 24px;
+  padding: 24px 20px;
   border-bottom: 1px solid var(--border-primary);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .sidebar-icon {
-  font-size: 32px;
+  color: var(--brand-primary);
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.3));
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .sidebar-header h1 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  line-height: 1.2;
+  margin: 0;
 }
 
 .sidebar-tagline {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-tertiary);
-  margin-left: 0;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .sidebar-nav {
@@ -220,6 +237,16 @@ body {
   color: var(--brand-primary);
   border-left: 3px solid var(--brand-primary);
   padding-left: 13px;
+}
+
+.nav-item-featured {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.nav-item-featured.active {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+  border-left: 3px solid var(--brand-primary);
 }
 
 /* Stats Overview in Sidebar */
@@ -396,22 +423,34 @@ body {
   flex: 1;
 }
 
-.header-actions {
+.page-title-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 8px;
+}
+
+.page-title-icon {
+  color: var(--brand-primary);
+  flex-shrink: 0;
 }
 
 .page-title {
   font-size: 28px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin: 0;
   color: var(--text-primary);
 }
 
 .page-subtitle {
   font-size: 14px;
   color: var(--text-tertiary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 /* Search Bar */
