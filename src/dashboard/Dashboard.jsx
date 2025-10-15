@@ -21,8 +21,8 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState('dark'); // Theme state
   const [username, setUsername] = useState(''); // User's name
-  const [personaSyncOpen, setPersonaSyncOpen] = useState(true); // PersonaSync dropdown state
-  const [echoLenzOpen, setEchoLenzOpen] = useState(true); // EchoLenz dropdown state
+  const [personaSyncOpen, setPersonaSyncOpen] = useState(false); // PersonaSync dropdown state - closed by default
+  const [echoLenzOpen, setEchoLenzOpen] = useState(false); // EchoLenz dropdown state - closed by default
   const [filters, setFilters] = useState({
     dateRange: 'all',
     minVisits: 0,
