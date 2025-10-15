@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, MapPin, Tag, Sparkles, TrendingUp, Calendar, Search, User, Target, Heart } from 'lucide-react';
+import { Clock, MapPin, Tag, Sparkles, TrendingUp, Calendar, Search, User, Target, Heart, Sun, Moon } from 'lucide-react';
 
 const Popup = () => {
   const [stats, setStats] = useState(null);
@@ -10,9 +10,17 @@ const Popup = () => {
   const [goalInsights, setGoalInsights] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
     loadData();
+    // Load theme from storage
+    chrome.storage.sync.get(['theme'], (result) => {
+      if (result.theme) {
+        setTheme(result.theme);
+        document.documentElement.setAttribute('data-theme', result.theme);
+      }
+    });
   }, []);
 
   const loadData = async () => {
@@ -103,6 +111,13 @@ const Popup = () => {
     return emojis[mood] || '🤔';
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    chrome.storage.sync.set({ theme: newTheme });
+  };
+
   if (loading) {
     return (
       <div className="popup-container">
@@ -122,7 +137,12 @@ const Popup = () => {
           <span className="header-icon">✨</span>
           <h1>SupriAI</h1>
         </div>
-        <p className="header-subtitle">Your AI Mirror</p>
+        <div className="header-right">
+          <p className="header-subtitle">Your AI Mirror</p>
+          <button className="theme-toggle-small" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
       </div>
 
       {/* Tab Navigation */}

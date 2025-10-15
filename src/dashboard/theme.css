@@ -1,0 +1,211 @@
+/* ===================================
+   THEME SYSTEM - SupriAI
+   Light & Dark Mode CSS Variables
+   =================================== */
+
+:root {
+  /* ===== DARK THEME (Default) ===== */
+  --theme-mode: 'dark';
+  
+  /* Background Colors */
+  --bg-primary: #0a0e27;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #0f172a;
+  --bg-overlay: rgba(15, 23, 42, 0.9);
+  --bg-card: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
+  --bg-card-hover: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+  
+  /* Text Colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0a0e27;
+  
+  /* Brand Colors */
+  --brand-primary: #6366f1;
+  --brand-secondary: #3b82f6;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  
+  /* Accent Colors */
+  --accent-purple: #a78bfa;
+  --accent-blue: #60a5fa;
+  --accent-cyan: #22d3ee;
+  --accent-green: #4ade80;
+  --accent-yellow: #fbbf24;
+  --accent-red: #f87171;
+  --accent-pink: #f472b6;
+  
+  /* Border Colors */
+  --border-primary: rgba(99, 102, 241, 0.2);
+  --border-secondary: rgba(99, 102, 241, 0.1);
+  --border-hover: rgba(99, 102, 241, 0.4);
+  --border-focus: rgba(99, 102, 241, 0.6);
+  
+  /* Shadow Colors */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 32px rgba(99, 102, 241, 0.3);
+  --shadow-xl: 0 20px 48px rgba(99, 102, 241, 0.4);
+  
+  /* Component-specific Colors */
+  --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --card-bg: rgba(99, 102, 241, 0.1);
+  --card-border: rgba(99, 102, 241, 0.2);
+  --input-bg: rgba(15, 23, 42, 0.8);
+  --input-border: rgba(99, 102, 241, 0.3);
+  --button-bg: rgba(99, 102, 241, 0.1);
+  --button-hover: rgba(99, 102, 241, 0.15);
+  
+  /* Scrollbar Colors */
+  --scrollbar-track: rgba(255, 255, 255, 0.05);
+  --scrollbar-thumb: rgba(99, 102, 241, 0.5);
+  
+  /* Status Colors */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+}
+
+/* ===== LIGHT THEME ===== */
+[data-theme="light"] {
+  --theme-mode: 'light';
+  
+  /* Background Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-overlay: rgba(248, 250, 252, 0.95);
+  --bg-card: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%);
+  --bg-card-hover: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(59, 130, 246, 0.06) 100%);
+  
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #475569;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+  
+  /* Brand Colors (same in both themes) */
+  --brand-primary: #6366f1;
+  --brand-secondary: #3b82f6;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+  
+  /* Accent Colors (adjusted for light mode) */
+  --accent-purple: #7c3aed;
+  --accent-blue: #2563eb;
+  --accent-cyan: #06b6d4;
+  --accent-green: #16a34a;
+  --accent-yellow: #d97706;
+  --accent-red: #dc2626;
+  --accent-pink: #db2777;
+  
+  /* Border Colors */
+  --border-primary: rgba(99, 102, 241, 0.3);
+  --border-secondary: rgba(99, 102, 241, 0.15);
+  --border-hover: rgba(99, 102, 241, 0.5);
+  --border-focus: rgba(99, 102, 241, 0.7);
+  
+  /* Shadow Colors */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 12px 32px rgba(99, 102, 241, 0.15);
+  --shadow-xl: 0 20px 48px rgba(99, 102, 241, 0.2);
+  
+  /* Component-specific Colors */
+  --sidebar-bg: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+  --card-bg: rgba(99, 102, 241, 0.05);
+  --card-border: rgba(99, 102, 241, 0.15);
+  --input-bg: #ffffff;
+  --input-border: rgba(99, 102, 241, 0.25);
+  --button-bg: rgba(99, 102, 241, 0.08);
+  --button-hover: rgba(99, 102, 241, 0.12);
+  
+  /* Scrollbar Colors */
+  --scrollbar-track: rgba(0, 0, 0, 0.05);
+  --scrollbar-thumb: rgba(99, 102, 241, 0.4);
+  
+  /* Status Colors (same in both themes) */
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-error: #ef4444;
+  --status-info: #3b82f6;
+}
+
+/* ===== THEME TRANSITIONS ===== */
+* {
+  transition: background-color 0.3s ease, 
+              border-color 0.3s ease, 
+              color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+/* Exclude transitions for specific elements */
+button, a, input, select, 
+.nav-item, .tab-button, .memory-card,
+.stat-card, .timeline-item {
+  transition: all 0.2s ease !important;
+}
+
+/* ===== THEME TOGGLE BUTTON ===== */
+.theme-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--button-bg);
+  border: 1px solid var(--border-primary);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--button-hover);
+  border-color: var(--border-hover);
+}
+
+.theme-toggle-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--brand-primary);
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-toggle-icon {
+  transform: rotate(20deg);
+}
+
+.theme-toggle-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ===== RESPONSIVE THEME AWARENESS ===== */
+/* System preferences can be used to set initial theme */
+/* The app will respect user's manual selection stored in chrome.storage */
+
+/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
+:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-primary: rgba(99, 102, 241, 0.6);
+    --text-tertiary: var(--text-secondary);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart } from 'lucide-react';
+import { Search, Filter, Calendar, Clock, Tag, Sparkles, Grid, List, Map as MapIcon, Settings, Download, Upload, User, TrendingUp, Target, Brain, Heart, Sun, Moon } from 'lucide-react';
 import KnowledgeMap from './components/KnowledgeMap';
 import MemoryList from './components/MemoryList';
 import MemoryTimeline from './components/MemoryTimeline';
@@ -19,6 +19,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState('dark'); // Theme state
   const [filters, setFilters] = useState({
     dateRange: 'all',
     minVisits: 0,
@@ -27,6 +28,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadData();
+    // Load theme from storage
+    chrome.storage.sync.get(['theme'], (result) => {
+      if (result.theme) {
+        setTheme(result.theme);
+        document.documentElement.setAttribute('data-theme', result.theme);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -169,6 +177,13 @@ const Dashboard = () => {
     input.click();
   };
 
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    chrome.storage.sync.set({ theme: newTheme });
+  };
+
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -299,9 +314,15 @@ const Dashboard = () => {
               }
             </p>
           </div>
-          {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && (
-            <SearchBar onSearch={handleSearch} />
-          )}
+          <div className="header-actions">
+            {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && (
+              <SearchBar onSearch={handleSearch} />
+            )}
+            <button className="theme-toggle" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+              {theme === 'dark' ? <Sun className="theme-toggle-icon" size={20} /> : <Moon className="theme-toggle-icon" size={20} />}
+              <span className="theme-toggle-text">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filter Bar - only show for memory views */}
