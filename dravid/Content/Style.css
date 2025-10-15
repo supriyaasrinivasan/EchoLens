@@ -1,0 +1,132 @@
+body,html
+{
+  margin:0;
+  padding: 0;
+  width:100%;
+  font-family: Arial Unicode MS; 
+  background-color: #e1faeb;
+}
+.tbl
+{
+background-color:#bdfcd6;
+font-size:14px;
+border-radius:5px;
+}
+td
+{
+font-size:16px;
+}
+div, table
+{
+	text-align:center;
+}
+
+.logo{
+  margin-top:0px;
+  font-size: 24pt;
+  text-align: center;
+}
+
+.navbar {
+  overflow: hidden;
+  background-color: #03451d; 
+}
+
+.navbar a {
+  float: left;
+  color: white;
+  text-align: center;
+  padding: 8px 15px;
+  text-decoration: none;
+}
+
+.dropdown {
+  float: left;
+  overflow: hidden;
+}
+
+.dropdown .dropbtn {
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  background-color: inherit;
+}
+
+.navbar a:hover, .dropdown:hover .dropbtn {
+  background-color: #231f03;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+}
+
+.dropdown-content a {
+  float: none;
+  color: black;
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.dropdown-content a:hover {
+  background-color: #ddd;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.tbl
+{
+  margin-top:30px;
+  text-align:left;
+}
+
+.btn_submit
+{
+  border:none; 
+  color:white;
+  padding: 5px 15px;
+  text-align: center;
+  background-color:#c40347; 
+}
+
+.btn_delete
+{
+  border:none; 
+  color:white;
+  padding: 5px 15px;
+  background-color:#c90000; 
+}
+
+input[type="text"], select
+{
+  padding: 3px 5px;
+}
+
+.mygrid
+{
+  width:94%;
+  margin-top:50px;
+  border-collapse:collapse;
+}
+.mygrid tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+    background-color: #c40347;;
+    color: white;
+}
+
+.heading{
+  text-align: center;
+}
+
+.scrollImage{
+  max-width: 200px;
+  max-height: 200px;
+  padding: 0px 20px;
+}
+
