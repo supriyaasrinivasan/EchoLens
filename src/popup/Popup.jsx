@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, MapPin, Tag, Sparkles, TrendingUp, Calendar, Search, User, Target, Heart, Sun, Moon } from 'lucide-react';
+import { Sparkles, Calendar, TrendingUp, Clock, BookOpen, Zap, Sun, Moon, PlusCircle, Trash2, ExternalLink, Target, Brain, Activity } from 'lucide-react';
 
 const Popup = () => {
   const [stats, setStats] = useState(null);
   const [recentMemories, setRecentMemories] = useState([]);
-  const [currentPageContext, setCurrentPageContext] = useState(null);
-  const [latestSnapshot, setLatestSnapshot] = useState(null);
-  const [moodSummary, setMoodSummary] = useState(null);
-  const [goalInsights, setGoalInsights] = useState(null);
+  const [skills, setSkills] = useState([]);
+  const [skillProgress, setSkillProgress] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
   const [theme, setTheme] = useState('dark');
+  const [newSkill, setNewSkill] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -23,62 +23,44 @@ const Popup = () => {
     });
   }, []);
 
+  const sendMessage = (msg) => new Promise((resolve) => chrome.runtime.sendMessage(msg, (res) => resolve(res)));
+
   const loadData = async () => {
     setLoading(true);
+    try {
+      // General stats
+      const statsResp = await sendMessage({ type: 'GET_STATS' });
+      if (statsResp?.stats) setStats(statsResp.stats);
 
-    // Get stats
-    chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
-      if (response?.stats) {
-        setStats(response.stats);
-      }
-    });
+      // Recent memories
+      const memResp = await sendMessage({ type: 'GET_MEMORIES', data: { limit: 5 } });
+      if (memResp?.memories) setRecentMemories(memResp.memories);
 
-    // Get recent memories
-    chrome.runtime.sendMessage({ 
-      type: 'GET_MEMORIES',
-      data: { limit: 10 }
-    }, (response) => {
-      if (response?.memories) {
-        setRecentMemories(response.memories.slice(0, 5));
-      }
-    });
+      // Skills data
+      const skillsResp = await sendMessage({ type: 'GET_ALL_SKILLS' });
+      if (skillsResp?.skills) setSkills(skillsResp.skills);
 
-    // Get latest personality snapshot
-    chrome.runtime.sendMessage({ type: 'GET_PERSONALITY_SNAPSHOTS', data: { limit: 1 } }, (response) => {
-      if (response?.snapshots && response.snapshots.length > 0) {
-        setLatestSnapshot(response.snapshots[0]);
-      }
-    });
+      // Weekly skill summary
+      const weeklyResp = await sendMessage({ type: 'GET_WEEKLY_SKILL_SUMMARY' });
+      if (weeklyResp?.summary) setWeeklyStats(weeklyResp.summary);
 
-    // Get mood summary
-    chrome.runtime.sendMessage({ type: 'GET_MOOD_SUMMARY' }, (response) => {
-      if (response?.moodSummary) {
-        setMoodSummary(response.moodSummary);
-      }
-    });
-
-    // Get goal insights
-    chrome.runtime.sendMessage({ type: 'GET_GOAL_INSIGHTS' }, (response) => {
-      if (response?.insights) {
-        setGoalInsights(response.insights);
-      }
-    });
-
-    // Get current page context
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
-        chrome.runtime.sendMessage({
-          type: 'GET_PREVIOUS_CONTEXT',
-          url: tabs[0].url
-        }, (response) => {
-          if (response?.context) {
-            setCurrentPageContext(response.context);
-          }
-          setLoading(false);
+      // Get skill progress for top 3 skills
+      if (skillsResp?.skills && skillsResp.skills.length > 0) {
+        const progressPromises = skillsResp.skills.slice(0, 3).map(async (skill) => {
+          const resp = await sendMessage({ type: 'GET_SKILL_PROGRESS', data: { skill: skill.name } });
+          return resp?.progress || null;
         });
+        const progressData = await Promise.all(progressPromises);
+        setSkillProgress(progressData.filter(p => p !== null));
       }
-    });
+
+      setLoading(false);
+    } catch (err) {
+      console.error('popup loadData error', err);
+      setLoading(false);
+    }
   };
+
 
   const openDashboard = () => {
     chrome.runtime.openOptionsPage();
@@ -118,12 +100,54 @@ const Popup = () => {
     chrome.storage.sync.set({ theme: newTheme });
   };
 
+  const addSkill = async () => {
+    const name = newSkill.trim();
+    if (!name) return;
+    setActionLoading(true);
+    try {
+      const resp = await sendMessage({ type: 'ADD_CUSTOM_SKILL', data: { name } });
+      if (resp?.success) {
+        setNewSkill('');
+        await loadData();
+      }
+    } catch (err) {
+      console.error('addSkill error', err);
+    }
+    setActionLoading(false);
+  };
+
+  const removeSkill = async (skill) => {
+    if (!confirm(`Delete skill "${skill}"? This will remove tracked entries.`)) return;
+    setActionLoading(true);
+    try {
+      const resp = await sendMessage({ type: 'DELETE_SKILL', data: { skill } });
+      if (resp?.success) await loadData();
+    } catch (err) {
+      console.error('removeSkill error', err);
+    }
+    setActionLoading(false);
+  };
+
+  const openLearningPath = async (skill) => {
+    setActionLoading(true);
+    try {
+      const resp = await sendMessage({ type: 'GET_LEARNING_PATH', data: { skill } });
+      if (resp?.learningPath && resp.learningPath.length > 0) {
+        // open first resource in new tab
+        window.open(resp.learningPath[0].url, '_blank');
+      }
+    } catch (err) {
+      console.error('openLearningPath error', err);
+    }
+    setActionLoading(false);
+  };
+
   if (loading) {
     return (
       <div className="popup-container">
         <div className="loading-state">
           <Sparkles className="loading-icon" />
-          <p>Loading your memories...</p>
+          <p>Loading your data...</p>
         </div>
       </div>
     );
@@ -131,247 +155,177 @@ const Popup = () => {
 
   return (
     <div className="popup-container">
-      {/* Header */}
-      <div className="popup-header">
-        <div className="header-title">
-          <span className="header-icon">✨</span>
-          <h1>SupriAI</h1>
+      <header className="popup-header">
+        <div className="header-left">
+          <div className="brand">✨ SupriAI</div>
+          <div className="subtitle">Your AI Learning Companion</div>
         </div>
-        <div className="header-right">
-          <p className="header-subtitle">Your AI Mirror</p>
-          <button className="theme-toggle-small" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+        <div className="header-actions">
+          <button className="icon-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
             {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Tab Navigation */}
-      <div className="tab-nav">
-        <button 
-          className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Overview
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'persona' ? 'active' : ''}`}
-          onClick={() => setActiveTab('persona')}
-        >
-          Persona
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'current' ? 'active' : ''}`}
-          onClick={() => setActiveTab('current')}
-        >
-          This Page
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="popup-content">
-        {activeTab === 'overview' && (
-          <>
-            {/* Stats Grid */}
-            {stats && (
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <MapPin size={20} />
-                  <div className="stat-value">{stats.totalVisits}</div>
-                  <div className="stat-label">Sites Visited</div>
-                </div>
-                <div className="stat-card">
-                  <Clock size={20} />
-                  <div className="stat-value">{formatTime(stats.totalTimeSpent)}</div>
-                  <div className="stat-label">Time Tracked</div>
-                </div>
-                <div className="stat-card">
-                  <Sparkles size={20} />
-                  <div className="stat-value">{stats.totalHighlights}</div>
-                  <div className="stat-label">Highlights</div>
-                </div>
-                <div className="stat-card">
-                  <TrendingUp size={20} />
-                  <div className="stat-value">{stats.thisWeekVisits}</div>
-                  <div className="stat-label">This Week</div>
-                </div>
-              </div>
-            )}
-
-            {/* Recent Memories */}
-            <div className="section">
-              <div className="section-header">
-                <Calendar size={18} />
-                <h3>Recent Memories</h3>
-              </div>
-              <div className="memory-list">
-                {recentMemories.length > 0 ? (
-                  recentMemories.map((memory, idx) => (
-                    <div key={idx} className="memory-item" onClick={() => window.open(memory.url, '_blank')}>
-                      <div className="memory-title">{memory.title}</div>
-                      <div className="memory-meta">
-                        <span>{formatDate(memory.lastVisit)}</span>
-                        <span>•</span>
-                        <span>{memory.visits} visits</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="empty-state">
-                    <p>No memories yet. Start browsing!</p>
-                  </div>
-                )}
+      <main className="popup-content">
+        {/* Stats Overview */}
+        {stats && (
+          <section className="stats-overview">
+            <div className="stat-item">
+              <Activity size={18} className="stat-icon" />
+              <div className="stat-info">
+                <div className="stat-value">{stats.totalVisits || 0}</div>
+                <div className="stat-label">Sites Visited</div>
               </div>
             </div>
-          </>
+            <div className="stat-item">
+              <Clock size={18} className="stat-icon" />
+              <div className="stat-info">
+                <div className="stat-value">{formatTime(stats.totalTimeSpent || 0)}</div>
+                <div className="stat-label">Time Tracked</div>
+              </div>
+            </div>
+            <div className="stat-item">
+              <Brain size={18} className="stat-icon" />
+              <div className="stat-info">
+                <div className="stat-value">{skills.length}</div>
+                <div className="stat-label">Skills Tracked</div>
+              </div>
+            </div>
+          </section>
         )}
 
-        {activeTab === 'persona' && (
-          <>
-            {/* Latest Snapshot */}
-            {latestSnapshot && (
-              <div className="section">
-                <div className="section-header">
-                  <User size={18} />
-                  <h3>This Week's Vibe</h3>
-                </div>
-                <div className="persona-card">
-                  <div className="persona-tone">
-                    <span className="persona-label">Tone</span>
-                    <span className="persona-value">{latestSnapshot.tone}</span>
+        {/* Skill Progress */}
+        {skillProgress.length > 0 && (
+          <section className="skill-progress-section">
+            <h3 className="section-title">
+              <TrendingUp size={16} />
+              Top Skills Progress
+            </h3>
+            <div className="progress-list">
+              {skillProgress.map((progress, idx) => (
+                <div className="progress-item" key={idx}>
+                  <div className="progress-header">
+                    <span className="progress-name">{progress.skill}</span>
+                    <span className="progress-level">Level {progress.level || 1}</span>
                   </div>
-                  {latestSnapshot.quoteOfWeek && (
-                    <div className="persona-quote">
-                      <Sparkles size={14} />
-                      "{latestSnapshot.quoteOfWeek}"
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Mood Summary */}
-            {moodSummary && (
-              <div className="section">
-                <div className="section-header">
-                  <Heart size={18} />
-                  <h3>Weekly Mood</h3>
-                </div>
-                <div className="mood-card">
-                  <div className="mood-display">
-                    <span className="mood-emoji">{getMoodEmoji(moodSummary.dominantMood)}</span>
-                    <span className="mood-label">Mostly {moodSummary.dominantMood}</span>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${progress.xp_percentage || 0}%` }}></div>
                   </div>
-                  <div className="mood-breakdown">
-                    <span>😊 {moodSummary.positive || 0}</span>
-                    <span>😐 {moodSummary.neutral || 0}</span>
-                    <span>😔 {moodSummary.negative || 0}</span>
+                  <div className="progress-stats">
+                    <span>{progress.total_time ? formatTime(progress.total_time) : '0m'}</span>
+                    <span>{progress.xp || 0} XP</span>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Goal Progress */}
-            {goalInsights && goalInsights.activeGoals > 0 && (
-              <div className="section">
-                <div className="section-header">
-                  <Target size={18} />
-                  <h3>Goal Alignment</h3>
-                </div>
-                <div className="goals-card">
-                  <div className="goal-stat">
-                    <span className="goal-label">Alignment Rate</span>
-                    <span className="goal-value">{goalInsights.alignmentRate}%</span>
-                  </div>
-                  <div className="goal-stat">
-                    <span className="goal-label">Active Goals</span>
-                    <span className="goal-value">{goalInsights.activeGoals}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {!latestSnapshot && !moodSummary && !goalInsights && (
-              <div className="empty-state">
-                <User size={32} />
-                <p>Keep browsing to build your persona!</p>
-                <p className="empty-state-sub">Your first snapshot will appear soon</p>
-              </div>
-            )}
-          </>
+              ))}
+            </div>
+          </section>
         )}
 
-        {activeTab === 'current' && (
-          <div className="section">
-            {currentPageContext ? (
-              <>
-                <div className="context-card">
-                  <div className="context-header">
-                    <Sparkles size={20} />
-                    <h3>Memory Recall</h3>
-                  </div>
-                  
-                  <div className="context-stats">
-                    <div className="context-stat">
-                      <span className="context-label">Visits</span>
-                      <span className="context-value">{currentPageContext.visits}</span>
-                    </div>
-                    <div className="context-stat">
-                      <span className="context-label">Time Spent</span>
-                      <span className="context-value">{formatTime(currentPageContext.totalTimeSpent)}</span>
-                    </div>
-                  </div>
-
-                  {currentPageContext.lastVisit && (
-                    <p className="context-info">
-                      Last visit: <strong>{formatDate(currentPageContext.lastVisit)}</strong>
-                    </p>
-                  )}
-
-                  {currentPageContext.summary && (
-                    <div className="context-summary">
-                      <div className="summary-label">AI Summary</div>
-                      <p>{currentPageContext.summary}</p>
-                    </div>
-                  )}
-
-                  {currentPageContext.highlights && currentPageContext.highlights.length > 0 && (
-                    <div className="highlights-section">
-                      <div className="highlights-label">Your Highlights</div>
-                      {currentPageContext.highlights.slice(0, 3).map((highlight, idx) => (
-                        <div key={idx} className="highlight-item">
-                          "{highlight.text.substring(0, 100)}..."
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {currentPageContext.tags && currentPageContext.tags.length > 0 && (
-                    <div className="tags-section">
-                      {currentPageContext.tags.map((tag, idx) => (
-                        <span key={idx} className="tag">{tag}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="empty-state">
-                <Sparkles size={32} />
-                <p>First time here!</p>
-                <p className="empty-state-sub">EchoLens is now capturing context...</p>
-              </div>
-            )}
+        {/* Skills Management */}
+        <section className="skills-section">
+          <h3 className="section-title">
+            <Target size={16} />
+            My Skills
+          </h3>
+          <div className="skills-input-group">
+            <input 
+              className="skill-input" 
+              placeholder="Add a new skill (e.g., React, Python)" 
+              value={newSkill} 
+              onChange={(e) => setNewSkill(e.target.value)} 
+              onKeyDown={(e) => e.key === 'Enter' && addSkill()} 
+            />
+            <button className="add-btn" onClick={addSkill} disabled={actionLoading}>
+              <PlusCircle size={16}/> Add
+            </button>
           </div>
-        )}
-      </div>
 
-      {/* Footer */}
-      <div className="popup-footer">
-        <button className="dashboard-button" onClick={openDashboard}>
-          <Search size={16} />
-          Open Dashboard
+          <div className="skills-list">
+            {skills.length === 0 && (
+              <div className="empty-state">
+                <BookOpen size={32} className="empty-icon" />
+                <p>No skills tracked yet</p>
+                <p className="empty-hint">Add your first skill above to get started!</p>
+              </div>
+            )}
+            {skills.map((s, idx) => (
+              <div className="skill-item" key={idx}>
+                <div className="skill-info">
+                  <div className="skill-name">{s.name}</div>
+                  {s.total_time && <div className="skill-time">{formatTime(s.total_time)}</div>}
+                </div>
+                <div className="skill-actions">
+                  <button className="btn-icon" onClick={() => openLearningPath(s.name)} title="Open learning resources">
+                    <Zap size={14}/>
+                  </button>
+                  <button className="btn-icon danger" onClick={() => removeSkill(s.name)} title="Delete skill">
+                    <Trash2 size={14}/>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Recent Activity */}
+        {recentMemories.length > 0 && (
+          <section className="recent-section">
+            <h3 className="section-title">
+              <Calendar size={16} />
+              Recent Activity
+            </h3>
+            <div className="memory-list">
+              {recentMemories.slice(0, 3).map((memory, idx) => (
+                <div className="memory-item" key={idx} onClick={() => window.open(memory.url, '_blank')}>
+                  <div className="memory-title">{memory.title || 'Untitled'}</div>
+                  <div className="memory-meta">
+                    <span>{formatDate(memory.lastVisit)}</span>
+                    {memory.visits > 1 && <span>• {memory.visits} visits</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Weekly Summary */}
+        {weeklyStats && (
+          <section className="weekly-summary">
+            <h3 className="section-title">
+              <Sparkles size={16} />
+              This Week
+            </h3>
+            <div className="summary-grid">
+              {weeklyStats.totalTimeSpent && (
+                <div className="summary-card">
+                  <div className="summary-value">{formatTime(weeklyStats.totalTimeSpent)}</div>
+                  <div className="summary-label">Learning Time</div>
+                </div>
+              )}
+              {weeklyStats.skillsImproved && (
+                <div className="summary-card">
+                  <div className="summary-value">{weeklyStats.skillsImproved}</div>
+                  <div className="summary-label">Skills Improved</div>
+                </div>
+              )}
+              {weeklyStats.totalXP && (
+                <div className="summary-card">
+                  <div className="summary-value">{weeklyStats.totalXP}</div>
+                  <div className="summary-label">XP Earned</div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </main>
+
+      <footer className="popup-footer">
+        <button className="dashboard-btn" onClick={() => chrome.runtime.openOptionsPage()}>
+          <ExternalLink size={16} />
+          Open Full Dashboard
         </button>
-      </div>
+      </footer>
     </div>
   );
 };

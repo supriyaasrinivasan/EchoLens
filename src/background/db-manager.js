@@ -1,4 +1,4 @@
-// SQLite Database Manager for EchoLens
+// SQLite Database Manager for SupriAI
 // Handles all database operations using sql.js
 
 import initSqlJs from 'sql.js';
@@ -7,7 +7,7 @@ export class DatabaseManager {
   constructor() {
     this.db = null;
     this.SQL = null;
-    this.dbName = 'echolens.db';
+    this.dbName = 'supriai.db';
     this.isInitialized = false;
   }
 
@@ -1113,6 +1113,156 @@ export class DatabaseManager {
       topics: allTopics,
       timeSpent: totalTimeSpent
     };
+  }
+
+  // ==================== Skill Tracking Methods ====================
+
+  // Save skill activity
+  async saveSkillActivity(skillData) {
+    this.db.run(
+      `INSERT INTO skill_activities (
+        url, skill, confidence, keywords, time_spent, timestamp
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        skillData.url || 'manual',
+        skillData.skill,
+        skillData.confidence || 1.0,
+        skillData.keywords || '',
+        skillData.time_spent || 0,
+        skillData.timestamp || Date.now()
+      ]
+    );
+
+    await this.saveDatabase();
+  }
+
+  // Get skill statistics
+  async getSkillStats() {
+    const stmt = this.db.prepare(`
+      SELECT 
+        skill,
+        COUNT(*) as visit_count,
+        SUM(time_spent) as total_time,
+        AVG(confidence) as avg_confidence,
+        MIN(timestamp) as first_seen,
+        MAX(timestamp) as last_seen
+      FROM skill_activities
+      GROUP BY skill
+      ORDER BY total_time DESC, visit_count DESC
+    `);
+
+    const skills = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      skills.push({
+        skill: row.skill,
+        visit_count: row.visit_count,
+        total_time: row.total_time || 0,
+        avg_confidence: row.avg_confidence || 0,
+        first_seen: row.first_seen,
+        last_seen: row.last_seen
+      });
+    }
+    stmt.free();
+
+    return skills;
+  }
+
+  // Get skill by name
+  async getSkillByName(skillName) {
+    const stmt = this.db.prepare(`
+      SELECT 
+        skill,
+        COUNT(*) as visit_count,
+        SUM(time_spent) as total_time,
+        AVG(confidence) as avg_confidence,
+        MIN(timestamp) as first_seen,
+        MAX(timestamp) as last_seen
+      FROM skill_activities
+      WHERE skill = ?
+      GROUP BY skill
+    `);
+    stmt.bind([skillName]);
+
+    let skillData = null;
+    if (stmt.step()) {
+      const row = stmt.getAsObject();
+      skillData = {
+        skill: row.skill,
+        visit_count: row.visit_count,
+        total_time: row.total_time || 0,
+        avg_confidence: row.avg_confidence || 0,
+        first_seen: row.first_seen,
+        last_seen: row.last_seen
+      };
+    }
+    stmt.free();
+
+    return skillData;
+  }
+
+  // Get skill activities since a timestamp
+  async getSkillActivitiesSince(timestamp) {
+    const stmt = this.db.prepare(`
+      SELECT * FROM skill_activities
+      WHERE timestamp >= ?
+      ORDER BY timestamp DESC
+    `);
+    stmt.bind([timestamp]);
+
+    const activities = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      activities.push({
+        id: row.id,
+        url: row.url,
+        skill: row.skill,
+        confidence: row.confidence,
+        keywords: row.keywords,
+        time_spent: row.time_spent,
+        timestamp: row.timestamp,
+        created_at: row.created_at
+      });
+    }
+    stmt.free();
+
+    return activities;
+  }
+
+  // Get all unique skills
+  async getAllSkills() {
+    const stmt = this.db.prepare(`
+      SELECT DISTINCT skill FROM skill_activities
+      ORDER BY skill ASC
+    `);
+
+    const skills = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      skills.push(row.skill);
+    }
+    stmt.free();
+
+    return skills;
+  }
+
+  // Delete skill activity
+  async deleteSkillActivity(skillName) {
+    this.db.run('DELETE FROM skill_activities WHERE skill = ?', [skillName]);
+    await this.saveDatabase();
+  }
+
+  // Update skill time spent
+  async updateSkillTimeSpent(url, skill, additionalTime) {
+    this.db.run(
+      `UPDATE skill_activities 
+       SET time_spent = time_spent + ? 
+       WHERE url = ? AND skill = ? AND timestamp = (
+         SELECT MAX(timestamp) FROM skill_activities WHERE url = ? AND skill = ?
+       )`,
+      [additionalTime, url, skill, url, skill]
+    );
+    await this.saveDatabase();
   }
 
   // Close database

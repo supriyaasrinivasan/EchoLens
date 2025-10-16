@@ -8,17 +8,21 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/echolens';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/supriai';
 
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('📦 Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('✨ Connected to MongoDB - SupriAI Database'))
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  console.log('⚠️  Server running without database connection');
+});
 
 // Models
 const UserSchema = new mongoose.Schema({
@@ -58,7 +62,29 @@ const Memory = mongoose.model('Memory', MemorySchema);
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'EchoLens API is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'SupriAI API is running',
+    version: '2.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API Info endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'SupriAI API',
+    version: '2.0.0',
+    description: 'Your AI mirror - Digital self-awareness engine',
+    endpoints: {
+      health: '/health',
+      users: '/api/users/*',
+      memories: '/api/memories/*',
+      search: '/api/memories/search',
+      sync: '/api/sync',
+      stats: '/api/stats/:userId'
+    }
+  });
 });
 
 // User routes
@@ -225,9 +251,39 @@ function getTopTags(memories, limit) {
     .map(([tag, count]) => ({ tag, count }));
 }
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server error:', err);
+  res.status(500).json({ 
+    success: false, 
+    error: 'Internal server error',
+    message: err.message 
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    error: 'Endpoint not found',
+    path: req.path 
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
-  console.log(`🌌 EchoLens API server running on port ${PORT}`);
+  console.log(`✨ SupriAI API server running on port ${PORT}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  console.log(`📚 API info: http://localhost:${PORT}/api`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('⚠️  SIGTERM received, closing server...');
+  mongoose.connection.close(() => {
+    console.log('✅ MongoDB connection closed');
+    process.exit(0);
+  });
 });
 
 module.exports = app;

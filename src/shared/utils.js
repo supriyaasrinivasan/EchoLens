@@ -1,4 +1,5 @@
-// Shared utility functions for EchoLens
+// Shared utility functions for SupriAI
+// Common helpers used across content scripts, background, and popup
 
 export const formatTime = (seconds) => {
   if (seconds < 60) return `${seconds}s`;

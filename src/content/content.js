@@ -1,4 +1,5 @@
-// EchoLens Content Script - Context Capture Engine
+// SupriAI Content Script - Context Capture Engine
+// Captures page content, highlights, and sends to background worker
 // Tracks page visits, reading time, highlights, and extracts meaningful context
 
 class ContextCapture {
@@ -61,8 +62,8 @@ class ContextCapture {
     
     // Create focus mode overlay
     const focusOverlay = document.createElement('div');
-    focusOverlay.id = 'echolens-focus-overlay';
-    focusOverlay.className = 'echolens-focus-mode';
+    focusOverlay.id = 'supriai-focus-overlay';
+    focusOverlay.className = 'supriai-focus-mode';
     
     const endTime = Date.now() + duration;
     const minutes = Math.floor(duration / 60000);
@@ -82,12 +83,12 @@ class ContextCapture {
     
     // Add dim overlay to reduce distractions
     const dimOverlay = document.createElement('div');
-    dimOverlay.id = 'echolens-dim-overlay';
-    dimOverlay.className = 'echolens-dim';
+    dimOverlay.id = 'supriai-dim-overlay';
+    dimOverlay.className = 'supriai-dim';
     document.body.appendChild(dimOverlay);
     
     // Apply focus styles
-    document.body.classList.add('echolens-focused');
+    document.body.classList.add('supriai-focused');
     
     // Update timer every second
     const timerInterval = setInterval(() => {
@@ -123,14 +124,14 @@ class ContextCapture {
     this.focusModeActive = false;
     
     // Remove overlays
-    const focusOverlay = document.getElementById('echolens-focus-overlay');
-    const dimOverlay = document.getElementById('echolens-dim-overlay');
+    const focusOverlay = document.getElementById('supriai-focus-overlay');
+    const dimOverlay = document.getElementById('supriai-dim-overlay');
     
     if (focusOverlay) focusOverlay.remove();
     if (dimOverlay) dimOverlay.remove();
     
     // Remove focus styles
-    document.body.classList.remove('echolens-focused');
+    document.body.classList.remove('supriai-focused');
   }
 
   showFocusComplete() {
@@ -139,7 +140,7 @@ class ContextCapture {
 
   showNotification(title, message) {
     const notification = document.createElement('div');
-    notification.className = 'echolens-notification';
+    notification.className = 'supriai-notification';
     notification.innerHTML = `
       <div class="notification-content">
         <div class="notification-title">${title}</div>
@@ -315,22 +316,22 @@ class ContextCapture {
   injectOverlay() {
     // Create the floating memory icon
     const overlay = document.createElement('div');
-    overlay.id = 'echolens-overlay';
+    overlay.id = 'supriai-overlay';
     overlay.innerHTML = `
-      <div class="echolens-icon" title="EchoLens Memory">
+      <div class="supriai-icon" title="supriai Memory">
         💫
       </div>
-      <div class="echolens-popup" style="display: none;">
-        <div class="echolens-popup-content">
-          <div class="echolens-loading">Loading memories...</div>
+      <div class="supriai-popup" style="display: none;">
+        <div class="supriai-popup-content">
+          <div class="supriai-loading">Loading memories...</div>
         </div>
       </div>
     `;
     document.body.appendChild(overlay);
     
     // Toggle popup on click
-    const icon = overlay.querySelector('.echolens-icon');
-    const popup = overlay.querySelector('.echolens-popup');
+    const icon = overlay.querySelector('.supriai-icon');
+    const popup = overlay.querySelector('.supriai-popup');
     
     icon.addEventListener('click', () => {
       const isVisible = popup.style.display !== 'none';
@@ -339,12 +340,12 @@ class ContextCapture {
   }
 
   showMemoryOverlay(context) {
-    const popup = document.querySelector('.echolens-popup-content');
+    const popup = document.querySelector('.supriai-popup-content');
     if (!popup) return;
     
     const { visits, lastVisit, totalTimeSpent, highlights, tags } = context;
     
-    let html = '<div class="echolens-memory">';
+    let html = '<div class="supriai-memory">';
     
     if (visits > 1) {
       html += `
@@ -391,7 +392,7 @@ class ContextCapture {
           <span class="memory-title">First Visit</span>
         </div>
         <div class="memory-stat">
-          This is your first time here. EchoLens is capturing context...
+          This is your first time here. supriai is capturing context...
         </div>
       `;
     }

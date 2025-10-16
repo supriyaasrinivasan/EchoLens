@@ -6,6 +6,7 @@ import { PersonalityEngine } from './personality-engine.js';
 import { GoalAlignmentAI } from './goal-alignment.js';
 import { DigitalTwinAI } from './digital-twin.js';
 import { SkillTracker } from './skill-tracker.js';
+import PremiumFeatures from './premium-features.js';
 
 // AI Processor Class
 class AIProcessor {
@@ -196,6 +197,7 @@ class SupriAIBackground {
     this.goalAlignment = null;
     this.digitalTwin = null;
     this.skillTracker = null;
+    this.premiumFeatures = null;
     this.activeSessions = new Map();
     this.init();
   }
@@ -209,6 +211,10 @@ class SupriAIBackground {
     this.goalAlignment = new GoalAlignmentAI(this.ai, this.db);
     this.digitalTwin = new DigitalTwinAI(this.ai, this.db);
     this.skillTracker = new SkillTracker(this.ai, this.db);
+    this.premiumFeatures = new PremiumFeatures(this.db);
+    
+    // Initialize premium features
+    await this.premiumFeatures.initialize();
     
     // Listen for messages from content scripts
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -383,6 +389,81 @@ class SupriAIBackground {
             timestamp: Date.now()
           });
           sendResponse({ success: true });
+          break;
+
+        case 'GET_LEARNING_PATH':
+          const learningPath = await this.skillTracker.generateLearningPath(data.skill);
+          sendResponse({ success: true, path: learningPath });
+          break;
+
+        case 'DELETE_SKILL':
+          await this.db.deleteSkillActivity(data.skill);
+          sendResponse({ success: true });
+          break;
+
+        case 'GET_ALL_SKILLS':
+          const allSkills = await this.db.getAllSkills();
+          sendResponse({ success: true, skills: allSkills });
+          break;
+
+        case 'GET_WEEKLY_SKILL_SUMMARY':
+          const weeklySummary = await this.skillTracker.getWeeklySkillSummary();
+          sendResponse({ success: true, summary: weeklySummary });
+          break;
+
+        // Premium Features
+        case 'GET_SUBSCRIPTION_INFO':
+          const tierInfo = await this.premiumFeatures.getCurrentTierInfo();
+          sendResponse({ success: true, subscription: tierInfo });
+          break;
+
+        case 'UPGRADE_SUBSCRIPTION':
+          const upgradeResult = await this.premiumFeatures.upgradeTier(data.tier, data.duration);
+          sendResponse(upgradeResult);
+          break;
+
+        case 'CHECK_FEATURE_ACCESS':
+          const hasAccess = await this.premiumFeatures.hasFeatureAccess(data.feature);
+          sendResponse({ success: true, hasAccess });
+          break;
+
+        case 'GET_FEATURE_LIMIT':
+          const limit = await this.premiumFeatures.getFeatureLimit(data.feature);
+          sendResponse({ success: true, limit });
+          break;
+
+        case 'CHECK_USAGE_LIMIT':
+          const withinLimit = await this.premiumFeatures.checkUsageLimit(data.feature);
+          sendResponse({ success: true, withinLimit });
+          break;
+
+        case 'INCREMENT_FEATURE_USAGE':
+          await this.premiumFeatures.incrementFeatureUsage(data.feature);
+          sendResponse({ success: true });
+          break;
+
+        case 'CREATE_TEAM':
+          const teamResult = await this.premiumFeatures.createTeam(data.teamName);
+          sendResponse(teamResult);
+          break;
+
+        case 'GET_USER_TEAMS':
+          const teams = await this.premiumFeatures.getUserTeams();
+          sendResponse({ success: true, teams });
+          break;
+
+        case 'ADD_TEAM_MEMBER':
+          const addMemberResult = await this.premiumFeatures.addTeamMember(
+            data.teamId, 
+            data.userId, 
+            data.role
+          );
+          sendResponse(addMemberResult);
+          break;
+
+        case 'GET_TEAM_MEMBERS':
+          const members = await this.premiumFeatures.getTeamMembers(data.teamId);
+          sendResponse({ success: true, members });
           break;
 
         default:

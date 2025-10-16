@@ -1,4 +1,4 @@
-// Skill Tracker for EchoLens
+// Skill Tracker for SupriAI
 // Detects topics, tracks skill development, and suggests courses/resources
 
 export class SkillTracker {
@@ -113,23 +113,19 @@ export class SkillTracker {
 
     // Save detected skills
     if (detectedSkills.length > 0) {
-      await this.saveSkillActivity(url, detectedSkills);
+      for (const skill of detectedSkills) {
+        await this.db.saveSkillActivity({
+          url,
+          skill: skill.skill,
+          confidence: skill.confidence,
+          keywords: skill.matchedKeywords.join(','),
+          time_spent: 0,
+          timestamp: Date.now()
+        });
+      }
     }
 
     return detectedSkills;
-  }
-
-  // Save skill activity to database
-  async saveSkillActivity(url, skills) {
-    for (const skill of skills) {
-      await this.db.saveSkillActivity({
-        url,
-        skill: skill.skill,
-        confidence: skill.confidence,
-        keywords: skill.matchedKeywords.join(','),
-        timestamp: Date.now()
-      });
-    }
   }
 
   // Get skill progress summary

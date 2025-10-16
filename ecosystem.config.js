@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: "echolens-api",
+    name: "supriai-api",
     script: "./server/index.js",
     instances: "max",
     exec_mode: "cluster",
