@@ -12,7 +12,9 @@ import {
   RiArrowRightSLine,
   RiFireLine,
   RiFlashlightLine,
-  RiTargetLine
+  RiTargetLine,
+  RiCheckLine,
+  RiErrorWarningLine
 } from '@remixicon/react';
 
 const SkillsDashboard = () => {
@@ -25,6 +27,9 @@ const SkillsDashboard = () => {
   const [showAddSkill, setShowAddSkill] = useState(false);
   const [newSkillName, setNewSkillName] = useState('');
   const [favoriteSkills, setFavoriteSkills] = useState([]);
+  const [addingSkill, setAddingSkill] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     loadSkillsData();
@@ -76,19 +81,43 @@ const SkillsDashboard = () => {
   };
 
   const addCustomSkill = async () => {
-    if (!newSkillName.trim()) return;
+    if (!newSkillName.trim()) {
+      setErrorMessage('Please enter a skill name');
+      return;
+    }
     
-    // Add skill to the background tracker
-    chrome.runtime.sendMessage({
-      type: 'ADD_CUSTOM_SKILL',
-      skill: newSkillName.trim()
-    }, (response) => {
+    setAddingSkill(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    
+    try {
+      // Add skill to the background tracker
+      const response = await chrome.runtime.sendMessage({
+        type: 'ADD_CUSTOM_SKILL',
+        skill: newSkillName.trim()
+      });
+      
+      console.log('Add skill response:', response);
+      
       if (response && response.success) {
-        loadSkillsData();
+        setSuccessMessage(`Skill "${newSkillName.trim()}" added successfully!`);
         setNewSkillName('');
         setShowAddSkill(false);
+        
+        // Reload skills data
+        setTimeout(() => {
+          loadSkillsData();
+          setSuccessMessage('');
+        }, 1500);
+      } else {
+        setErrorMessage(response?.error || 'Failed to add skill. Please try again.');
       }
-    });
+    } catch (error) {
+      console.error('Error adding skill:', error);
+      setErrorMessage('An error occurred while adding the skill.');
+    } finally {
+      setAddingSkill(false);
+    }
   };
 
   const getLevelForXP = (xp) => {
@@ -282,13 +311,50 @@ const SkillsDashboard = () => {
         <div className="add-skill-form">
           <input
             type="text"
-            placeholder="Enter skill name..."
+            placeholder="Enter skill name (e.g., Python, Web Development, Photography)..."
             value={newSkillName}
-            onChange={(e) => setNewSkillName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addCustomSkill()}
+            onChange={(e) => {
+              setNewSkillName(e.target.value);
+              setErrorMessage('');
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && !addingSkill) {
+                addCustomSkill();
+              }
+            }}
+            disabled={addingSkill}
+            autoFocus
           />
-          <button onClick={addCustomSkill}>Add</button>
-          <button onClick={() => setShowAddSkill(false)}>Cancel</button>
+          <button 
+            onClick={addCustomSkill} 
+            disabled={addingSkill || !newSkillName.trim()}
+          >
+            {addingSkill ? 'Adding...' : 'Add'}
+          </button>
+          <button 
+            onClick={() => {
+              setShowAddSkill(false);
+              setNewSkillName('');
+              setErrorMessage('');
+            }}
+            disabled={addingSkill}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="message-banner success">
+          <RiCheckLine size={18} />
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="message-banner error">
+          <RiErrorWarningLine size={18} />
+          {errorMessage}
         </div>
       )}
 

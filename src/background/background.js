@@ -225,20 +225,26 @@ class SupriAIBackground {
           break;
 
         case 'ADD_CUSTOM_SKILL':
-          const skillName = data.skill || data.name || message.skill || message.name;
-          if (!skillName) {
-            sendResponse({ success: false, error: 'Skill name is required' });
-            break;
+          try {
+            const skillName = data.skill || data.name || message.skill || message.name;
+            if (!skillName) {
+              sendResponse({ success: false, error: 'Skill name is required' });
+              break;
+            }
+            await this.db.saveSkillActivity({
+              url: 'manual',
+              skill: skillName,
+              confidence: 1.0,
+              keywords: '',
+              time_spent: 0,
+              timestamp: Date.now()
+            });
+            console.log('✅ Custom skill added:', skillName);
+            sendResponse({ success: true, message: `Skill "${skillName}" added successfully` });
+          } catch (error) {
+            console.error('❌ Error adding custom skill:', error);
+            sendResponse({ success: false, error: error.message || 'Failed to add skill' });
           }
-          await this.db.saveSkillActivity({
-            url: 'manual',
-            skill: skillName,
-            confidence: 1.0,
-            keywords: '',
-            time_spent: 0,
-            timestamp: Date.now()
-          });
-          sendResponse({ success: true });
           break;
 
         case 'GET_LEARNING_PATH':

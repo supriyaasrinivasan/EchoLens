@@ -304,11 +304,12 @@ const Dashboard = () => {
             </button>
           </div>
 
-          {/* PersonaSync Section */}
+          {/* PersonaSync Section - Mind & Personality Tracking */}
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setPersonaSyncOpen(!personaSyncOpen)}>
               <div className="nav-section-label">
                 {personaSyncOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
+                <RiUserLine size={18} style={{ marginLeft: '4px', marginRight: '8px' }} />
                 <span>PersonaSync</span>
               </div>
             </div>
@@ -317,7 +318,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'mindsync' ? 'active' : ''}`}
                   onClick={() => setView('mindsync')}
-                  title="MindSync Dashboard"
+                  title="Your weekly vibe and trending interests"
                 >
                   <RiHeartLine size={20} />
                   <span>MindSync</span>
@@ -325,7 +326,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'personality' ? 'active' : ''}`}
                   onClick={() => setView('personality')}
-                  title="Weekly Snapshots"
+                  title="Weekly snapshots of your digital identity"
                 >
                   <RiUserLine size={20} />
                   <span>Personality</span>
@@ -333,7 +334,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'evolution' ? 'active' : ''}`}
                   onClick={() => setView('evolution')}
-                  title="Interest Evolution"
+                  title="Watch your curiosity evolve over time"
                 >
                   <RiLineChartLine size={20} />
                   <span>Evolution</span>
@@ -341,7 +342,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'goals' ? 'active' : ''}`}
                   onClick={() => setView('goals')}
-                  title="Goal Alignment"
+                  title="Track your intentional browsing goals"
                 >
                   <RiTargetLine size={20} />
                   <span>Goals</span>
@@ -349,7 +350,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'twin' ? 'active' : ''}`}
                   onClick={() => setView('twin')}
-                  title="Digital Twin"
+                  title="Your AI reflection trained on your patterns"
                 >
                   <RiBrainLine size={20} />
                   <span>Digital Twin</span>
@@ -358,57 +359,12 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* New Features Section */}
-          <div className="nav-section">
-            <div className="nav-section-header" onClick={() => setNewFeaturesOpen(!newFeaturesOpen)}>
-              <div className="nav-section-label">
-                {newFeaturesOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
-                <span>Skillify</span>
-              </div>
-            </div>
-            {newFeaturesOpen && (
-              <div className="nav-section-items">
-                <button 
-                  className={`nav-item ${view === 'skills' ? 'active' : ''}`}
-                  onClick={() => setView('skills')}
-                  title="Skill Tracker"
-                >
-                  <RiBookOpenLine size={20} />
-                  <span>Skills</span>
-                </button>
-                <button 
-                  className={`nav-item ${view === 'achievements' ? 'active' : ''}`}
-                  onClick={() => setView('achievements')}
-                  title="Achievements & Badges"
-                >
-                  <RiTrophyLine size={20} />
-                  <span>Achievements</span>
-                </button>
-                <button 
-                  className={`nav-item ${view === 'analytics' ? 'active' : ''}`}
-                  onClick={() => setView('analytics')}
-                  title="Progress Analytics"
-                >
-                  <RiBarChartLine size={20} />
-                  <span>Analytics</span>
-                </button>
-                <button 
-                  className={`nav-item ${view === 'mindfulness' ? 'active' : ''}`}
-                  onClick={() => setView('mindfulness')}
-                  title="Mindfulness Center"
-                >
-                  <RiMentalHealthLine size={20} />
-                  <span>Mindfulness</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* EchoLenz Section */}
+          {/* EchoLenz Section - Memory & Knowledge Exploration */}
           <div className="nav-section">
             <div className="nav-section-header" onClick={() => setEchoLenzOpen(!echoLenzOpen)}>
               <div className="nav-section-label">
                 {echoLenzOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
+                <RiMapPinLine size={18} style={{ marginLeft: '4px', marginRight: '8px' }} />
                 <span>EchoLenz</span>
               </div>
             </div>
@@ -417,6 +373,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'map' ? 'active' : ''}`}
                   onClick={() => setView('map')}
+                  title="Visualize your knowledge clusters"
                 >
                   <RiMapPinLine size={20} />
                   <span>Knowledge Map</span>
@@ -424,6 +381,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'list' ? 'active' : ''}`}
                   onClick={() => setView('list')}
+                  title="Browse your memory library"
                 >
                   <RiListCheck size={20} />
                   <span>Memory List</span>
@@ -431,6 +389,7 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'timeline' ? 'active' : ''}`}
                   onClick={() => setView('timeline')}
+                  title="Journey through your browsing history"
                 >
                   <RiCalendarLine size={20} />
                   <span>Timeline</span>
@@ -438,9 +397,57 @@ const Dashboard = () => {
                 <button 
                   className={`nav-item ${view === 'insights' ? 'active' : ''}`}
                   onClick={() => setView('insights')}
+                  title="AI-powered pattern discovery"
                 >
                   <RiSparklingLine size={20} />
                   <span>AI Insights</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Skillify Section - Learning & Growth Tracking */}
+          <div className="nav-section">
+            <div className="nav-section-header" onClick={() => setNewFeaturesOpen(!newFeaturesOpen)}>
+              <div className="nav-section-label">
+                {newFeaturesOpen ? <RiArrowDownSLine size={16} /> : <RiArrowRightSLine size={16} />}
+                <RiBookOpenLine size={18} style={{ marginLeft: '4px', marginRight: '8px' }} />
+                <span>Skillify</span>
+              </div>
+            </div>
+            {newFeaturesOpen && (
+              <div className="nav-section-items">
+                <button 
+                  className={`nav-item ${view === 'skills' ? 'active' : ''}`}
+                  onClick={() => setView('skills')}
+                  title="Track your learning journey and skills"
+                >
+                  <RiBookOpenLine size={20} />
+                  <span>Skills</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'achievements' ? 'active' : ''}`}
+                  onClick={() => setView('achievements')}
+                  title="Unlock badges and complete challenges"
+                >
+                  <RiTrophyLine size={20} />
+                  <span>Achievements</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setView('analytics')}
+                  title="Visualize your learning evolution"
+                >
+                  <RiBarChartLine size={20} />
+                  <span>Analytics</span>
+                </button>
+                <button 
+                  className={`nav-item ${view === 'mindfulness' ? 'active' : ''}`}
+                  onClick={() => setView('mindfulness')}
+                  title="Focus sessions and mood tracking"
+                >
+                  <RiMentalHealthLine size={20} />
+                  <span>Mindfulness</span>
                 </button>
               </div>
             )}
@@ -562,85 +569,135 @@ const Dashboard = () => {
                   </p>
                 </div>
                 
-                <div className="welcome-features">
-                  <div className="feature-card" onClick={() => setView('mindsync')}>
-                    <div className="feature-icon">
-                      <RiHeartLine size={32} />
+                {/* PersonaSync Features - Mind & Personality */}
+                <div className="feature-category">
+                  <h2 className="category-title">
+                    <RiUserLine size={24} style={{ marginRight: '10px' }} />
+                    PersonaSync - Mind & Personality
+                  </h2>
+                  <div className="welcome-features">
+                    <div className="feature-card" onClick={() => setView('mindsync')}>
+                      <div className="feature-icon">
+                        <RiHeartLine size={32} />
+                      </div>
+                      <h3>MindSync</h3>
+                      <p>Track your weekly vibe and trending interests</p>
                     </div>
-                    <h3>MindSync</h3>
-                    <p>Track your weekly vibe and trending interests</p>
+                    
+                    <div className="feature-card" onClick={() => setView('personality')}>
+                      <div className="feature-icon">
+                        <RiUserLine size={32} />
+                      </div>
+                      <h3>Personality</h3>
+                      <p>Weekly snapshots of your digital identity</p>
+                    </div>
+                    
+                    <div className="feature-card" onClick={() => setView('evolution')}>
+                      <div className="feature-icon">
+                        <RiLineChartLine size={32} />
+                      </div>
+                      <h3>Evolution</h3>
+                      <p>Watch your curiosity evolve over time</p>
+                    </div>
+                    
+                    <div className="feature-card" onClick={() => setView('goals')}>
+                      <div className="feature-icon">
+                        <RiTargetLine size={32} />
+                      </div>
+                      <h3>Goals</h3>
+                      <p>Track your intentional browsing goals</p>
+                    </div>
+                    
+                    <div className="feature-card" onClick={() => setView('twin')}>
+                      <div className="feature-icon">
+                        <RiBrainLine size={32} />
+                      </div>
+                      <h3>Digital Twin</h3>
+                      <p>Your AI reflection trained on your patterns</p>
+                    </div>
                   </div>
-                  
-                  <div className="feature-card" onClick={() => setView('personality')}>
-                    <div className="feature-icon">
-                      <RiUserLine size={32} />
+                </div>
+
+                {/* EchoLenz Features - Memory & Knowledge */}
+                <div className="feature-category">
+                  <h2 className="category-title">
+                    <RiMapPinLine size={24} style={{ marginRight: '10px' }} />
+                    EchoLenz - Memory & Knowledge
+                  </h2>
+                  <div className="welcome-features">
+                    <div className="feature-card" onClick={() => setView('map')}>
+                      <div className="feature-icon">
+                        <RiMapPinLine size={32} />
+                      </div>
+                      <h3>Knowledge Map</h3>
+                      <p>Visualize your knowledge clusters</p>
                     </div>
-                    <h3>Personality</h3>
-                    <p>Weekly snapshots of your digital identity</p>
+                    
+                    <div className="feature-card" onClick={() => setView('list')}>
+                      <div className="feature-icon">
+                        <RiListCheck size={32} />
+                      </div>
+                      <h3>Memory List</h3>
+                      <p>Browse your memory library</p>
+                    </div>
+                    
+                    <div className="feature-card" onClick={() => setView('timeline')}>
+                      <div className="feature-icon">
+                        <RiCalendarLine size={32} />
+                      </div>
+                      <h3>Timeline</h3>
+                      <p>Journey through your browsing history</p>
+                    </div>
+                    
+                    <div className="feature-card" onClick={() => setView('insights')}>
+                      <div className="feature-icon">
+                        <RiSparklingLine size={32} />
+                      </div>
+                      <h3>AI Insights</h3>
+                      <p>AI-powered pattern discovery</p>
+                    </div>
                   </div>
-                  
-                  <div className="feature-card" onClick={() => setView('evolution')}>
-                    <div className="feature-icon">
-                      <RiLineChartLine size={32} />
+                </div>
+
+                {/* Skillify Features - Learning & Growth */}
+                <div className="feature-category">
+                  <h2 className="category-title">
+                    <RiBookOpenLine size={24} style={{ marginRight: '10px' }} />
+                    Skillify - Learning & Growth
+                    <span className="new-badge" style={{ marginLeft: '12px' }}>NEW</span>
+                  </h2>
+                  <div className="welcome-features">
+                    <div className="feature-card featured-new" onClick={() => setView('skills')}>
+                      <div className="feature-icon">
+                        <RiBookOpenLine size={32} />
+                      </div>
+                      <h3>Skills</h3>
+                      <p>Track your learning journey and progress</p>
                     </div>
-                    <h3>Evolution</h3>
-                    <p>Watch your curiosity evolve over time</p>
-                  </div>
-                  
-                  <div className="feature-card" onClick={() => setView('twin')}>
-                    <div className="feature-icon">
-                      <RiBrainLine size={32} />
+                    
+                    <div className="feature-card featured-new" onClick={() => setView('achievements')}>
+                      <div className="feature-icon">
+                        <RiTrophyLine size={32} />
+                      </div>
+                      <h3>Achievements</h3>
+                      <p>Unlock badges and complete challenges</p>
                     </div>
-                    <h3>Digital Twin</h3>
-                    <p>Your AI reflection trained on your patterns</p>
-                  </div>
-                  
-                  <div className="feature-card featured-new" onClick={() => setView('skills')}>
-                    <div className="feature-icon">
-                      <RiBookOpenLine size={32} />
+                    
+                    <div className="feature-card featured-new" onClick={() => setView('analytics')}>
+                      <div className="feature-icon">
+                        <RiBarChartLine size={32} />
+                      </div>
+                      <h3>Analytics</h3>
+                      <p>Visualize your learning evolution</p>
                     </div>
-                    <h3>Skills <span className="new-badge">NEW</span></h3>
-                    <p>Track your learning journey and progress</p>
-                  </div>
-                  
-                  <div className="feature-card featured-new" onClick={() => setView('achievements')}>
-                    <div className="feature-icon">
-                      <RiTrophyLine size={32} />
+                    
+                    <div className="feature-card featured-new" onClick={() => setView('mindfulness')}>
+                      <div className="feature-icon">
+                        <RiMentalHealthLine size={32} />
+                      </div>
+                      <h3>Mindfulness</h3>
+                      <p>Focus sessions and mood tracking</p>
                     </div>
-                    <h3>Achievements <span className="new-badge">NEW</span></h3>
-                    <p>Unlock badges and complete challenges</p>
-                  </div>
-                  
-                  <div className="feature-card featured-new" onClick={() => setView('analytics')}>
-                    <div className="feature-icon">
-                      <RiBarChartLine size={32} />
-                    </div>
-                    <h3>Analytics <span className="new-badge">NEW</span></h3>
-                    <p>Visualize your knowledge evolution</p>
-                  </div>
-                  
-                  <div className="feature-card featured-new" onClick={() => setView('mindfulness')}>
-                    <div className="feature-icon">
-                      <RiMentalHealthLine size={32} />
-                    </div>
-                    <h3>Mindfulness <span className="new-badge">NEW</span></h3>
-                    <p>Focus sessions and mood tracking</p>
-                  </div>
-                  
-                  <div className="feature-card" onClick={() => setView('map')}>
-                    <div className="feature-icon">
-                      <RiMapPinLine size={32} />
-                    </div>
-                    <h3>Knowledge Map</h3>
-                    <p>Visualize your browsing patterns</p>
-                  </div>
-                  
-                  <div className="feature-card" onClick={() => setView('insights')}>
-                    <div className="feature-icon">
-                      <RiSparklingLine size={32} />
-                    </div>
-                    <h3>AI Insights</h3>
-                    <p>Discover patterns in your browsing</p>
                   </div>
                 </div>
                 
