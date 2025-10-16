@@ -124,20 +124,40 @@ const Dashboard = () => {
   const loadData = async () => {
     setLoading(true);
 
-    // Get all memories
-    chrome.runtime.sendMessage({ type: 'GET_MEMORIES' }, (response) => {
-      if (response?.memories) {
-        setMemories(response.memories);
-      }
-    });
+    try {
+      // Get all memories
+      chrome.runtime.sendMessage({ type: 'GET_MEMORIES' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('GET_MEMORIES error:', chrome.runtime.lastError);
+          setLoading(false);
+          return;
+        }
+        if (response?.memories) {
+          setMemories(response.memories);
+        } else {
+          console.warn('GET_MEMORIES returned no memories');
+          setMemories([]);
+        }
+      });
 
-    // Get stats
-    chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
-      if (response?.stats) {
-        setStats(response.stats);
-      }
+      // Get stats
+      chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('GET_STATS error:', chrome.runtime.lastError);
+          setLoading(false);
+          return;
+        }
+        if (response?.stats) {
+          setStats(response.stats);
+        } else {
+          console.warn('GET_STATS returned no stats');
+        }
+        setLoading(false);
+      });
+    } catch (err) {
+      console.error('loadData error:', err);
       setLoading(false);
-    });
+    }
   };
 
   const applyFilters = () => {

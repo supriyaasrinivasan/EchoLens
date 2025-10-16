@@ -368,8 +368,30 @@ class SupriAIBackground {
           break;
 
         case 'GET_SKILL_PROGRESS':
-          const skillProgress = await this.skillTracker.getSkillProgress();
-          sendResponse(skillProgress);
+          if (data && data.skill) {
+            // Get progress for specific skill
+            const skillData = await this.db.getSkillByName(data.skill);
+            if (skillData) {
+              const level = this.skillTracker.calculateSkillLevel(skillData);
+              const xp = this.skillTracker.calculateXP(skillData.total_time);
+              sendResponse({ 
+                success: true,
+                progress: {
+                  skill: data.skill,
+                  level: level.value,
+                  xp: xp,
+                  xp_percentage: level.xp_percentage || 0,
+                  total_time: skillData.total_time
+                }
+              });
+            } else {
+              sendResponse({ success: false, error: 'Skill not found' });
+            }
+          } else {
+            // Get all skills progress
+            const skillProgress = await this.skillTracker.getSkillProgress();
+            sendResponse(skillProgress);
+          }
           break;
 
         case 'GET_LEARNING_PATHS':
@@ -381,19 +403,31 @@ class SupriAIBackground {
           break;
 
         case 'ADD_CUSTOM_SKILL':
+          const skillName = data.skill || data.name || message.skill || message.name;
+          if (!skillName) {
+            sendResponse({ success: false, error: 'Skill name is required' });
+            break;
+          }
           await this.db.saveSkillActivity({
             url: 'manual',
-            skill: data.skill || message.skill,
+            skill: skillName,
             confidence: 1.0,
             keywords: '',
+            time_spent: 0,
             timestamp: Date.now()
           });
           sendResponse({ success: true });
           break;
 
         case 'GET_LEARNING_PATH':
-          const learningPath = await this.skillTracker.generateLearningPath(data.skill);
-          sendResponse({ success: true, path: learningPath });
+          const pathData = await this.skillTracker.generateLearningPath(data.skill);
+          if (pathData.error) {
+            sendResponse({ success: false, message: pathData.error });
+          } else {
+            // Convert to array format expected by popup
+            const learningPath = pathData.recommendedCourses || [];
+            sendResponse({ success: true, learningPath });
+          }
           break;
 
         case 'DELETE_SKILL':

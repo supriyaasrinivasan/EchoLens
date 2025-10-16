@@ -46,8 +46,10 @@ const Popup = () => {
 
       // Get skill progress for top 3 skills
       if (skillsResp?.skills && skillsResp.skills.length > 0) {
-        const progressPromises = skillsResp.skills.slice(0, 3).map(async (skill) => {
-          const resp = await sendMessage({ type: 'GET_SKILL_PROGRESS', data: { skill: skill.name } });
+        const topSkills = skillsResp.skills.slice(0, 3);
+        const progressPromises = topSkills.map(async (skill) => {
+          const skillName = typeof skill === 'string' ? skill : skill.name;
+          const resp = await sendMessage({ type: 'GET_SKILL_PROGRESS', data: { skill: skillName } });
           return resp?.progress || null;
         });
         const progressData = await Promise.all(progressPromises);
@@ -109,9 +111,13 @@ const Popup = () => {
       if (resp?.success) {
         setNewSkill('');
         await loadData();
+      } else {
+        console.error('Failed to add skill:', resp?.error);
+        alert(`Failed to add skill: ${resp?.error || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('addSkill error', err);
+      alert('Error adding skill. Please try again.');
     }
     setActionLoading(false);
   };
@@ -132,12 +138,17 @@ const Popup = () => {
     setActionLoading(true);
     try {
       const resp = await sendMessage({ type: 'GET_LEARNING_PATH', data: { skill } });
-      if (resp?.learningPath && resp.learningPath.length > 0) {
+      if (resp?.success && resp.learningPath && resp.learningPath.length > 0) {
         // open first resource in new tab
-        window.open(resp.learningPath[0].url, '_blank');
+        const firstResource = resp.learningPath[0];
+        const url = firstResource.url || firstResource;
+        window.open(url, '_blank');
+      } else {
+        alert(`No learning resources found for ${skill} yet.`);
       }
     } catch (err) {
       console.error('openLearningPath error', err);
+      alert('Error loading learning path. Please try again.');
     }
     setActionLoading(false);
   };
@@ -249,22 +260,28 @@ const Popup = () => {
                 <p className="empty-hint">Add your first skill above to get started!</p>
               </div>
             )}
-            {skills.map((s, idx) => (
-              <div className="skill-item" key={idx}>
-                <div className="skill-info">
-                  <div className="skill-name">{s.name}</div>
-                  {s.total_time && <div className="skill-time">{formatTime(s.total_time)}</div>}
+            {skills.map((skill, idx) => {
+              // Handle both object and string formats
+              const skillName = typeof skill === 'string' ? skill : skill.name;
+              const skillTime = typeof skill === 'object' ? skill.total_time : null;
+              
+              return (
+                <div className="skill-item" key={idx}>
+                  <div className="skill-info">
+                    <div className="skill-name">{skillName}</div>
+                    {skillTime && <div className="skill-time">{formatTime(skillTime)}</div>}
+                  </div>
+                  <div className="skill-actions">
+                    <button className="btn-icon" onClick={() => openLearningPath(skillName)} title="Open learning resources">
+                      <Zap size={14}/>
+                    </button>
+                    <button className="btn-icon danger" onClick={() => removeSkill(skillName)} title="Delete skill">
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
                 </div>
-                <div className="skill-actions">
-                  <button className="btn-icon" onClick={() => openLearningPath(s.name)} title="Open learning resources">
-                    <Zap size={14}/>
-                  </button>
-                  <button className="btn-icon danger" onClick={() => removeSkill(s.name)} title="Delete skill">
-                    <Trash2 size={14}/>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

@@ -1232,14 +1232,27 @@ export class DatabaseManager {
   // Get all unique skills
   async getAllSkills() {
     const stmt = this.db.prepare(`
-      SELECT DISTINCT skill FROM skill_activities
-      ORDER BY skill ASC
+      SELECT 
+        skill,
+        COUNT(*) as visit_count,
+        SUM(time_spent) as total_time,
+        MAX(timestamp) as last_activity,
+        AVG(confidence) as avg_confidence
+      FROM skill_activities
+      GROUP BY skill
+      ORDER BY total_time DESC
     `);
 
     const skills = [];
     while (stmt.step()) {
       const row = stmt.getAsObject();
-      skills.push(row.skill);
+      skills.push({
+        name: row.skill,
+        total_time: row.total_time || 0,
+        visit_count: row.visit_count || 0,
+        last_activity: row.last_activity,
+        confidence: row.avg_confidence || 0
+      });
     }
     stmt.free();
 
