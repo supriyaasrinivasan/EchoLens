@@ -8,6 +8,9 @@
 /* Import PersonaSync styles */
 @import './personasync.css';
 
+/* Import Dashboard Enhancements */
+@import './dashboard-enhancements.css';
+
 * {
   box-sizing: border-box;
   margin: 0;

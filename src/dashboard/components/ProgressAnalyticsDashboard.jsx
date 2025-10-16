@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import {
+  RiBarChartLine,
+  RiLineChartLine,
+  RiPieChartLine,
+  RiTimeLine,
+  RiBookOpenLine,
+  RiTargetLine,
+  RiFlashlightLine,
+  RiArrowUpLine,
+  RiArrowDownLine,
+  RiCalendarLine,
+  RiGlobalLine,
+  RiLightbulbLine
+} from '@remixicon/react';
 
 const ProgressAnalyticsDashboard = () => {
   const [period, setPeriod] = useState('week'); // week, month, year
   const [analytics, setAnalytics] = useState(null);
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMetric, setSelectedMetric] = useState('time'); // time, pages, skills
 
   useEffect(() => {
     loadAnalytics();
@@ -63,6 +78,19 @@ const ProgressAnalyticsDashboard = () => {
     return 'Needs Improvement';
   };
 
+  const getScoreTips = (score) => {
+    if (score >= 80) return 'You\'re in the zone! Keep up the excellent focus.';
+    if (score >= 60) return 'Good work! Try minimizing distractions for even better focus.';
+    if (score >= 40) return 'You\'re making progress. Consider using focus mode to improve.';
+    return 'Let\'s work on your focus. Try setting specific learning goals.';
+  };
+
+  const getTrendIcon = (change) => {
+    if (change > 0) return <RiArrowUpLine size={18} />;
+    if (change < 0) return <RiArrowDownLine size={18} />;
+    return null;
+  };
+
   const formatCategoryData = () => {
     if (!analytics || !analytics.categoryBreakdown) return [];
     
@@ -90,8 +118,10 @@ const ProgressAnalyticsDashboard = () => {
   if (loading) {
     return (
       <div className="analytics-dashboard loading">
-        <div className="loader"></div>
-        <p>Analyzing your progress...</p>
+        <div className="loading-container">
+          <RiBarChartLine size={48} className="loading-icon" />
+          <p>Analyzing your progress...</p>
+        </div>
       </div>
     );
   }
@@ -100,9 +130,19 @@ const ProgressAnalyticsDashboard = () => {
     return (
       <div className="analytics-dashboard">
         <div className="empty-state">
-          <div className="empty-icon">📊</div>
+          <div className="empty-icon"><RiLineChartLine size={64} /></div>
           <h3>No Analytics Available</h3>
           <p>Start browsing to see your progress analytics!</p>
+          <div className="empty-tips">
+            <h4>What You'll See Here:</h4>
+            <ul>
+              <li>📊 Learning time trends</li>
+              <li>📚 Pages visited and categories</li>
+              <li>🎯 Focus score and productivity</li>
+              <li>🚀 Skill growth over time</li>
+              <li>💡 Personalized insights</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
@@ -116,8 +156,8 @@ const ProgressAnalyticsDashboard = () => {
       {/* Header with Period Selector */}
       <div className="dashboard-header">
         <div className="header-content">
-          <h2>📊 Progress Analytics</h2>
-          <p className="subtitle">Your learning evolution over time</p>
+          <h2><RiBarChartLine size={28} /> Progress Analytics</h2>
+          <p className="subtitle">Track your learning evolution and discover patterns in your growth</p>
         </div>
 
         <div className="period-selector">
@@ -125,18 +165,21 @@ const ProgressAnalyticsDashboard = () => {
             className={`period-btn ${period === 'week' ? 'active' : ''}`}
             onClick={() => setPeriod('week')}
           >
+            <RiCalendarLine size={16} />
             Week
           </button>
           <button 
             className={`period-btn ${period === 'month' ? 'active' : ''}`}
             onClick={() => setPeriod('month')}
           >
+            <RiCalendarLine size={16} />
             Month
           </button>
           <button 
             className={`period-btn ${period === 'year' ? 'active' : ''}`}
             onClick={() => setPeriod('year')}
           >
+            <RiCalendarLine size={16} />
             Year
           </button>
         </div>
@@ -144,36 +187,40 @@ const ProgressAnalyticsDashboard = () => {
 
       {/* Key Metrics */}
       <div className="metrics-grid">
-        <div className="metric-card">
-          <div className="metric-icon">📚</div>
+        <div className={`metric-card ${selectedMetric === 'pages' ? 'selected' : ''}`} 
+             onClick={() => setSelectedMetric('pages')}>
+          <div className="metric-icon"><RiBookOpenLine size={24} /></div>
           <div className="metric-content">
             <span className="metric-value">{analytics.totalPages || 0}</span>
             <span className="metric-label">Pages Visited</span>
             {analytics.pagesChange !== undefined && (
               <span className={`metric-change ${analytics.pagesChange >= 0 ? 'positive' : 'negative'}`}>
-                {analytics.pagesChange >= 0 ? '↑' : '↓'} {Math.abs(analytics.pagesChange)}%
+                {getTrendIcon(analytics.pagesChange)}
+                {Math.abs(analytics.pagesChange)}% vs last {period}
               </span>
             )}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon">⏱️</div>
+        <div className={`metric-card ${selectedMetric === 'time' ? 'selected' : ''}`}
+             onClick={() => setSelectedMetric('time')}>
+          <div className="metric-icon"><RiTimeLine size={24} /></div>
           <div className="metric-content">
             <span className="metric-value">
               {formatDuration(analytics.totalTime || 0)}
             </span>
-            <span className="metric-label">Time Spent</span>
+            <span className="metric-label">Time Spent Learning</span>
             {analytics.timeChange !== undefined && (
               <span className={`metric-change ${analytics.timeChange >= 0 ? 'positive' : 'negative'}`}>
-                {analytics.timeChange >= 0 ? '↑' : '↓'} {Math.abs(analytics.timeChange)}%
+                {getTrendIcon(analytics.timeChange)}
+                {Math.abs(analytics.timeChange)}% vs last {period}
               </span>
             )}
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon">🎯</div>
+        <div className="metric-card focus-score-card">
+          <div className="metric-icon"><RiTargetLine size={24} /></div>
           <div className="metric-content">
             <span className="metric-value">{analytics.focusScore || 0}</span>
             <span className="metric-label">Focus Score</span>
@@ -183,14 +230,17 @@ const ProgressAnalyticsDashboard = () => {
             >
               {getScoreLabel(analytics.focusScore)}
             </span>
+            <span className="metric-tip">{getScoreTips(analytics.focusScore)}</span>
           </div>
         </div>
 
-        <div className="metric-card">
-          <div className="metric-icon">🌐</div>
+        <div className={`metric-card ${selectedMetric === 'domains' ? 'selected' : ''}`}
+             onClick={() => setSelectedMetric('domains')}>
+          <div className="metric-icon"><RiGlobalLine size={24} /></div>
           <div className="metric-content">
             <span className="metric-value">{analytics.uniqueDomains || 0}</span>
             <span className="metric-label">Unique Domains</span>
+            <span className="metric-description">Sources explored</span>
           </div>
         </div>
       </div>
@@ -198,14 +248,20 @@ const ProgressAnalyticsDashboard = () => {
       {/* Insights Section */}
       {insights.length > 0 && (
         <div className="insights-section">
-          <h3>💡 Insights</h3>
+          <h3><RiLightbulbLine size={20} /> AI-Powered Insights</h3>
+          <p className="section-description">Personalized recommendations based on your learning patterns</p>
           <div className="insights-grid">
             {insights.map((insight, index) => (
-              <div key={index} className="insight-card">
+              <div key={index} className={`insight-card ${insight.type || 'info'}`}>
                 <div className="insight-icon">{insight.icon || '💡'}</div>
                 <div className="insight-content">
                   <h4>{insight.title}</h4>
                   <p>{insight.message}</p>
+                  {insight.action && (
+                    <button className="insight-action-btn">
+                      {insight.action}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -216,7 +272,8 @@ const ProgressAnalyticsDashboard = () => {
       {/* Category Breakdown */}
       {categoryData.length > 0 && (
         <div className="breakdown-section">
-          <h3>📂 Category Breakdown</h3>
+          <h3><RiPieChartLine size={20} /> Learning Category Breakdown</h3>
+          <p className="section-description">Where you're spending your time</p>
           <div className="breakdown-list">
             {categoryData.map((item, index) => (
               <div key={index} className="breakdown-item">
@@ -238,18 +295,26 @@ const ProgressAnalyticsDashboard = () => {
               </div>
             ))}
           </div>
+          {Object.keys(analytics.categoryBreakdown).length > 5 && (
+            <button className="view-all-btn">
+              View All {Object.keys(analytics.categoryBreakdown).length} Categories
+            </button>
+          )}
         </div>
       )}
 
       {/* Skill Growth */}
       {skillData.length > 0 && (
         <div className="breakdown-section">
-          <h3>🚀 Skill Growth</h3>
+          <h3><RiArrowUpLine size={20} /> Skill Growth This {period.charAt(0).toUpperCase() + period.slice(1)}</h3>
+          <p className="section-description">Your top improving skills</p>
           <div className="breakdown-list">
             {skillData.map((item, index) => (
-              <div key={index} className="breakdown-item">
+              <div key={index} className="breakdown-item skill-item">
                 <div className="breakdown-info">
-                  <span className="breakdown-rank">#{index + 1}</span>
+                  <span className="breakdown-rank trophy-rank">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                  </span>
                   <span className="breakdown-label">{item.skill}</span>
                   <span className="breakdown-count">+{item.xp} XP</span>
                 </div>
