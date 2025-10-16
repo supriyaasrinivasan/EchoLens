@@ -215,7 +215,7 @@ const Dashboard = () => {
         const url = URL.createObjectURL(dataBlob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `echolens-export-${Date.now()}.json`;
+        link.download = `supriai-export-${Date.now()}.json`;
         link.click();
         URL.revokeObjectURL(url);
       }

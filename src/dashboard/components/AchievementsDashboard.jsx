@@ -288,7 +288,7 @@ const AchievementsDashboard = () => {
         <div className="empty-state">
           <div className="empty-icon">🏆</div>
           <h3>No Achievements Yet</h3>
-          <p>Start using EchoLens to unlock achievements and earn rewards!</p>
+          <p>Start using SupriAI to unlock achievements and earn rewards!</p>
         </div>
       )}
     </div>
