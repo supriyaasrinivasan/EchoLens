@@ -7,6 +7,7 @@ import { PersonalityEngine } from './personality-engine.js';
 import { GoalAlignmentAI } from './goal-alignment.js';
 import { DigitalTwinAI } from './digital-twin.js';
 import { SkillTracker } from './skill-tracker.js';
+import { LearningAnalytics } from './learning-analytics.js';
 import PremiumFeatures from './premium-features.js';
 
 // Main Background Worker Class
@@ -19,8 +20,10 @@ class SupriAIBackground {
     this.goalAlignment = null;
     this.digitalTwin = null;
     this.skillTracker = null;
+    this.learningAnalytics = null;
     this.premiumFeatures = null;
     this.activeSessions = new Map();
+    this.learningSessionTracker = new Map(); // Track active learning sessions
     this.init();
   }
 
@@ -33,7 +36,11 @@ class SupriAIBackground {
     this.goalAlignment = new GoalAlignmentAI(this.ai, this.db);
     this.digitalTwin = new DigitalTwinAI(this.ai, this.db);
     this.skillTracker = new SkillTracker(this.ai, this.db);
+    this.learningAnalytics = new LearningAnalytics(this.ai, this.db);
     this.premiumFeatures = new PremiumFeatures(this.db);
+    
+    // Initialize learning analytics database
+    await this.learningAnalytics.initializeDatabase();
     
     // Initialize premium features
     await this.premiumFeatures.initialize();
@@ -49,6 +56,11 @@ class SupriAIBackground {
       if (changeInfo.status === 'complete') {
         this.handleTabLoad(tabId, tab);
       }
+    });
+
+    // Listen for tab activation (user switches tabs)
+    chrome.tabs.onActivated.addListener((activeInfo) => {
+      this.handleTabActivation(activeInfo.tabId);
     });
 
     // Listen for tab closures
@@ -328,6 +340,41 @@ class SupriAIBackground {
           sendResponse({ success: true, members });
           break;
 
+        // Learning Analytics
+        case 'SAVE_LEARNING_SESSION':
+          const learningResult = await this.learningAnalytics.saveLearningSession(data);
+          sendResponse({ success: true, result: learningResult });
+          break;
+
+        case 'GET_LEARNING_ANALYTICS':
+          const learningAnalytics = await this.learningAnalytics.getLearningAnalytics(data?.timeRange || 'week');
+          sendResponse({ success: true, analytics: learningAnalytics });
+          break;
+
+        case 'GET_LEARNING_RECOMMENDATIONS':
+          const recommendations = await this.learningAnalytics.getRecommendations();
+          sendResponse({ success: true, recommendations });
+          break;
+
+        case 'GET_LEARNING_INSIGHTS':
+          const learningInsights = await this.learningAnalytics.generateInsights();
+          sendResponse({ success: true, insights: learningInsights });
+          break;
+
+        case 'GET_LEARNING_STREAK':
+          const streak = await this.learningAnalytics.getLearningStreak();
+          sendResponse({ success: true, streak });
+          break;
+
+        case 'TRACK_LEARNING_ACTIVITY':
+          // Update active learning session
+          const tabId = sender.tab?.id;
+          if (tabId && data) {
+            this.updateLearningSession(tabId, data);
+          }
+          sendResponse({ success: true });
+          break;
+
         default:
           sendResponse({ error: 'Unknown message type' });
       }
@@ -516,6 +563,99 @@ class SupriAIBackground {
     console.log('💭 Mood tracking update');
   }
 
+  /**
+   * Handle tab activation - start tracking learning session
+   */
+  async handleTabActivation(tabId) {
+    try {
+      const tab = await chrome.tabs.get(tabId);
+      if (!tab || !tab.url || tab.url.startsWith('chrome://')) return;
+
+      // Start new learning session tracker
+      const sessionId = `session_${tabId}_${Date.now()}`;
+      this.learningSessionTracker.set(tabId, {
+        sessionId,
+        url: tab.url,
+        title: tab.title,
+        startTime: Date.now(),
+        activeTime: 0,
+        lastActivity: Date.now(),
+        scrollDepth: 0
+      });
+
+      console.log(`📚 Started learning session for tab ${tabId}`);
+    } catch (error) {
+      console.error('Error starting learning session:', error);
+    }
+  }
+
+  /**
+   * Update learning session with activity data
+   */
+  updateLearningSession(tabId, data) {
+    const session = this.learningSessionTracker.get(tabId);
+    if (!session) return;
+
+    const now = Date.now();
+    const timeSinceLastActivity = now - session.lastActivity;
+
+    // Only count as active if less than 30 seconds since last activity
+    if (timeSinceLastActivity < 30000) {
+      session.activeTime += timeSinceLastActivity;
+    }
+
+    session.lastActivity = now;
+
+    if (data.scrollDepth !== undefined) {
+      session.scrollDepth = Math.max(session.scrollDepth, data.scrollDepth);
+    }
+
+    this.learningSessionTracker.set(tabId, session);
+  }
+
+  /**
+   * End learning session and save to database
+   */
+  async endLearningSession(tabId) {
+    const session = this.learningSessionTracker.get(tabId);
+    if (!session) return;
+
+    const now = Date.now();
+    const totalTime = Math.floor((now - session.startTime) / 1000); // in seconds
+
+    // Check if previous session exists for this URL
+    const revisitCount = await this.checkRevisitCount(session.url);
+
+    // Save learning session
+    await this.learningAnalytics.saveLearningSession({
+      url: session.url,
+      title: session.title,
+      timeSpent: totalTime,
+      activeTime: Math.floor(session.activeTime / 1000),
+      scrollDepth: session.scrollDepth,
+      revisitCount: revisitCount + 1,
+      sessionId: session.sessionId
+    });
+
+    this.learningSessionTracker.delete(tabId);
+    console.log(`📚 Ended learning session for tab ${tabId}: ${totalTime}s total, ${Math.floor(session.activeTime / 1000)}s active`);
+  }
+
+  /**
+   * Check how many times a URL has been visited
+   */
+  async checkRevisitCount(url) {
+    try {
+      const result = await this.db.executeSQL(
+        'SELECT COUNT(*) as count FROM learning_sessions WHERE url = ?',
+        [url]
+      );
+      return result[0]?.count || 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
   async handleTabLoad(tabId, tab) {
     if (!tab.url || tab.url.startsWith('chrome://')) return;
 
@@ -525,6 +665,9 @@ class SupriAIBackground {
     if (previousContext && previousContext.visit_count > 0) {
       console.log(`🔮 Returning user to: ${tab.url} (${previousContext.visit_count} previous visits)`);
     }
+
+    // Start learning session tracking
+    await this.handleTabActivation(tabId);
   }
 
   async handleTabClose(tabId) {
@@ -534,6 +677,9 @@ class SupriAIBackground {
       await this.db.updateVisit(session.context);
       this.activeSessions.delete(tabId);
     }
+
+    // End learning session tracking
+    await this.endLearningSession(tabId);
   }
 
   async handlePageUnload(context, tab) {

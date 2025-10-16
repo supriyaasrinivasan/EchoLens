@@ -291,6 +291,17 @@ class ContextCapture {
       type: 'CONTEXT_UPDATE',
       data: context
     });
+
+    // Send learning analytics data
+    chrome.runtime.sendMessage({
+      type: 'TRACK_LEARNING_ACTIVITY',
+      data: {
+        scrollDepth: this.scrollDepth / 100, // Normalize to 0-1
+        timeActive: Date.now() - this.startTime,
+        interactions: this.interactions,
+        isActive: this.isActive
+      }
+    });
   }
 
   async saveHighlight(text) {

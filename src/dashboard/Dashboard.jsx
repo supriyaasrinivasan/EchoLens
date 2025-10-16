@@ -46,9 +46,10 @@ import SkillsDashboard from './components/SkillsDashboard';
 import AchievementsDashboard from './components/AchievementsDashboard';
 import ProgressAnalyticsDashboard from './components/ProgressAnalyticsDashboard';
 import MindfulnessDashboard from './components/MindfulnessDashboard';
+import LearningAnalyticsDashboard from './components/LearningAnalyticsDashboard';
 
 const Dashboard = () => {
-  const [view, setView] = useState('welcome'); // welcome, mindsync, personality, evolution, map, list, timeline, insights, goals, twin, skills, achievements, analytics, mindfulness
+  const [view, setView] = useState('welcome'); // welcome, mindsync, personality, evolution, map, list, timeline, insights, goals, twin, skills, achievements, analytics, mindfulness, learning
   const [memories, setMemories] = useState([]);
   const [filteredMemories, setFilteredMemories] = useState([]);
   const [stats, setStats] = useState(null);
@@ -468,6 +469,14 @@ const Dashboard = () => {
                   <RiMentalHealthLine size={20} />
                   <span>Mindfulness</span>
                 </button>
+                <button 
+                  className={`nav-item ${view === 'learning' ? 'active' : ''}`}
+                  onClick={() => setView('learning')}
+                  title="AI-powered learning recommendations and analytics"
+                >
+                  <RiSparklingLine size={20} />
+                  <span>Learning AI</span>
+                </button>
               </div>
             )}
           </div>
@@ -490,6 +499,7 @@ const Dashboard = () => {
               {view === 'achievements' && <RiTrophyLine size={24} className="page-title-icon" />}
               {view === 'analytics' && <RiBarChartLine size={24} className="page-title-icon" />}
               {view === 'mindfulness' && <RiMentalHealthLine size={24} className="page-title-icon" />}
+              {view === 'learning' && <RiSparklingLine size={24} className="page-title-icon" />}
               {view === 'map' && <RiMapPinLine size={24} className="page-title-icon" />}
               {view === 'list' && <RiListCheck size={24} className="page-title-icon" />}
               {view === 'timeline' && <RiCalendarLine size={24} className="page-title-icon" />}
@@ -505,6 +515,7 @@ const Dashboard = () => {
                 {view === 'achievements' && 'Achievements & Badges'}
                 {view === 'analytics' && 'Progress Analytics'}
                 {view === 'mindfulness' && 'Mindfulness Center'}
+                {view === 'learning' && 'AI Learning Analytics'}
                 {view === 'map' && 'Knowledge Map'}
                 {view === 'list' && 'Memory Library'}
                 {view === 'timeline' && 'Memory Timeline'}
@@ -522,6 +533,7 @@ const Dashboard = () => {
               {view === 'achievements' && 'Your milestones and progress'}
               {view === 'analytics' && 'Your learning evolution over time'}
               {view === 'mindfulness' && 'Track your mental well-being and focus'}
+              {view === 'learning' && 'AI-powered learning analytics and personalized recommendations'}
               {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && 
                 `${filteredMemories.length} memories${searchQuery ? ` matching "${searchQuery}"` : ''}`
               }
@@ -745,6 +757,7 @@ const Dashboard = () => {
           {view === 'achievements' && <AchievementsDashboard />}
           {view === 'analytics' && <ProgressAnalyticsDashboard />}
           {view === 'mindfulness' && <MindfulnessDashboard />}
+          {view === 'learning' && <LearningAnalyticsDashboard />}
           {view === 'map' && <KnowledgeMap memories={filteredMemories} />}
           {view === 'list' && <MemoryList memories={filteredMemories} />}
           {view === 'timeline' && <MemoryTimeline memories={filteredMemories} />}
