@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, ExternalLink, Tag, Sparkles } from 'lucide-react';
+import { RiTimeLine, RiExternalLinkLine, RiPriceTag3Line, RiSparklingLine } from '@remixicon/react';
 
 const MemoryList = ({ memories }) => {
   const formatDate = (timestamp) => {
@@ -29,7 +29,7 @@ const MemoryList = ({ memories }) => {
   if (memories.length === 0) {
     return (
       <div className="empty-list">
-        <Sparkles size={48} />
+        <RiSparklingLine size={48} />
         <h3>No memories found</h3>
         <p>Try adjusting your filters or search query</p>
       </div>
@@ -52,14 +52,14 @@ const MemoryList = ({ memories }) => {
               <h3>{memory.title}</h3>
               <a href={memory.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                 {new URL(memory.url).hostname}
-                <ExternalLink size={14} />
+                <RiExternalLinkLine size={14} />
               </a>
             </div>
           </div>
 
           {memory.insights?.summary && (
             <div className="memory-summary">
-              <Sparkles size={14} />
+              <RiSparklingLine size={14} />
               <p>{memory.insights.summary}</p>
             </div>
           )}
@@ -94,7 +94,7 @@ const MemoryList = ({ memories }) => {
             <div className="memory-tags">
               {memory.tags.map((tag, tidx) => (
                 <span key={tidx} className="memory-tag">
-                  <Tag size={12} />
+                  <RiPriceTag3Line size={12} />
                   {tag}
                 </span>
               ))}

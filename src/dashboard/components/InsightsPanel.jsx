@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { TrendingUp, Sparkles, Link as LinkIcon, Clock } from 'lucide-react';
+import { RiLineChartLine, RiSparklingLine, RiLinksLine, RiTimeLine } from '@remixicon/react';
 
 const InsightsPanel = ({ memories }) => {
   const insights = useMemo(() => {
@@ -62,7 +62,7 @@ const InsightsPanel = ({ memories }) => {
   if (!insights) {
     return (
       <div className="insights-panel">
-        <h3><Sparkles size={20} /> No insights yet</h3>
+        <h3><RiSparklingLine size={20} /> No insights yet</h3>
         <p>Start browsing to generate AI-powered insights</p>
       </div>
     );
@@ -78,14 +78,14 @@ const InsightsPanel = ({ memories }) => {
   return (
     <div className="insights-panel">
       <div className="insights-header">
-        <Sparkles size={24} />
+        <RiSparklingLine size={24} />
         <h3>AI-Powered Insights</h3>
       </div>
 
       {/* Trending Topics */}
       <div className="insight-section">
         <div className="insight-title">
-          <TrendingUp size={18} />
+          <RiLineChartLine size={18} />
           <h4>Trending Topics</h4>
         </div>
         <div className="tag-cloud">
@@ -102,7 +102,7 @@ const InsightsPanel = ({ memories }) => {
       {insights.topClusters.length > 0 && (
         <div className="insight-section">
           <div className="insight-title">
-            <LinkIcon size={18} />
+            <RiLinksLine size={18} />
             <h4>Knowledge Clusters</h4>
           </div>
           <div className="cluster-list">
@@ -119,7 +119,7 @@ const InsightsPanel = ({ memories }) => {
       {/* Time Insights */}
       <div className="insight-section">
         <div className="insight-title">
-          <Clock size={18} />
+          <RiTimeLine size={18} />
           <h4>Time Analysis</h4>
         </div>
         <div className="time-stats">
@@ -137,7 +137,7 @@ const InsightsPanel = ({ memories }) => {
       {/* Most Visited */}
       <div className="insight-section">
         <div className="insight-title">
-          <TrendingUp size={18} />
+          <RiLineChartLine size={18} />
           <h4>Most Revisited</h4>
         </div>
         <div className="top-list">

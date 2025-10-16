@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import { RiCalendarLine, RiTimeLine, RiPriceTag3Line } from '@remixicon/react';
 
 const MemoryTimeline = ({ memories }) => {
   // Group memories by date
@@ -38,7 +38,7 @@ const MemoryTimeline = ({ memories }) => {
   if (memories.length === 0) {
     return (
       <div className="empty-timeline">
-        <Calendar size={48} />
+        <RiCalendarLine size={48} />
         <h3>No memories in this timeframe</h3>
         <p>Try adjusting your filters</p>
       </div>
@@ -50,7 +50,7 @@ const MemoryTimeline = ({ memories }) => {
       {groupedMemories.map(([date, dayMemories], idx) => (
         <div key={idx} className="timeline-group">
           <div className="timeline-date">
-            <Calendar size={20} />
+            <RiCalendarLine size={20} />
             <h3>{date}</h3>
             <span className="memory-count">{dayMemories.length} memories</span>
           </div>
@@ -59,7 +59,7 @@ const MemoryTimeline = ({ memories }) => {
             {dayMemories.map((memory, midx) => (
               <div key={midx} className="timeline-item" onClick={() => window.open(memory.url, '_blank')}>
                 <div className="timeline-time">
-                  <Clock size={16} />
+                  <RiTimeLine size={16} />
                   {formatTime(memory.lastVisit)}
                 </div>
 

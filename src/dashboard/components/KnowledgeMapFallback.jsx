@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles } from 'lucide-react';
+import { RiSparklingLine } from '@remixicon/react';
 
 const KnowledgeMapFallback = ({ memories }) => {
   // Group memories by tags
@@ -69,7 +69,7 @@ const KnowledgeMapFallback = ({ memories }) => {
         overflowY: 'auto'
       }}>
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <Sparkles size={32} style={{ margin: '0 auto 12px', color: '#6366f1' }} />
+          <RiSparklingLine size={32} style={{ margin: '0 auto 12px', color: '#6366f1' }} />
           <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>Your Knowledge Clusters</h3>
           <p style={{ color: '#94a3b8', fontSize: '14px' }}>
             Organized by {tagGroups.length} topics • {memories.length} memories

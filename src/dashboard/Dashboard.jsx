@@ -40,6 +40,7 @@ import InterestEvolutionTimeline from './components/InterestEvolutionTimeline';
 import MindSyncDashboard from './components/MindSyncDashboard';
 import GoalsManager from './components/GoalsManager';
 import DigitalTwin from './components/DigitalTwin';
+import EchoLenzIntro from './components/EchoLenzIntro';
 // New Feature Components
 import SkillsDashboard from './components/SkillsDashboard';
 import AchievementsDashboard from './components/AchievementsDashboard';
@@ -56,8 +57,8 @@ const Dashboard = () => {
   const [theme, setTheme] = useState('dark'); // Theme state
   const [username, setUsername] = useState(''); // User's name
   const [personaSyncOpen, setPersonaSyncOpen] = useState(false); // PersonaSync dropdown state - closed by default
-  const [echoLenzOpen, setEchoLenzOpen] = useState(false); // EchoLenz dropdown state - closed by default
-  const [newFeaturesOpen, setNewFeaturesOpen] = useState(false); // New Features dropdown state - open by default
+  const [echoLenzOpen, setEchoLenzOpen] = useState(false); // EchoLenz dropdown state - open by default
+  const [newFeaturesOpen, setNewFeaturesOpen] = useState(false); // New Features dropdown state - closed by default
   const [filters, setFilters] = useState({
     dateRange: 'all',
     minVisits: 0,
@@ -647,6 +648,18 @@ const Dashboard = () => {
               </div>
             </div>
           )}
+          
+          {/* EchoLenz Views with Intro Banner */}
+          {(view === 'map' || view === 'list' || view === 'timeline' || view === 'insights') && (
+            <>
+              <EchoLenzIntro 
+                currentView={view} 
+                onViewChange={setView}
+                memories={filteredMemories}
+              />
+            </>
+          )}
+          
           {view === 'mindsync' && <MindSyncDashboard />}
           {view === 'personality' && <PersonalitySnapshots />}
           {view === 'evolution' && <InterestEvolutionTimeline />}

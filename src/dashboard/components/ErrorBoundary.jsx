@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { RiErrorWarningLine, RiRefreshLine } from '@remixicon/react';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -29,7 +29,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="error-boundary-container">
           <div className="error-content">
-            <AlertTriangle size={64} className="error-icon" />
+            <RiErrorWarningLine size={64} className="error-icon" />
             <h2>Something went wrong</h2>
             <p>We encountered an unexpected error. Don't worry, your data is safe.</p>
             
@@ -40,7 +40,7 @@ class ErrorBoundary extends React.Component {
             )}
             
             <button onClick={this.handleReset} className="error-reset-button">
-              <RefreshCw size={18} />
+              <RiRefreshLine size={18} />
               Reload Dashboard
             </button>
           </div>
