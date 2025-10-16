@@ -80,6 +80,12 @@ const Dashboard = () => {
     // Try to get username from Chrome profile
     if (chrome.identity && chrome.identity.getProfileUserInfo) {
       chrome.identity.getProfileUserInfo({ accountStatus: 'ANY' }, (userInfo) => {
+        // Check for errors first
+        if (chrome.runtime.lastError) {
+          console.warn('Could not get user info:', chrome.runtime.lastError.message);
+          return;
+        }
+        
         if (userInfo && userInfo.email) {
           // Extract name from email (before @)
           const name = userInfo.email.split('@')[0];

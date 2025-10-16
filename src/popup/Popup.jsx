@@ -261,21 +261,18 @@ const Popup = () => {
               </div>
             )}
             {skills.map((skill, idx) => {
-              // Handle both object and string formats
-              const skillName = typeof skill === 'string' ? skill : skill.name;
-              const skillTime = typeof skill === 'object' ? skill.total_time : null;
-              
+              // Skills are now always returned as objects from getAllSkills()
               return (
                 <div className="skill-item" key={idx}>
                   <div className="skill-info">
-                    <div className="skill-name">{skillName}</div>
-                    {skillTime && <div className="skill-time">{formatTime(skillTime)}</div>}
+                    <div className="skill-name">{skill.name}</div>
+                    {skill.total_time > 0 && <div className="skill-time">{formatTime(skill.total_time)}</div>}
                   </div>
                   <div className="skill-actions">
-                    <button className="btn-icon" onClick={() => openLearningPath(skillName)} title="Open learning resources">
+                    <button className="btn-icon" onClick={() => openLearningPath(skill.name)} title="Open learning resources">
                       <Zap size={14}/>
                     </button>
-                    <button className="btn-icon danger" onClick={() => removeSkill(skillName)} title="Delete skill">
+                    <button className="btn-icon danger" onClick={() => removeSkill(skill.name)} title="Delete skill">
                       <Trash2 size={14}/>
                     </button>
                   </div>

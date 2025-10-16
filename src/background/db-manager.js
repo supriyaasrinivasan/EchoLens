@@ -271,7 +271,18 @@ export class DatabaseManager {
 
     try {
       const data = this.db.export();
-      await chrome.storage.local.set({ [this.dbName]: Array.from(data) });
+      const dataArray = Array.from(data);
+      
+      // Monitor database size
+      const sizeInMB = (dataArray.length / 1024 / 1024).toFixed(2);
+      if (sizeInMB > 9) {
+        console.warn(`⚠️ Database size: ${sizeInMB}MB - approaching 10MB limit!`);
+        // Trigger cleanup when approaching limit
+        await this.cleanup();
+      }
+      
+      await chrome.storage.local.set({ [this.dbName]: dataArray });
+      console.log(`💾 Database saved (${sizeInMB}MB)`);
     } catch (error) {
       console.error('❌ Error saving database:', error);
     }

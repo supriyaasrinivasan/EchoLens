@@ -278,7 +278,11 @@ class ContextCapture {
   }
 
   async sendHeartbeat() {
-    if (!this.isActive) return;
+    // Don't send heartbeat if page is hidden or user is inactive
+    if (document.hidden || !this.isActive) {
+      console.log('⏸️ Skipping heartbeat (page hidden or inactive)');
+      return;
+    }
     
     const context = this.extractPageContext();
     
@@ -314,6 +318,12 @@ class ContextCapture {
   }
 
   injectOverlay() {
+    // Check if overlay already exists to prevent duplicates
+    if (document.getElementById('supriai-overlay')) {
+      console.log('✓ Overlay already exists, skipping injection');
+      return;
+    }
+    
     // Create the floating memory icon
     const overlay = document.createElement('div');
     overlay.id = 'supriai-overlay';
