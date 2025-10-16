@@ -23,12 +23,52 @@ const MindfulnessDashboard = () => {
   const [reflectionResponse, setReflectionResponse] = useState('');
   const [mindfulnessScore, setMindfulnessScore] = useState(0);
   const [focusMode, setFocusMode] = useState(false);
-  const [focusDuration, setFocusDuration] = useState(25);
+  const [focusDuration, setFocusDuration] = useState(45);
   const [loading, setLoading] = useState(true);
+  const [selectedMood, setSelectedMood] = useState(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [moodStats, setMoodStats] = useState(null);
+  const [focusStats, setFocusStats] = useState(null);
+  const [focusTimeRemaining, setFocusTimeRemaining] = useState(0);
+  const [focusProgress, setFocusProgress] = useState(0);
 
   useEffect(() => {
     loadMindfulnessData();
   }, []);
+
+  // Poll focus mode status when active
+  useEffect(() => {
+    if (!focusMode) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await chrome.runtime.sendMessage({
+          type: 'GET_FOCUS_STATUS'
+        });
+
+        if (response.success && response.status) {
+          if (!response.status.active) {
+            // Focus mode ended
+            setFocusMode(false);
+            setFocusTimeRemaining(0);
+            setFocusProgress(0);
+            showToast('Focus session completed! 🎉');
+            await loadMindfulnessData();
+          } else {
+            // Update timer
+            const remainingMs = response.status.remaining;
+            setFocusTimeRemaining(remainingMs);
+            setFocusProgress(response.status.progress || 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error polling focus status:', error);
+      }
+    }, 1000); // Update every second
+
+    return () => clearInterval(pollInterval);
+  }, [focusMode]);
 
   const loadMindfulnessData = async () => {
     try {
@@ -70,6 +110,18 @@ const MindfulnessDashboard = () => {
         setMindfulnessScore(scoreResponse.score || 0);
       }
 
+      // Calculate mood statistics
+      if (moodResponse.timeline && moodResponse.timeline.length > 0) {
+        const stats = calculateMoodStats(moodResponse.timeline);
+        setMoodStats(stats);
+      }
+
+      // Calculate focus statistics
+      if (focusResponse.sessions && focusResponse.sessions.length > 0) {
+        const stats = calculateFocusStats(focusResponse.sessions);
+        setFocusStats(stats);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Failed to load mindfulness data:', error);
@@ -77,8 +129,54 @@ const MindfulnessDashboard = () => {
     }
   };
 
+  const calculateMoodStats = (timeline) => {
+    const moodCounts = {};
+    timeline.forEach(entry => {
+      moodCounts[entry.mood] = (moodCounts[entry.mood] || 0) + 1;
+    });
+    
+    const mostCommon = Object.entries(moodCounts)
+      .sort((a, b) => b[1] - a[1])[0];
+    
+    const last7Days = timeline.slice(0, 7);
+    const positiveMoods = last7Days.filter(e => 
+      ['energized', 'happy', 'calm'].includes(e.mood)
+    ).length;
+    const positivityRate = (positiveMoods / last7Days.length) * 100;
+
+    return {
+      mostCommon: mostCommon ? mostCommon[0] : null,
+      mostCommonCount: mostCommon ? mostCommon[1] : 0,
+      totalEntries: timeline.length,
+      positivityRate: Math.round(positivityRate),
+      weeklyAverage: last7Days.length
+    };
+  };
+
+  const calculateFocusStats = (sessions) => {
+    const totalTime = sessions.reduce((sum, s) => sum + s.duration, 0);
+    const completedSessions = sessions.filter(s => s.completed).length;
+    const completionRate = (completedSessions / sessions.length) * 100;
+    const avgSessionLength = totalTime / sessions.length;
+
+    return {
+      totalTime,
+      totalSessions: sessions.length,
+      completedSessions,
+      completionRate: Math.round(completionRate),
+      avgSessionLength: Math.round(avgSessionLength)
+    };
+  };
+
+  const showToast = (message) => {
+    setToastMessage(message);
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
+  };
+
   const handleMoodLog = async (mood) => {
     try {
+      setSelectedMood(mood);
       const response = await chrome.runtime.sendMessage({
         type: 'LOG_MOOD',
         mood
@@ -86,9 +184,12 @@ const MindfulnessDashboard = () => {
 
       if (response.success) {
         await loadMindfulnessData();
+        showToast(`Mood logged: ${mood} ${getMoodEmoji(mood)}`);
+        setTimeout(() => setSelectedMood(null), 2000);
       }
     } catch (error) {
       console.error('Failed to log mood:', error);
+      setSelectedMood(null);
     }
   };
 
@@ -104,8 +205,8 @@ const MindfulnessDashboard = () => {
 
       if (response.success) {
         setReflectionResponse('');
-        // Show success message
-        alert('Reflection saved! 🎉');
+        showToast('Reflection saved! 🎉 Great job taking time to reflect!');
+        await loadMindfulnessData();
       }
     } catch (error) {
       console.error('Failed to save reflection:', error);
@@ -114,16 +215,42 @@ const MindfulnessDashboard = () => {
 
   const handleStartFocus = async () => {
     try {
+      console.log('🎯 Starting focus mode with duration:', focusDuration, 'minutes');
       const response = await chrome.runtime.sendMessage({
         type: 'START_FOCUS_MODE',
-        duration: focusDuration * 60 // Convert to seconds
+        data: {
+          duration: focusDuration * 60 * 1000 // Convert minutes to milliseconds
+        }
+      });
+
+      console.log('📥 Focus mode response:', response);
+
+      if (response && response.success) {
+        setFocusMode(true);
+        showToast(`Focus mode started! ${focusDuration} minutes of deep work ahead 🎯`);
+      } else {
+        console.error('❌ Focus mode failed:', response);
+        showToast('Failed to start focus mode. Please try again.');
+      }
+    } catch (error) {
+      console.error('❌ Failed to start focus mode:', error);
+      showToast('Error starting focus mode. Check console.');
+    }
+  };
+
+  const handleStopFocus = async () => {
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'STOP_FOCUS_MODE'
       });
 
       if (response.success) {
-        setFocusMode(true);
+        setFocusMode(false);
+        showToast('Focus session ended! Great work! 🎉');
+        await loadMindfulnessData();
       }
     } catch (error) {
-      console.error('Failed to start focus mode:', error);
+      console.error('Failed to stop focus mode:', error);
     }
   };
 
@@ -176,6 +303,13 @@ const MindfulnessDashboard = () => {
     return `${minutes}m`;
   };
 
+  const formatTimeRemaining = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const getScoreColor = (score) => {
     if (score >= 80) return '#10b981';
     if (score >= 60) return '#3b82f6';
@@ -196,6 +330,14 @@ const MindfulnessDashboard = () => {
 
   return (
     <div className="mindfulness-dashboard">
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="success-toast">
+          <RiSparklingLine size={20} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="dashboard-header">
         <div className="header-content">
@@ -219,6 +361,59 @@ const MindfulnessDashboard = () => {
         </div>
       </div>
 
+      {/* Statistics Overview */}
+      {(moodStats || focusStats) && (
+        <div className="mindfulness-stats-grid">
+          {moodStats && (
+            <>
+              <div className="stat-card-mindful">
+                <div className="stat-icon-wrapper">
+                  <RiEmotionHappyLine size={24} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-value">{moodStats.totalEntries}</div>
+                  <div className="stat-label">Mood Logs</div>
+                </div>
+              </div>
+              
+              <div className="stat-card-mindful">
+                <div className="stat-icon-wrapper" style={{ background: 'rgba(16, 185, 129, 0.15)' }}>
+                  <RiSparklingLine size={24} style={{ color: '#10b981' }} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-value">{moodStats.positivityRate}%</div>
+                  <div className="stat-label">Positivity Rate</div>
+                </div>
+              </div>
+            </>
+          )}
+          
+          {focusStats && (
+            <>
+              <div className="stat-card-mindful">
+                <div className="stat-icon-wrapper" style={{ background: 'rgba(59, 130, 246, 0.15)' }}>
+                  <RiTimerLine size={24} style={{ color: '#3b82f6' }} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-value">{formatDuration(focusStats.totalTime)}</div>
+                  <div className="stat-label">Focus Time</div>
+                </div>
+              </div>
+              
+              <div className="stat-card-mindful">
+                <div className="stat-icon-wrapper" style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
+                  <RiFireLine size={24} style={{ color: '#ef4444' }} />
+                </div>
+                <div className="stat-content">
+                  <div className="stat-value">{focusStats.completionRate}%</div>
+                  <div className="stat-label">Completion Rate</div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Mood Logger */}
       <div className="mood-logger-section">
         <h3><RiEmotionHappyLine size={20} /> How are you feeling?</h3>
@@ -226,19 +421,22 @@ const MindfulnessDashboard = () => {
         <div className="mood-buttons">
           {['energized', 'happy', 'calm', 'neutral', 'tired', 'stressed', 'frustrated'].map(mood => {
             const MoodIcon = getMoodIcon(mood);
+            const isSelected = selectedMood === mood;
             return (
               <button
                 key={mood}
-                className="mood-btn"
+                className={`mood-btn ${isSelected ? 'selected' : ''}`}
                 onClick={() => handleMoodLog(mood)}
                 style={{ '--mood-color': getMoodColor(mood) }}
                 title={mood.charAt(0).toUpperCase() + mood.slice(1)}
+                disabled={isSelected}
               >
                 <div className="mood-icon-wrapper">
-                  <MoodIcon size={28} />
+                  <MoodIcon size={28} style={{ color: isSelected ? getMoodColor(mood) : undefined }} />
                 </div>
                 <span className="mood-emoji">{getMoodEmoji(mood)}</span>
                 <span className="mood-label">{mood}</span>
+                {isSelected && <span className="mood-checkmark">✓</span>}
               </button>
             );
           })}
@@ -304,13 +502,59 @@ const MindfulnessDashboard = () => {
               <div className="focus-active-icon">
                 <RiTimerLine size={48} />
               </div>
-              <p className="focus-active-title">Focus mode is active!</p>
+              <p className="focus-active-title">Focus Mode is Active! 🎯</p>
+              
+              {/* Live Countdown Timer */}
+              <div className="focus-timer-display">
+                <div className="timer-circle">
+                  <svg className="timer-ring" width="120" height="120">
+                    <circle
+                      className="timer-ring-bg"
+                      stroke="#e5e7eb"
+                      strokeWidth="8"
+                      fill="transparent"
+                      r="52"
+                      cx="60"
+                      cy="60"
+                    />
+                    <circle
+                      className="timer-ring-progress"
+                      stroke="#667eea"
+                      strokeWidth="8"
+                      fill="transparent"
+                      r="52"
+                      cx="60"
+                      cy="60"
+                      strokeDasharray={`${2 * Math.PI * 52}`}
+                      strokeDashoffset={`${2 * Math.PI * 52 * (1 - focusProgress / 100)}`}
+                      strokeLinecap="round"
+                      style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+                    />
+                  </svg>
+                  <div className="timer-text">
+                    <span className="timer-value">{formatTimeRemaining(focusTimeRemaining)}</span>
+                    <span className="timer-label">remaining</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="focus-active-info">
+                <div className="focus-info-item">
+                  <RiFireLine size={20} style={{ color: '#ef4444' }} />
+                  <span>Only educational content is accessible</span>
+                </div>
+                <div className="focus-info-item">
+                  <RiSparklingLine size={20} style={{ color: '#10b981' }} />
+                  <span>Stay focused on learning!</span>
+                </div>
+              </div>
+              
               <p className="focus-active-note">
-                Check the extension popup or content pages to see the timer and controls
+                🚫 Non-educational sites are blocked during this session
               </p>
-              <button className="focus-stop-btn">
+              <button className="focus-stop-btn" onClick={handleStopFocus}>
                 <RiStopCircleLine size={20} />
-                End Session
+                End Session Early
               </button>
             </div>
           )}

@@ -4,6 +4,7 @@ import Dashboard from './Dashboard';
 import ErrorBoundary from './components/ErrorBoundary';
 import './dashboard.css';
 import './learning-analytics.css';
+import './mindfulness.css';
 
 const root = createRoot(document.getElementById('root'));
 root.render(

@@ -11,9 +11,12 @@ const Popup = () => {
   const [theme, setTheme] = useState('dark');
   const [newSkill, setNewSkill] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [focusTimeRemaining, setFocusTimeRemaining] = useState(0);
 
   useEffect(() => {
     loadData();
+    checkFocusMode();
     // Load theme from storage
     chrome.storage.sync.get(['theme'], (result) => {
       if (result.theme) {
@@ -22,6 +25,52 @@ const Popup = () => {
       }
     });
   }, []);
+
+  const checkFocusMode = async () => {
+    try {
+      const response = await sendMessage({ type: 'GET_FOCUS_STATUS' });
+      if (response && response.success && response.status) {
+        setFocusMode(response.status.active);
+        setFocusTimeRemaining(response.status.remaining || 0);
+      }
+    } catch (error) {
+      console.error('Error checking focus mode:', error);
+    }
+  };
+
+  const startFocusMode = async () => {
+    setActionLoading(true);
+    try {
+      const response = await sendMessage({ 
+        type: 'START_FOCUS_MODE',
+        data: { duration: 25 * 60 * 1000 } // 25 minutes
+      });
+      if (response && response.success) {
+        setFocusMode(true);
+        alert('🎯 Focus mode started! 25 minutes of deep work ahead.');
+      } else {
+        alert('Failed to start focus mode: ' + (response?.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error starting focus mode:', error);
+      alert('Error starting focus mode. Check console.');
+    }
+    setActionLoading(false);
+  };
+
+  const stopFocusMode = async () => {
+    setActionLoading(true);
+    try {
+      const response = await sendMessage({ type: 'STOP_FOCUS_MODE' });
+      if (response && response.success) {
+        setFocusMode(false);
+        alert('✅ Focus session ended!');
+      }
+    } catch (error) {
+      console.error('Error stopping focus mode:', error);
+    }
+    setActionLoading(false);
+  };
 
   const sendMessage = (msg) => new Promise((resolve) => chrome.runtime.sendMessage(msg, (res) => resolve(res)));
 
@@ -179,6 +228,32 @@ const Popup = () => {
       </header>
 
       <main className="popup-content">
+        {/* Focus Mode Quick Access */}
+        <section className="focus-quick-section">
+          {!focusMode ? (
+            <button className="focus-start-quick-btn" onClick={startFocusMode} disabled={actionLoading}>
+              <Target size={18} />
+              <div>
+                <div>Start 25-Min Focus Mode</div>
+                <div style={{ fontSize: '11px', opacity: 0.7 }}>Block distracting sites</div>
+              </div>
+            </button>
+          ) : (
+            <div className="focus-active-quick">
+              <div className="focus-pulse-icon">🎯</div>
+              <div>
+                <div><strong>Focus Mode Active</strong></div>
+                <div style={{ fontSize: '12px', opacity: 0.8 }}>
+                  {Math.floor(focusTimeRemaining / 60000)}:{Math.floor((focusTimeRemaining % 60000) / 1000).toString().padStart(2, '0')} remaining
+                </div>
+              </div>
+              <button className="focus-stop-quick-btn" onClick={stopFocusMode} disabled={actionLoading}>
+                Stop
+              </button>
+            </div>
+          )}
+        </section>
+
         {/* Stats Overview */}
         {stats && (
           <section className="stats-overview">

@@ -9,6 +9,7 @@ import { DigitalTwinAI } from './digital-twin.js';
 import { SkillTracker } from './skill-tracker.js';
 import { LearningAnalytics } from './learning-analytics.js';
 import PremiumFeatures from './premium-features.js';
+import { MindfulnessEngine } from './mindfulness-engine.js';
 
 // Main Background Worker Class
 
@@ -22,8 +23,10 @@ class SupriAIBackground {
     this.skillTracker = null;
     this.learningAnalytics = null;
     this.premiumFeatures = null;
+    this.mindfulness = null;
     this.activeSessions = new Map();
     this.learningSessionTracker = new Map(); // Track active learning sessions
+    this.focusModeBlockedTabs = new Set(); // Track tabs blocked during focus mode
     this.init();
   }
 
@@ -38,6 +41,7 @@ class SupriAIBackground {
     this.skillTracker = new SkillTracker(this.ai, this.db);
     this.learningAnalytics = new LearningAnalytics(this.ai, this.db);
     this.premiumFeatures = new PremiumFeatures(this.db);
+    this.mindfulness = new MindfulnessEngine(this.ai, this.db);
     
     // Initialize learning analytics database
     await this.learningAnalytics.initializeDatabase();
@@ -68,6 +72,11 @@ class SupriAIBackground {
       this.handleTabClose(tabId);
     });
 
+    // Listen for web navigation for focus mode blocking
+    chrome.webNavigation.onBeforeNavigate.addListener((details) => {
+      this.handleNavigation(details);
+    });
+
     // Set up periodic tasks
     chrome.alarms.create('cleanup', { periodInMinutes: 60 });
     chrome.alarms.create('weeklySnapshot', { periodInMinutes: 10080 }); // Weekly
@@ -80,6 +89,8 @@ class SupriAIBackground {
         this.generateWeeklySnapshot();
       } else if (alarm.name === 'moodTracking') {
         this.updateMoodTracking();
+      } else if (alarm.name === 'end_focus_mode') {
+        this.handleFocusModeEnd();
       }
     });
 
@@ -373,6 +384,90 @@ class SupriAIBackground {
             this.updateLearningSession(tabId, data);
           }
           sendResponse({ success: true });
+          break;
+
+        // Mindfulness & Focus Mode
+        case 'START_FOCUS_MODE':
+          console.log('📥 Received START_FOCUS_MODE request with data:', data);
+          try {
+            if (!data || !data.duration) {
+              console.error('❌ No duration provided in START_FOCUS_MODE');
+              sendResponse({ success: false, error: 'Duration is required' });
+              break;
+            }
+            console.log('🎯 Starting focus mode with duration:', data.duration, 'ms');
+            const focusSession = await this.mindfulness.activateFocusMode(data.duration);
+            console.log('✅ Focus session created:', focusSession);
+            await this.enableFocusModeBlocking();
+            console.log('✅ Focus mode blocking enabled');
+            sendResponse({ success: true, session: focusSession });
+          } catch (error) {
+            console.error('❌ Error starting focus mode:', error);
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
+        case 'STOP_FOCUS_MODE':
+          console.log('📥 Received STOP_FOCUS_MODE request');
+          try {
+            await this.mindfulness.deactivateFocusMode();
+            await this.disableFocusModeBlocking();
+            console.log('✅ Focus mode stopped successfully');
+            sendResponse({ success: true });
+          } catch (error) {
+            console.error('❌ Error stopping focus mode:', error);
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
+        case 'GET_FOCUS_STATUS':
+          try {
+            const focusStatus = await this.mindfulness.getFocusModeStatus();
+            sendResponse({ success: true, status: focusStatus });
+          } catch (error) {
+            console.error('❌ Error getting focus status:', error);
+            sendResponse({ success: false, error: error.message });
+          }
+          break;
+
+        case 'GET_MOOD_TIMELINE':
+          const moodData = await this.mindfulness.getMoodTimeline(data?.days || 30);
+          sendResponse({ success: true, timeline: moodData.timeline });
+          break;
+
+        case 'LOG_MOOD':
+          await this.db.saveMoodData({
+            timestamp: Date.now(),
+            mood: data.mood,
+            sentiment: this.getMoodSentiment(data.mood),
+            sentimentScore: this.getMoodScore(data.mood),
+            emotions: data.mood,
+            tone: 'manual',
+            url: 'manual_log'
+          });
+          sendResponse({ success: true });
+          break;
+
+        case 'GET_FOCUS_SESSIONS':
+          const sessions = await this.db.getFocusSessionsSince(
+            Date.now() - (data?.days || 30) * 24 * 60 * 60 * 1000
+          );
+          sendResponse({ success: true, sessions });
+          break;
+
+        case 'GET_DAILY_PROMPT':
+          const prompt = await this.mindfulness.getDailyPrompt();
+          sendResponse({ success: true, prompt });
+          break;
+
+        case 'SAVE_REFLECTION':
+          await this.mindfulness.saveReflectionResponse(data.promptId, data.response);
+          sendResponse({ success: true });
+          break;
+
+        case 'GET_MINDFULNESS_SCORE':
+          const report = await this.mindfulness.getMindfulnessReport(7);
+          sendResponse({ success: true, score: report.overallScore });
           break;
 
         default:
@@ -749,6 +844,543 @@ class SupriAIBackground {
   async performCleanup() {
     console.log('🧹 Performing cleanup...');
     await this.db.cleanup();
+  }
+
+  async generateWeeklySnapshot() {
+    if (this.personalityEngine) {
+      await this.personalityEngine.generateWeeklySnapshot();
+    }
+  }
+
+  async updateMoodTracking() {
+    // Periodic mood tracking can be implemented here if needed
+    console.log('💭 Mood tracking update');
+  }
+
+  // Focus Mode Content Blocking
+  async enableFocusModeBlocking() {
+    console.log('🎯 Focus mode blocking enabled - Only educational content allowed');
+    await chrome.storage.local.set({ focus_mode_blocking: true });
+
+    // Use declarativeNetRequest to block non-educational domains
+    const educationalDomains = this.getEducationalDomains();
+    
+    // Create allow rules for educational domains
+    const allowRules = educationalDomains.map((domain, index) => ({
+      id: index + 1,
+      priority: 2,
+      action: { type: 'allow' },
+      condition: {
+        urlFilter: `*://*.${domain}/*`,
+        resourceTypes: ['main_frame']
+      }
+    }));
+
+    // Add a block rule for all other domains (lower priority)
+    const blockRule = {
+      id: 10000,
+      priority: 1,
+      action: { 
+        type: 'redirect',
+        redirect: {
+          extensionPath: '/focus-block.html'
+        }
+      },
+      condition: {
+        urlFilter: '*://*/*',
+        resourceTypes: ['main_frame'],
+        excludedInitiatorDomains: ['localhost', '127.0.0.1']
+      }
+    };
+
+    try {
+      // Remove existing dynamic rules
+      const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+      const ruleIdsToRemove = existingRules.map(rule => rule.id);
+      
+      if (ruleIdsToRemove.length > 0) {
+        await chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: ruleIdsToRemove
+        });
+      }
+
+      // Add new rules (allow educational + block rest)
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        addRules: [...allowRules, blockRule]
+      });
+
+      console.log('✅ Focus mode blocking rules activated:', allowRules.length, 'educational domains allowed');
+    } catch (error) {
+      console.error('❌ Error setting up declarativeNetRequest rules:', error);
+      // Fallback to webNavigation-based blocking
+      await this.enableWebNavigationBlocking();
+    }
+  }
+
+  async enableWebNavigationBlocking() {
+    // Fallback method using webNavigation
+    await chrome.storage.local.set({ focus_mode_blocking_nav: true });
+    console.log('🎯 Using webNavigation fallback for blocking');
+  }
+
+  getEducationalDomains() {
+    return [
+      'edu',
+      'ac.uk',
+      'ac.in',
+      'edu.au',
+      'wikipedia.org',
+      'coursera.org',
+      'udemy.com',
+      'edx.org',
+      'khanacademy.org',
+      'mit.edu',
+      'stanford.edu',
+      'harvard.edu',
+      'arxiv.org',
+      'scholar.google.com',
+      'researchgate.net',
+      'stackoverflow.com',
+      'github.com',
+      'medium.com',
+      'dev.to',
+      'freecodecamp.org',
+      'w3schools.com',
+      'developer.mozilla.org',
+      'mdn.mozilla.org',
+      'docs.python.org',
+      'docs.oracle.com',
+      'docs.microsoft.com',
+      'learn.microsoft.com',
+      'cloud.google.com',
+      'aws.amazon.com',
+      'learn.jquery.com',
+      'vuejs.org',
+      'reactjs.org',
+      'angular.io',
+      'nodejs.org',
+      'leetcode.com',
+      'hackerrank.com',
+      'codewars.com',
+      'codecademy.com',
+      'udacity.com',
+      'pluralsight.com',
+      'lynda.com',
+      'linkedin.com/learning',
+      'skillshare.com',
+      'brilliant.org',
+      'duolingo.com',
+      'memrise.com',
+      'quizlet.com',
+      'sciencedirect.com',
+      'nature.com',
+      'science.org',
+      'jstor.org',
+      'springer.com',
+      'wiley.com',
+      'elsevier.com',
+      'ted.com',
+      'youtube.com/education',
+      'youtube.com/learning',
+      'notion.so',
+      'evernote.com',
+      'onenote.com',
+      'trello.com',
+      'asana.com',
+      'books.google.com',
+      'goodreads.com',
+      'readthedocs.io',
+      'readthedocs.org'
+    ];
+  }
+
+  async disableFocusModeBlocking() {
+    console.log('✅ Focus mode blocking disabled');
+    await chrome.storage.local.remove(['focus_mode_blocking', 'focus_mode_blocking_nav', 'blocked_sites_count']);
+    this.focusModeBlockedTabs.clear();
+
+    try {
+      // Remove all dynamic rules
+      const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
+      const ruleIdsToRemove = existingRules.map(rule => rule.id);
+      
+      if (ruleIdsToRemove.length > 0) {
+        await chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: ruleIdsToRemove
+        });
+        console.log('✅ Removed', ruleIdsToRemove.length, 'blocking rules');
+      }
+    } catch (error) {
+      console.error('Error removing declarativeNetRequest rules:', error);
+    }
+  }
+
+  async handleNavigation(details) {
+    // Only intercept main frame navigations
+    if (details.frameId !== 0) return;
+
+    const { focus_mode_blocking } = await chrome.storage.local.get(['focus_mode_blocking']);
+    if (!focus_mode_blocking) return;
+
+    const url = details.url;
+    
+    // Allow chrome:// and extension pages
+    if (url.startsWith('chrome://') || url.startsWith('chrome-extension://')) {
+      return;
+    }
+
+    // Check if URL is educational
+    if (!this.isEducationalContent(url)) {
+      // Block the navigation by redirecting to a block page
+      console.log(`🚫 Blocked non-educational URL during focus mode: ${url}`);
+      this.focusModeBlockedTabs.add(details.tabId);
+      
+      // Create block page HTML
+      const blockPageHtml = this.createBlockPage(url);
+      
+      // Inject the block page
+      chrome.tabs.update(details.tabId, {
+        url: 'data:text/html;charset=utf-8,' + encodeURIComponent(blockPageHtml)
+      });
+    }
+  }
+
+  isEducationalContent(url) {
+    // Educational domains and keywords
+    const educationalDomains = [
+      'edu',
+      'wikipedia.org',
+      'coursera.org',
+      'udemy.com',
+      'edx.org',
+      'khanacademy.org',
+      'mit.edu',
+      'stanford.edu',
+      'harvard.edu',
+      'arxiv.org',
+      'scholar.google.com',
+      'researchgate.net',
+      'stackoverflow.com',
+      'github.com',
+      'medium.com',
+      'dev.to',
+      'freecodecamp.org',
+      'w3schools.com',
+      'mdn.mozilla.org',
+      'docs.',
+      'tutorial',
+      'learn',
+      'course',
+      'education',
+      'academic',
+      'study',
+      'research',
+      'library',
+      'books.google',
+      'sciencedirect.com',
+      'nature.com',
+      'science.org',
+      'ted.com'
+    ];
+
+    const urlLower = url.toLowerCase();
+    
+    // Check if URL contains educational domains or keywords
+    return educationalDomains.some(domain => 
+      urlLower.includes(domain)
+    );
+  }
+
+  createBlockPage(blockedUrl) {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Focus Mode Active</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+          }
+          
+          .container {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          }
+          
+          .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+          }
+          
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+          }
+          
+          h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 16px;
+            font-weight: 700;
+          }
+          
+          .subtitle {
+            color: #718096;
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+          }
+          
+          .blocked-url {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+            word-break: break-all;
+            color: #4a5568;
+            font-family: monospace;
+            font-size: 14px;
+          }
+          
+          .reason {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 16px;
+            margin: 20px 0;
+            text-align: left;
+            border-radius: 4px;
+          }
+          
+          .reason-title {
+            font-weight: 600;
+            color: #c53030;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          
+          .reason-text {
+            color: #742a2a;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          
+          .tips {
+            background: #f0fff4;
+            border-left: 4px solid #48bb78;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            border-radius: 4px;
+          }
+          
+          .tips-title {
+            font-weight: 600;
+            color: #2f855a;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          
+          .tips ul {
+            list-style: none;
+            padding-left: 0;
+          }
+          
+          .tips li {
+            color: #276749;
+            font-size: 14px;
+            line-height: 1.8;
+            padding-left: 24px;
+            position: relative;
+          }
+          
+          .tips li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #48bb78;
+            font-weight: bold;
+          }
+          
+          .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          
+          .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+          }
+          
+          .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+          }
+          
+          .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+          }
+          
+          .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+          }
+          
+          .btn-secondary:hover {
+            background: #cbd5e0;
+          }
+          
+          .timer {
+            margin-top: 20px;
+            padding: 16px;
+            background: #edf2f7;
+            border-radius: 8px;
+            color: #4a5568;
+            font-weight: 600;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="icon">🎯</div>
+          <h1>Focus Mode is Active</h1>
+          <p class="subtitle">Stay on track with your learning goals!</p>
+          
+          <div class="blocked-url">
+            <strong>Blocked URL:</strong><br>
+            ${blockedUrl}
+          </div>
+          
+          <div class="reason">
+            <div class="reason-title">
+              <span>⚠️</span>
+              <span>Why was this blocked?</span>
+            </div>
+            <div class="reason-text">
+              This website doesn't appear to be educational content. During focus mode, 
+              only educational resources are accessible to help you stay focused on learning.
+            </div>
+          </div>
+          
+          <div class="tips">
+            <div class="tips-title">
+              <span>💡</span>
+              <span>Allowed Educational Sites</span>
+            </div>
+            <ul>
+              <li>Educational institutions (.edu domains)</li>
+              <li>Learning platforms (Coursera, Udemy, Khan Academy, etc.)</li>
+              <li>Documentation sites (MDN, W3Schools, official docs)</li>
+              <li>Research platforms (Wikipedia, arXiv, Google Scholar)</li>
+              <li>Developer communities (Stack Overflow, GitHub)</li>
+              <li>Tutorial sites (freeCodeCamp, TED, Medium educational content)</li>
+            </ul>
+          </div>
+          
+          <div class="timer" id="timer">
+            Focus session in progress...
+          </div>
+          
+          <div class="actions">
+            <button class="btn btn-primary" onclick="window.history.back()">
+              ← Go Back
+            </button>
+            <button class="btn btn-secondary" onclick="window.close()">
+              Close Tab
+            </button>
+          </div>
+        </div>
+        
+        <script>
+          // Update timer with remaining focus time
+          chrome.storage.local.get(['focus_mode'], (result) => {
+            if (result.focus_mode) {
+              const remaining = result.focus_mode.endTime - Date.now();
+              const minutes = Math.floor(remaining / 60000);
+              document.getElementById('timer').textContent = 
+                \`Focus session ends in \${minutes} minutes\`;
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `;
+  }
+
+  async handleFocusModeEnd() {
+    console.log('⏰ Focus mode timer ended');
+    await this.mindfulness.deactivateFocusMode();
+    await this.disableFocusModeBlocking();
+    
+    // Show notification
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'icon.png',
+      title: 'Focus Session Complete!',
+      message: 'Great work! You completed your focus session. Time for a break! 🎉',
+      priority: 2
+    });
+  }
+
+  // Mood helper methods
+  getMoodSentiment(mood) {
+    const sentimentMap = {
+      'energized': 'positive',
+      'happy': 'positive',
+      'calm': 'positive',
+      'neutral': 'neutral',
+      'tired': 'neutral',
+      'stressed': 'negative',
+      'frustrated': 'negative'
+    };
+    return sentimentMap[mood] || 'neutral';
+  }
+
+  getMoodScore(mood) {
+    const scoreMap = {
+      'energized': 0.8,
+      'happy': 0.7,
+      'calm': 0.6,
+      'neutral': 0,
+      'tired': -0.3,
+      'stressed': -0.6,
+      'frustrated': -0.7
+    };
+    return scoreMap[mood] || 0;
   }
 }
 

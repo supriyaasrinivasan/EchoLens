@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus Mode Active - SupriAI</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: gradient-shift 10s ease infinite;
+      background-size: 200% 200%;
+    }
+    
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .container {
+      background: white;
+      border-radius: 24px;
+      padding: 60px 40px;
+      max-width: 700px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: fade-in-up 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes fade-in-up {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .icon {
+      font-size: 100px;
+      margin-bottom: 20px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    h1 {
+      color: #2d3748;
+      font-size: 36px;
+      margin-bottom: 16px;
+      font-weight: 800;
+    }
+    
+    .subtitle {
+      color: #718096;
+      font-size: 20px;
+      margin-bottom: 30px;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+    
+    .timer-display {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+      border: 2px solid rgba(102, 126, 234, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 30px 0;
+      display: inline-block;
+    }
+    
+    .timer-label {
+      font-size: 14px;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    
+    .timer-value {
+      font-size: 48px;
+      font-weight: 800;
+      color: #667eea;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 2px;
+    }
+    
+    .reason {
+      background: #fff5f5;
+      border-left: 4px solid #f56565;
+      padding: 20px;
+      margin: 30px 0;
+      text-align: left;
+      border-radius: 8px;
+    }
+    
+    .reason-title {
+      font-weight: 700;
+      color: #c53030;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    
+    .reason-text {
+      color: #742a2a;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    
+    .tips {
+      background: #f0fff4;
+      border-left: 4px solid #48bb78;
+      padding: 24px;
+      margin: 30px 0;
+      text-align: left;
+      border-radius: 8px;
+    }
+    
+    .tips-title {
+      font-weight: 700;
+      color: #2f855a;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+    }
+    
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .tip-item {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #276749;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .tip-icon {
+      font-size: 18px;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+    
+    .btn-secondary:hover {
+      background: #cbd5e0;
+      transform: translateY(-2px);
+    }
+    
+    .stats {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .stat {
+      background: #f7fafc;
+      padding: 16px 24px;
+      border-radius: 12px;
+      min-width: 150px;
+    }
+    
+    .stat-value {
+      font-size: 32px;
+      font-weight: 800;
+      color: #667eea;
+      display: block;
+    }
+    
+    .stat-label {
+      font-size: 13px;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 40px 24px;
+      }
+      
+      h1 {
+        font-size: 28px;
+      }
+      
+      .subtitle {
+        font-size: 16px;
+      }
+      
+      .timer-value {
+        font-size: 36px;
+      }
+      
+      .tips-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🎯</div>
+    <h1>Focus Mode is Active</h1>
+    <p class="subtitle">Stay on track with your learning goals!</p>
+    
+    <div class="timer-display">
+      <div class="timer-label">Session Ends In</div>
+      <div class="timer-value" id="timer">--:--</div>
+    </div>
+    
+    <div class="reason">
+      <div class="reason-title">
+        <span>🚫</span>
+        <span>Why was this blocked?</span>
+      </div>
+      <div class="reason-text">
+        This website doesn't appear to be educational content. During focus mode, 
+        only educational resources are accessible to help you stay focused on learning 
+        and studying. This helps maintain your productivity and achieve your goals.
+      </div>
+    </div>
+    
+    <div class="tips">
+      <div class="tips-title">
+        <span>✅</span>
+        <span>Allowed Educational Sites</span>
+      </div>
+      <div class="tips-grid">
+        <div class="tip-item">
+          <span class="tip-icon">🎓</span>
+          <span>Universities (.edu)</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">📚</span>
+          <span>Learning Platforms</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">📖</span>
+          <span>Documentation Sites</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">🔬</span>
+          <span>Research Resources</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">💻</span>
+          <span>Developer Tools</span>
+        </div>
+        <div class="tip-item">
+          <span class="tip-icon">📝</span>
+          <span>Tutorial Sites</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-value" id="progress">0</span>
+        <span class="stat-label">% Complete</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="sites-blocked">0</span>
+        <span class="stat-label">Sites Blocked</span>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn btn-primary" onclick="window.history.back()">
+        ← Go Back to Learning
+      </button>
+      <button class="btn btn-secondary" onclick="openDashboard()">
+        📊 Open Dashboard
+      </button>
+      <button class="btn btn-secondary" onclick="window.close()">
+        ✕ Close Tab
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    // Update timer with remaining focus time
+    async function updateTimer() {
+      try {
+        const result = await chrome.storage.local.get(['focus_mode']);
+        if (result.focus_mode) {
+          const remaining = result.focus_mode.endTime - Date.now();
+          if (remaining > 0) {
+            const minutes = Math.floor(remaining / 60000);
+            const seconds = Math.floor((remaining % 60000) / 1000);
+            document.getElementById('timer').textContent = 
+              `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Calculate progress
+            const total = result.focus_mode.duration;
+            const elapsed = total - remaining;
+            const progress = Math.round((elapsed / total) * 100);
+            document.getElementById('progress').textContent = progress;
+          } else {
+            document.getElementById('timer').textContent = 'Session Ended';
+            document.getElementById('progress').textContent = '100';
+          }
+        }
+      } catch (error) {
+        console.error('Error updating timer:', error);
+        document.getElementById('timer').textContent = 'Active';
+      }
+    }
+    
+    // Update blocked sites count
+    async function updateBlockedCount() {
+      try {
+        const result = await chrome.storage.local.get(['blocked_sites_count']);
+        const count = result.blocked_sites_count || 0;
+        document.getElementById('sites-blocked').textContent = count;
+      } catch (error) {
+        console.error('Error getting blocked count:', error);
+      }
+    }
+    
+    // Increment blocked sites counter
+    async function incrementBlockedCount() {
+      try {
+        const result = await chrome.storage.local.get(['blocked_sites_count']);
+        const count = (result.blocked_sites_count || 0) + 1;
+        await chrome.storage.local.set({ blocked_sites_count: count });
+        document.getElementById('sites-blocked').textContent = count;
+      } catch (error) {
+        console.error('Error incrementing blocked count:', error);
+      }
+    }
+    
+    function openDashboard() {
+      chrome.runtime.openOptionsPage();
+    }
+    
+    // Initialize
+    updateTimer();
+    updateBlockedCount();
+    incrementBlockedCount();
+    setInterval(updateTimer, 1000);
+    setInterval(updateBlockedCount, 5000);
+  </script>
+</body>
+</html>

@@ -254,6 +254,7 @@ export class MindfulnessEngine {
 
   // Focus Mode Management
   async activateFocusMode(duration = 25 * 60 * 1000) { // Default 25 min (Pomodoro)
+    console.log('🎯 Activating focus mode with duration:', duration, 'ms');
     this.focusModeActive = true;
     
     const session = {
@@ -263,19 +264,30 @@ export class MindfulnessEngine {
     };
 
     await chrome.storage.local.set({ focus_mode: session });
+    console.log('✅ Focus mode session saved to storage:', session);
 
     // Notify content scripts
-    const tabs = await chrome.tabs.query({});
-    tabs.forEach(tab => {
-      chrome.tabs.sendMessage(tab.id, {
-        type: 'FOCUS_MODE_ACTIVATED',
-        duration
-      }).catch(() => {}); // Ignore errors for tabs that can't receive messages
-    });
+    try {
+      const tabs = await chrome.tabs.query({});
+      console.log('📢 Notifying', tabs.length, 'tabs about focus mode');
+      tabs.forEach(tab => {
+        if (tab.id && tab.url && !tab.url.startsWith('chrome://')) {
+          chrome.tabs.sendMessage(tab.id, {
+            type: 'FOCUS_MODE_ACTIVATED',
+            duration
+          }).catch(() => {}); // Ignore errors for tabs that can't receive messages
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error notifying tabs:', error);
+    }
 
-    // Set alarm to end focus mode
-    chrome.alarms.create('end_focus_mode', { delayInMinutes: duration / 60000 });
+    // Set alarm to end focus mode - convert milliseconds to minutes
+    const durationInMinutes = duration / 60000;
+    console.log('⏰ Setting alarm for', durationInMinutes, 'minutes');
+    chrome.alarms.create('end_focus_mode', { delayInMinutes: durationInMinutes });
 
+    console.log('✅ Focus mode activated successfully');
     return session;
   }
 

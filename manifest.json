@@ -10,7 +10,9 @@
     "scripting",
     "unlimitedStorage",
     "alarms",
-    "identity"
+    "identity",
+    "webNavigation",
+    "declarativeNetRequest"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -35,7 +37,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["assets/*", "dashboard.html", "sql-wasm.wasm"],
+      "resources": ["assets/*", "dashboard.html", "sql-wasm.wasm", "focus-block.html"],
       "matches": ["<all_urls>"]
     }
   ],

@@ -117,6 +117,7 @@ module.exports = {
       patterns: [
         { from: 'manifest.json', to: 'manifest.json' },
         { from: 'src/content/content.css', to: 'content.css' },
+        { from: 'focus-block.html', to: 'focus-block.html' },
         { from: 'assets', to: 'assets', noErrorOnMissing: true },
         // Copy sql.js wasm file
         { 

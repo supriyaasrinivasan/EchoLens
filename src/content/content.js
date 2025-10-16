@@ -111,7 +111,8 @@ class ContextCapture {
     focusOverlay.querySelector('.focus-mode-exit').addEventListener('click', () => {
       clearInterval(timerInterval);
       this.deactivateFocusMode();
-      chrome.runtime.sendMessage({ type: 'DEACTIVATE_FOCUS_MODE' });
+      // Notify background to stop focus mode (use STOP_FOCUS_MODE which background expects)
+      chrome.runtime.sendMessage({ type: 'STOP_FOCUS_MODE' });
     });
     
     // Show notification
