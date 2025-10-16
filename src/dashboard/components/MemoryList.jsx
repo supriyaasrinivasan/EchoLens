@@ -1,8 +1,9 @@
 import React from 'react';
 import { RiTimeLine, RiExternalLinkLine, RiPriceTag3Line, RiSparklingLine } from '@remixicon/react';
 
-const MemoryList = ({ memories }) => {
+const MemoryList = ({ memories = [] }) => {
   const formatDate = (timestamp) => {
+    if (!timestamp) return 'Unknown date';
     const date = new Date(timestamp);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -12,13 +13,14 @@ const MemoryList = ({ memories }) => {
   };
 
   const formatTime = (seconds) => {
-    if (seconds < 60) return `${seconds}s`;
+    if (!seconds || seconds < 60) return `${seconds || 0}s`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
     return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
   };
 
   const getDomainIcon = (url) => {
     try {
+      if (!url) return null;
       const domain = new URL(url).hostname;
       return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
     } catch {
@@ -26,7 +28,7 @@ const MemoryList = ({ memories }) => {
     }
   };
 
-  if (memories.length === 0) {
+  if (!Array.isArray(memories) || memories.length === 0) {
     return (
       <div className="empty-list">
         <RiSparklingLine size={48} />

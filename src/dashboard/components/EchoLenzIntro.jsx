@@ -9,12 +9,13 @@ import {
   RiPriceTag3Line
 } from '@remixicon/react';
 
-const EchoLenzIntro = ({ currentView, onViewChange, memories }) => {
+const EchoLenzIntro = ({ currentView, onViewChange, memories = [] }) => {
+  // Safely calculate stats with fallback values
   const stats = {
-    totalMemories: memories.length,
-    totalVisits: memories.reduce((sum, m) => sum + (m.visits || 0), 0),
-    totalTags: new Set(memories.flatMap(m => m.tags || [])).size,
-    totalTime: memories.reduce((sum, m) => sum + (m.totalTimeSpent || 0), 0)
+    totalMemories: Array.isArray(memories) ? memories.length : 0,
+    totalVisits: Array.isArray(memories) ? memories.reduce((sum, m) => sum + (m?.visits || 0), 0) : 0,
+    totalTags: Array.isArray(memories) ? new Set(memories.flatMap(m => m?.tags || [])).size : 0,
+    totalTime: Array.isArray(memories) ? memories.reduce((sum, m) => sum + (m?.totalTimeSpent || 0), 0) : 0
   };
 
   const formatTime = (seconds) => {

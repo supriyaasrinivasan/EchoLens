@@ -1,12 +1,19 @@
 import React from 'react';
 import { RiCalendarLine, RiTimeLine, RiPriceTag3Line } from '@remixicon/react';
 
-const MemoryTimeline = ({ memories }) => {
+const MemoryTimeline = ({ memories = [] }) => {
   // Group memories by date
   const groupedMemories = React.useMemo(() => {
+    // Safety check
+    if (!Array.isArray(memories) || memories.length === 0) {
+      return [];
+    }
+
     const groups = {};
     
     memories.forEach(memory => {
+      if (!memory?.lastVisit) return;
+      
       const date = new Date(memory.lastVisit);
       const dateKey = date.toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -27,6 +34,7 @@ const MemoryTimeline = ({ memories }) => {
   }, [memories]);
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return 'Unknown time';
     const date = new Date(timestamp);
     return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
@@ -35,7 +43,7 @@ const MemoryTimeline = ({ memories }) => {
     });
   };
 
-  if (memories.length === 0) {
+  if (!Array.isArray(memories) || memories.length === 0) {
     return (
       <div className="empty-timeline">
         <RiCalendarLine size={48} />

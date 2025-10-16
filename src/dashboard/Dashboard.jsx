@@ -132,51 +132,70 @@ const Dashboard = () => {
     setLoading(true);
 
     try {
-      // Get all memories
-      chrome.runtime.sendMessage({ type: 'GET_MEMORIES' }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error('GET_MEMORIES error:', chrome.runtime.lastError);
-          setLoading(false);
-          return;
-        }
-        if (response?.memories) {
-          setMemories(response.memories);
-        } else {
-          console.warn('GET_MEMORIES returned no memories');
-          setMemories([]);
-        }
+      // Use Promise-based approach for better control
+      const memoriesPromise = new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: 'GET_MEMORIES' }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('GET_MEMORIES error:', chrome.runtime.lastError);
+            resolve([]);
+            return;
+          }
+          if (response?.memories) {
+            resolve(response.memories);
+          } else {
+            console.warn('GET_MEMORIES returned no memories');
+            resolve([]);
+          }
+        });
       });
 
-      // Get stats
-      chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.error('GET_STATS error:', chrome.runtime.lastError);
-          setLoading(false);
-          return;
-        }
-        if (response?.stats) {
-          setStats(response.stats);
-        } else {
-          console.warn('GET_STATS returned no stats');
-        }
-        setLoading(false);
+      const statsPromise = new Promise((resolve) => {
+        chrome.runtime.sendMessage({ type: 'GET_STATS' }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error('GET_STATS error:', chrome.runtime.lastError);
+            resolve(null);
+            return;
+          }
+          if (response?.stats) {
+            resolve(response.stats);
+          } else {
+            console.warn('GET_STATS returned no stats');
+            resolve(null);
+          }
+        });
       });
+
+      // Wait for both requests to complete
+      const [memoriesData, statsData] = await Promise.all([memoriesPromise, statsPromise]);
+      
+      setMemories(memoriesData);
+      if (statsData) {
+        setStats(statsData);
+      }
+      setLoading(false);
     } catch (err) {
       console.error('loadData error:', err);
+      setMemories([]);
       setLoading(false);
     }
   };
 
   const applyFilters = () => {
+    // Ensure memories is an array before filtering
+    if (!Array.isArray(memories)) {
+      setFilteredMemories([]);
+      return;
+    }
+
     let filtered = [...memories];
 
     // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(m => 
-        m.title.toLowerCase().includes(query) ||
-        m.url.toLowerCase().includes(query) ||
-        m.tags.some(t => t.toLowerCase().includes(query))
+        m?.title?.toLowerCase().includes(query) ||
+        m?.url?.toLowerCase().includes(query) ||
+        (m?.tags && Array.isArray(m.tags) && m.tags.some(t => t?.toLowerCase().includes(query)))
       );
     }
 
@@ -191,19 +210,19 @@ const Dashboard = () => {
       };
       const range = ranges[filters.dateRange];
       if (range) {
-        filtered = filtered.filter(m => now - m.lastVisit < range);
+        filtered = filtered.filter(m => m?.lastVisit && (now - m.lastVisit < range));
       }
     }
 
     // Min visits filter
     if (filters.minVisits > 0) {
-      filtered = filtered.filter(m => m.visits >= filters.minVisits);
+      filtered = filtered.filter(m => (m?.visits || 0) >= filters.minVisits);
     }
 
     // Tag filter
     if (filters.tags.length > 0) {
       filtered = filtered.filter(m => 
-        filters.tags.some(tag => m.tags.includes(tag))
+        m?.tags && Array.isArray(m.tags) && filters.tags.some(tag => m.tags.includes(tag))
       );
     }
 

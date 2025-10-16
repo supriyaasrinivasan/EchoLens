@@ -1,16 +1,19 @@
 import React, { useMemo } from 'react';
 import { RiLineChartLine, RiSparklingLine, RiLinksLine, RiTimeLine } from '@remixicon/react';
 
-const InsightsPanel = ({ memories }) => {
+const InsightsPanel = ({ memories = [] }) => {
   const insights = useMemo(() => {
-    if (!memories || memories.length === 0) return null;
+    // Safety check
+    if (!Array.isArray(memories) || memories.length === 0) return null;
 
     // Calculate trending topics
     const tagFrequency = {};
     memories.forEach(memory => {
-      memory.tags?.forEach(tag => {
-        tagFrequency[tag] = (tagFrequency[tag] || 0) + 1;
-      });
+      if (memory?.tags && Array.isArray(memory.tags)) {
+        memory.tags.forEach(tag => {
+          tagFrequency[tag] = (tagFrequency[tag] || 0) + 1;
+        });
+      }
     });
 
     const topTags = Object.entries(tagFrequency)
@@ -20,27 +23,31 @@ const InsightsPanel = ({ memories }) => {
 
     // Find most visited memories
     const topMemories = [...memories]
-      .sort((a, b) => b.visits - a.visits)
+      .filter(m => m?.visits)
+      .sort((a, b) => (b.visits || 0) - (a.visits || 0))
       .slice(0, 5);
 
     // Find recently active memories
     const recentMemories = [...memories]
-      .sort((a, b) => b.lastVisit - a.lastVisit)
+      .filter(m => m?.lastVisit)
+      .sort((a, b) => (b.lastVisit || 0) - (a.lastVisit || 0))
       .slice(0, 5);
 
     // Calculate time-based insights
-    const totalTime = memories.reduce((sum, m) => sum + (m.totalTimeSpent || 0), 0);
+    const totalTime = memories.reduce((sum, m) => sum + (m?.totalTimeSpent || 0), 0);
     const avgTime = memories.length > 0 ? totalTime / memories.length : 0;
 
     // Find related memories (same tags)
     const relatedClusters = {};
     memories.forEach(memory => {
-      memory.tags?.forEach(tag => {
-        if (!relatedClusters[tag]) {
-          relatedClusters[tag] = [];
-        }
-        relatedClusters[tag].push(memory);
-      });
+      if (memory?.tags && Array.isArray(memory.tags)) {
+        memory.tags.forEach(tag => {
+          if (!relatedClusters[tag]) {
+            relatedClusters[tag] = [];
+          }
+          relatedClusters[tag].push(memory);
+        });
+      }
     });
 
     const topClusters = Object.entries(relatedClusters)

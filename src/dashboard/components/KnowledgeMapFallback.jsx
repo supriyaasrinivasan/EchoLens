@@ -1,18 +1,25 @@
 import React from 'react';
 import { RiSparklingLine } from '@remixicon/react';
 
-const KnowledgeMapFallback = ({ memories }) => {
+const KnowledgeMapFallback = ({ memories = [] }) => {
   // Group memories by tags
   const tagGroups = React.useMemo(() => {
+    // Safety check for memories
+    if (!Array.isArray(memories) || memories.length === 0) {
+      return [];
+    }
+
     const groups = {};
     
     memories.forEach(memory => {
-      memory.tags.forEach(tag => {
-        if (!groups[tag]) {
-          groups[tag] = [];
-        }
-        groups[tag].push(memory);
-      });
+      if (memory?.tags && Array.isArray(memory.tags)) {
+        memory.tags.forEach(tag => {
+          if (!groups[tag]) {
+            groups[tag] = [];
+          }
+          groups[tag].push(memory);
+        });
+      }
     });
     
     return Object.entries(groups)
@@ -21,6 +28,8 @@ const KnowledgeMapFallback = ({ memories }) => {
   }, [memories]);
 
   const getColorByActivity = (memory) => {
+    if (!memory?.lastVisit) return '#64748b';
+    
     const daysSinceVisit = (Date.now() - memory.lastVisit) / (1000 * 60 * 60 * 24);
     
     if (daysSinceVisit < 1) return '#6366f1';
@@ -29,7 +38,7 @@ const KnowledgeMapFallback = ({ memories }) => {
     return '#64748b';
   };
 
-  if (memories.length === 0) {
+  if (!Array.isArray(memories) || memories.length === 0) {
     return (
       <div className="empty-map">
         <div className="empty-icon">🌌</div>
