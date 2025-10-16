@@ -7,7 +7,7 @@ const DigitalTwin = () => {
   const [conversation, setConversation] = useState([]);
   const [loading, setLoading] = useState(false);
   const [comparison, setComparison] = useState(null);
-  const [comparisonPeriod, setComparisonPeriod] = useState(90); // days
+  const [comparisonPeriod, setComparisonPeriod] = useState(30); // days
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
