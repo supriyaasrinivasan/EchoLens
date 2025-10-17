@@ -61,13 +61,23 @@ const Popup = () => {
   const stopFocusMode = async () => {
     setActionLoading(true);
     try {
+      console.log('🛑 Stopping focus mode...');
       const response = await sendMessage({ type: 'STOP_FOCUS_MODE' });
+      console.log('📥 Stop focus mode response:', response);
+      
       if (response && response.success) {
         setFocusMode(false);
-        alert('✅ Focus session ended!');
+        // Reload focus status to ensure popup is in sync
+        await checkFocusMode();
+        alert('✅ Focus session ended! Check the content page - it should be back to normal.');
+      } else {
+        const errorMsg = response?.error || 'Unknown error';
+        alert('⚠️ Failed to stop focus mode: ' + errorMsg);
+        console.error('Focus mode stop failed:', response);
       }
     } catch (error) {
-      console.error('Error stopping focus mode:', error);
+      console.error('❌ Error stopping focus mode:', error);
+      alert('❌ Error stopping focus mode. Check console for details.');
     }
     setActionLoading(false);
   };

@@ -294,6 +294,21 @@ body.supriai-focused [role="main"] {
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
+/* Ensure content is visible after focus mode ends */
+body:not(.supriai-focused) main,
+body:not(.supriai-focused) article,
+body:not(.supriai-focused) [role="main"] {
+  background: inherit;
+  padding: inherit;
+  border-radius: inherit;
+  box-shadow: inherit;
+  z-index: auto;
+}
+
+body {
+  pointer-events: auto !important;
+}
+
 /* Notification styles */
 .supriai-notification {
   position: fixed;

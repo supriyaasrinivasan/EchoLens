@@ -412,8 +412,26 @@ class SupriAIBackground {
           try {
             await this.mindfulness.deactivateFocusMode();
             await this.disableFocusModeBlocking();
+            
+            // Broadcast deactivation to all tabs
+            try {
+              const tabs = await chrome.tabs.query({});
+              console.log('📢 Broadcasting FOCUS_MODE_DEACTIVATED to', tabs.length, 'tabs');
+              tabs.forEach(tab => {
+                if (tab.id && tab.url && !tab.url.startsWith('chrome://')) {
+                  chrome.tabs.sendMessage(tab.id, {
+                    type: 'FOCUS_MODE_DEACTIVATED'
+                  }).catch((err) => {
+                    console.log('ℹ️ Could not message tab', tab.id, '- may not have content script');
+                  });
+                }
+              });
+            } catch (broadcastError) {
+              console.error('❌ Error broadcasting deactivation:', broadcastError);
+            }
+            
             console.log('✅ Focus mode stopped successfully');
-            sendResponse({ success: true });
+            sendResponse({ success: true, message: 'Focus mode deactivated' });
           } catch (error) {
             console.error('❌ Error stopping focus mode:', error);
             sendResponse({ success: false, error: error.message });

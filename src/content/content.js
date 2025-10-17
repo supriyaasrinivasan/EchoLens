@@ -12,6 +12,7 @@ class ContextCapture {
     this.lastActivity = Date.now();
     this.isActive = true;
     this.focusModeActive = false;
+    this.timerInterval = null; // Store timer interval reference
     
     this.init();
   }
@@ -44,21 +45,37 @@ class ContextCapture {
 
   setupFocusModeListener() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      if (message.type === 'FOCUS_MODE_ACTIVATED') {
-        this.activateFocusMode(message.duration);
-        sendResponse({ success: true });
-      } else if (message.type === 'FOCUS_MODE_DEACTIVATED') {
-        this.deactivateFocusMode();
-        sendResponse({ success: true });
+      try {
+        if (message.type === 'FOCUS_MODE_ACTIVATED') {
+          console.log('📨 Content script received FOCUS_MODE_ACTIVATED:', message);
+          this.activateFocusMode(message.duration);
+          sendResponse({ success: true, message: 'Focus mode activated on content script' });
+        } else if (message.type === 'FOCUS_MODE_DEACTIVATED') {
+          console.log('📨 Content script received FOCUS_MODE_DEACTIVATED');
+          this.deactivateFocusMode();
+          sendResponse({ success: true, message: 'Focus mode deactivated on content script' });
+        }
+      } catch (error) {
+        console.error('❌ Error in focus mode message handler:', error);
+        sendResponse({ success: false, error: error.message });
       }
       return true;
     });
   }
 
   activateFocusMode(duration) {
-    if (this.focusModeActive) return;
+    if (this.focusModeActive) {
+      console.log('⚠️ Focus mode already active, ignoring activation request');
+      return;
+    }
     
+    console.log('🎯 Activating focus mode with duration:', duration, 'ms');
     this.focusModeActive = true;
+    
+    // Clear any existing timer
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
     
     // Create focus mode overlay
     const focusOverlay = document.createElement('div');
@@ -80,23 +97,29 @@ class ContextCapture {
     `;
     
     document.body.appendChild(focusOverlay);
+    console.log('✅ Focus overlay created');
     
     // Add dim overlay to reduce distractions
     const dimOverlay = document.createElement('div');
     dimOverlay.id = 'supriai-dim-overlay';
     dimOverlay.className = 'supriai-dim';
     document.body.appendChild(dimOverlay);
+    console.log('✅ Dim overlay created');
     
     // Apply focus styles
     document.body.classList.add('supriai-focused');
     
     // Update timer every second
-    const timerInterval = setInterval(() => {
+    this.timerInterval = setInterval(() => {
       const remaining = endTime - Date.now();
       if (remaining <= 0) {
-        clearInterval(timerInterval);
+        console.log('⏱️ Timer completed');
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
         this.deactivateFocusMode();
         this.showFocusComplete();
+        // Notify background that focus session ended naturally
+        chrome.runtime.sendMessage({ type: 'FOCUS_SESSION_COMPLETED' }).catch(() => {});
       } else {
         const mins = Math.floor(remaining / 60000);
         const secs = Math.floor((remaining % 60000) / 1000);
@@ -108,31 +131,67 @@ class ContextCapture {
     }, 1000);
     
     // Exit button
-    focusOverlay.querySelector('.focus-mode-exit').addEventListener('click', () => {
-      clearInterval(timerInterval);
+    const exitBtn = focusOverlay.querySelector('.focus-mode-exit');
+    exitBtn.addEventListener('click', () => {
+      console.log('🛑 Exit button clicked');
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
       this.deactivateFocusMode();
-      // Notify background to stop focus mode (use STOP_FOCUS_MODE which background expects)
-      chrome.runtime.sendMessage({ type: 'STOP_FOCUS_MODE' });
+      // Notify background to stop focus mode
+      chrome.runtime.sendMessage({ type: 'STOP_FOCUS_MODE' }).catch(() => {});
     });
     
     // Show notification
     this.showNotification('🎯 Focus Mode Activated', `Stay focused for ${minutes} minutes`);
+    console.log('✅ Focus mode activated successfully');
   }
 
   deactivateFocusMode() {
-    if (!this.focusModeActive) return;
+    if (!this.focusModeActive) {
+      console.log('⚠️ Focus mode not active, ignoring deactivation request');
+      return;
+    }
     
+    console.log('🛑 Deactivating focus mode...');
     this.focusModeActive = false;
     
-    // Remove overlays
-    const focusOverlay = document.getElementById('supriai-focus-overlay');
-    const dimOverlay = document.getElementById('supriai-dim-overlay');
+    // Clear any running timer
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+      console.log('✅ Timer cleared');
+    }
     
-    if (focusOverlay) focusOverlay.remove();
-    if (dimOverlay) dimOverlay.remove();
+    // Remove overlays - be more thorough
+    const focusOverlay = document.getElementById('supriai-focus-overlay');
+    if (focusOverlay) {
+      focusOverlay.style.display = 'none'; // Hide first
+      setTimeout(() => {
+        focusOverlay.remove();
+        console.log('✅ Focus overlay removed');
+      }, 100);
+    }
+    
+    const dimOverlay = document.getElementById('supriai-dim-overlay');
+    if (dimOverlay) {
+      dimOverlay.style.opacity = '0'; // Fade out
+      dimOverlay.style.transition = 'opacity 0.3s ease-out';
+      setTimeout(() => {
+        dimOverlay.remove();
+        console.log('✅ Dim overlay removed');
+      }, 300);
+    }
     
     // Remove focus styles
     document.body.classList.remove('supriai-focused');
+    console.log('✅ Focus styles removed');
+    
+    // Make sure content is interactive again
+    document.body.style.pointerEvents = 'auto';
+    
+    console.log('✅ Focus mode deactivated successfully');
   }
 
   showFocusComplete() {

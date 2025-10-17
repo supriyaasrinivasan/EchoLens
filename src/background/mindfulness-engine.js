@@ -293,10 +293,12 @@ export class MindfulnessEngine {
 
   async deactivateFocusMode() {
     this.focusModeActive = false;
+    console.log('🛑 Mindfulness engine deactivating focus mode...');
     
     const focusMode = await chrome.storage.local.get(['focus_mode']);
     if (focusMode.focus_mode) {
       const duration = Date.now() - focusMode.focus_mode.startTime;
+      console.log('📊 Focus session duration:', duration, 'ms');
       
       // Save focus session to database
       await this.db.saveFocusSession({
@@ -305,19 +307,40 @@ export class MindfulnessEngine {
         duration,
         completed: duration >= focusMode.focus_mode.duration * 0.9 // 90% completion counts as success
       });
+      console.log('✅ Focus session saved to database');
     }
 
     await chrome.storage.local.remove('focus_mode');
+    console.log('✅ Focus mode storage cleared');
 
     // Notify content scripts
-    const tabs = await chrome.tabs.query({});
-    tabs.forEach(tab => {
-      chrome.tabs.sendMessage(tab.id, {
-        type: 'FOCUS_MODE_DEACTIVATED'
-      }).catch(() => {});
-    });
+    try {
+      const tabs = await chrome.tabs.query({});
+      console.log('📢 Notifying', tabs.length, 'tabs to deactivate focus mode');
+      
+      const promises = tabs.map(tab => {
+        if (tab.id && tab.url && !tab.url.startsWith('chrome://')) {
+          return chrome.tabs.sendMessage(tab.id, {
+            type: 'FOCUS_MODE_DEACTIVATED'
+          }).catch(err => {
+            console.log(`ℹ️ Tab ${tab.id} could not receive deactivation message:`, err.message);
+          });
+        }
+      });
+      
+      await Promise.all(promises);
+      console.log('✅ All available tabs notified');
+    } catch (error) {
+      console.error('❌ Error notifying tabs:', error);
+    }
 
-    chrome.alarms.clear('end_focus_mode');
+    // Clear the alarm
+    try {
+      chrome.alarms.clear('end_focus_mode');
+      console.log('✅ Focus mode alarm cleared');
+    } catch (error) {
+      console.log('ℹ️ Could not clear alarm:', error.message);
+    }
   }
 
   async getFocusModeStatus() {
