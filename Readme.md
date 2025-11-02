@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Chrome Extension](https://img.shields.io/badge/chrome-extension-orange.svg)](https://chrome.google.com/webstore)
 
-SupriAI is an intelligent Chrome extension that combines advanced memory tracking with personality insights, transforming your browsing experience into a journey of self-awareness. It's not just about remembering what you've seen—it's about understanding who you're becoming through your digital journey.
+SupriAI is an intelligent Chrome extension that combines advanced memory tracking with personality insights, transforming your browsing experience into a journey of self-awareness. It's not just about remembering what you've seen - it's about understanding who you're becoming through your digital journey.
 
 ---
 
