@@ -214,12 +214,13 @@ def store_sessions(sessions):
     for session in sessions:
         try:
             cursor.execute('''
-                INSERT INTO sessions (url, domain, category, topics, duration, 
+                INSERT INTO sessions (url, domain, title, category, topics, duration, 
                                      engagement_score, scroll_depth, date, timestamp)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 session.get('url'),
                 session.get('domain'),
+                session.get('title', 'Unknown'),
                 session.get('category'),
                 json.dumps(session.get('topics', [])),
                 session.get('duration', 0),

@@ -380,88 +380,140 @@ class ContentAnalyzer {
     }
 
     extractPageData() {
-        return {
-            url: window.location.href,
-            title: document.title,
-            metaDescription: this.getMetaDescription(),
-            keywords: this.extractKeywords(),
-            headings: this.extractHeadings(),
-            codeBlocks: this.countCodeBlocks(),
-            videos: this.countVideos(),
-            links: this.analyzeLinks(),
-            wordCount: this.countWords(),
-            readingTime: this.estimateReadingTime()
-        };
+        try {
+            return {
+                url: window.location.href,
+                title: document.title || '',
+                metaDescription: this.getMetaDescription(),
+                keywords: this.extractKeywords(),
+                headings: this.extractHeadings(),
+                codeBlocks: this.countCodeBlocks(),
+                videos: this.countVideos(),
+                links: this.analyzeLinks(),
+                wordCount: this.countWords(),
+                readingTime: this.estimateReadingTime()
+            };
+        } catch (error) {
+            console.log('SupriAI: Error extracting page data:', error.message);
+            return {
+                url: window.location.href,
+                title: '',
+                metaDescription: '',
+                keywords: [],
+                headings: [],
+                codeBlocks: 0,
+                videos: 0,
+                links: { total: 0, external: 0, topDomains: [] },
+                wordCount: 0,
+                readingTime: 0
+            };
+        }
     }
 
     getMetaDescription() {
-        const meta = document.querySelector('meta[name="description"]');
-        return meta ? meta.getAttribute('content') : '';
+        try {
+            const meta = document.querySelector('meta[name="description"]');
+            return meta ? meta.getAttribute('content') || '' : '';
+        } catch (error) {
+            return '';
+        }
     }
 
     extractKeywords() {
-        const keywords = [];
-        
-        // From meta keywords
-        const metaKeywords = document.querySelector('meta[name="keywords"]');
-        if (metaKeywords) {
-            keywords.push(...metaKeywords.getAttribute('content').split(',').map(k => k.trim()));
+        try {
+            const keywords = [];
+            
+            // From meta keywords
+            const metaKeywords = document.querySelector('meta[name="keywords"]');
+            if (metaKeywords) {
+                const content = metaKeywords.getAttribute('content');
+                if (content) {
+                    keywords.push(...content.split(',').map(k => k.trim()));
+                }
+            }
+            
+            // From headings
+            const headings = document.querySelectorAll('h1, h2, h3');
+            headings.forEach(h => {
+                if (h.textContent) {
+                    const words = h.textContent.trim().toLowerCase().split(/\s+/);
+                    keywords.push(...words.filter(w => w.length > 3));
+                }
+            });
+            
+            return [...new Set(keywords)].slice(0, 20);
+        } catch (error) {
+            return [];
         }
-        
-        // From headings
-        const headings = document.querySelectorAll('h1, h2, h3');
-        headings.forEach(h => {
-            const words = h.textContent.trim().toLowerCase().split(/\s+/);
-            keywords.push(...words.filter(w => w.length > 3));
-        });
-        
-        return [...new Set(keywords)].slice(0, 20);
     }
 
     extractHeadings() {
-        const headings = [];
-        document.querySelectorAll('h1, h2, h3').forEach(h => {
-            headings.push({
-                level: parseInt(h.tagName[1]),
-                text: h.textContent.trim().substring(0, 100)
+        try {
+            const headings = [];
+            document.querySelectorAll('h1, h2, h3').forEach(h => {
+                if (h.textContent) {
+                    headings.push({
+                        level: parseInt(h.tagName[1]),
+                        text: h.textContent.trim().substring(0, 100)
+                    });
+                }
             });
-        });
-        return headings.slice(0, 10);
+            return headings.slice(0, 10);
+        } catch (error) {
+            return [];
+        }
     }
 
     countCodeBlocks() {
-        return document.querySelectorAll('pre, code, .highlight, .code-block').length;
+        try {
+            return document.querySelectorAll('pre, code, .highlight, .code-block').length;
+        } catch (error) {
+            return 0;
+        }
     }
 
     countVideos() {
-        return document.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]').length;
+        try {
+            return document.querySelectorAll('video, iframe[src*="youtube"], iframe[src*="vimeo"]').length;
+        } catch (error) {
+            return 0;
+        }
     }
 
     analyzeLinks() {
-        const links = document.querySelectorAll('a[href]');
-        const domains = new Map();
-        
-        links.forEach(link => {
-            try {
-                const url = new URL(link.href);
-                const domain = url.hostname;
-                domains.set(domain, (domains.get(domain) || 0) + 1);
-            } catch (e) {}
-        });
-        
-        return {
-            total: links.length,
-            external: Array.from(domains.keys()).filter(d => d !== window.location.hostname).length,
-            topDomains: Array.from(domains.entries())
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5)
-                .map(([domain, count]) => ({ domain, count }))
-        };
+        try {
+            const links = document.querySelectorAll('a[href]');
+            const domains = new Map();
+            
+            links.forEach(link => {
+                try {
+                    const url = new URL(link.href);
+                    const domain = url.hostname;
+                    domains.set(domain, (domains.get(domain) || 0) + 1);
+                } catch (e) {}
+            });
+            
+            return {
+                total: links.length,
+                external: Array.from(domains.keys()).filter(d => d !== window.location.hostname).length,
+                topDomains: Array.from(domains.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([domain, count]) => ({ domain, count }))
+            };
+        } catch (error) {
+            return { total: 0, external: 0, topDomains: [] };
+        }
     }
 
     countWords() {
-        const text = document.body.innerText || '';
-        return text.split(/\s+/).filter(w => w.length > 0).length;
+        try {
+            if (!document.body) return 0;
+            const text = document.body.innerText || document.body.textContent || '';
+            return text.split(/\s+/).filter(w => w.length > 0).length;
+        } catch (error) {
+            return 0;
+        }
     }
 
     estimateReadingTime() {
@@ -471,6 +523,10 @@ class ContentAnalyzer {
     }
 }
 
-// Initialize
-const tracker = new ContentTracker();
-const analyzer = new ContentAnalyzer();
+// Initialize only if document exists
+try {
+    const tracker = new ContentTracker();
+    const analyzer = new ContentAnalyzer();
+} catch (error) {
+    console.log('SupriAI: Could not initialize content tracker:', error.message);
+}

@@ -427,12 +427,75 @@ class BackgroundController {
         const summary = await this.analytics.generateDailySummary();
         await this.storage.saveDailySummary(summary);
         
-        // Sync with Python backend for advanced AI analysis
+        // Generate local AI insights (works without backend)
+        await this.generateLocalInsights();
+        
+        // Try to sync with Python backend for advanced AI analysis (optional)
         await this.syncWithPythonBackend();
     }
 
-    // ==================== Python Backend Integration ====================
+    // ==================== Local AI Analysis (No Backend Required) ====================
+    async generateLocalInsights() {
+        try {
+            const sessions = await this.storage.getSessions({ limit: 50 });
+            const topics = await this.storage.getTopTopics(10);
+            const insights = [];
+
+            // Time pattern insight
+            if (sessions.length >= 5) {
+                const hourCounts = {};
+                sessions.forEach(s => {
+                    if (s.timestamp) {
+                        const hour = new Date(s.timestamp).getHours();
+                        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                    }
+                });
+                const peakHour = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+                if (peakHour) {
+                    const timeOfDay = peakHour[0] < 12 ? 'morning' : peakHour[0] < 17 ? 'afternoon' : 'evening';
+                    insights.push({
+                        type: 'time_pattern',
+                        title: 'Peak Learning Time',
+                        description: `You learn best in the ${timeOfDay} around ${peakHour[0]}:00`,
+                        confidence: 0.8
+                    });
+                }
+            }
+
+            // Topic focus insight
+            if (topics.length > 0) {
+                const topTopic = topics[0];
+                insights.push({
+                    type: 'focus_area',
+                    title: 'Primary Focus',
+                    description: `${topTopic.name} is your main learning focus`,
+                    confidence: 0.9
+                });
+            }
+
+            // Engagement insight
+            const avgEngagement = sessions.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / (sessions.length || 1);
+            if (avgEngagement > 0) {
+                const level = avgEngagement >= 70 ? 'excellent' : avgEngagement >= 50 ? 'good' : 'moderate';
+                insights.push({
+                    type: 'engagement',
+                    title: 'Engagement Level',
+                    description: `Your overall engagement is ${level} (${Math.round(avgEngagement)}%)`,
+                    confidence: 0.85
+                });
+            }
+
+            await this.storage.saveAIInsights(insights);
+            console.log('Local AI insights generated');
+        } catch (error) {
+            console.log('Error generating local insights:', error.message);
+        }
+    }
+
+    // ==================== Python Backend Integration (Optional) ====================
     async syncWithPythonBackend() {
+        // This is OPTIONAL - the extension works fully without the backend
+        // Backend provides enhanced ML-based analysis when available
         try {
             const data = await this.storage.getDataForSync();
             
@@ -458,10 +521,13 @@ class BackgroundController {
                 }
                 
                 console.log('Synced with Python backend successfully');
+                return true;
             }
         } catch (error) {
-            console.log('Backend sync skipped (server not available):', error.message);
+            // Backend not available - this is fine, extension works without it
+            console.log('Backend not available - using local analysis only');
         }
+        return false;
     }
 }
 

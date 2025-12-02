@@ -837,6 +837,8 @@ class DashboardController {
 
     async syncWithBackend() {
         const syncBtn = document.getElementById('syncBtn');
+        if (!syncBtn) return;
+        
         syncBtn.classList.add('syncing');
         
         try {
@@ -845,33 +847,141 @@ class DashboardController {
             const settings = await chrome.storage.local.get(['backendUrl']);
             const url = settings.backendUrl || 'http://localhost:5000';
             
-            const response = await fetch(`${url}/api/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+            // Check if backend is available first with a timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            try {
+                const response = await fetch(`${url}/api/sync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
 
-            if (response.ok) {
-                const result = await response.json();
-                
-                if (result.insights) {
-                    await this.storage.saveAIInsights(result.insights);
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.insights) {
+                        await this.storage.saveAIInsights(result.insights);
+                    }
+                    if (result.recommendations) {
+                        await this.storage.saveRecommendations(result.recommendations);
+                    }
+                    
+                    this.showNotification('Synced successfully with AI backend!', 'success');
+                    this.loadDashboard();
+                    return;
                 }
-                if (result.recommendations) {
-                    await this.storage.saveRecommendations(result.recommendations);
-                }
-                
-                alert('Synced successfully with AI backend!');
-                this.loadDashboard();
-            } else {
-                throw new Error('Sync failed');
+            } catch (fetchError) {
+                clearTimeout(timeoutId);
+                console.log('Backend not available, generating local insights...');
             }
+            
+            // Backend not available - generate local insights instead
+            await this.generateLocalInsights(data);
+            this.showNotification('Generated local insights (backend offline)', 'info');
+            this.loadDashboard();
+            
         } catch (error) {
             console.error('Sync error:', error);
-            alert('Could not connect to backend. Make sure the Python server is running.');
+            this.showNotification('Sync failed. Using local data.', 'warning');
         } finally {
             syncBtn.classList.remove('syncing');
         }
+    }
+
+    async generateLocalInsights(data) {
+        // Generate insights locally when backend is not available
+        const sessions = data.sessions || [];
+        const topics = data.topics || [];
+        
+        // Calculate basic insights
+        const totalTime = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const avgEngagement = sessions.length > 0 
+            ? Math.round(sessions.reduce((sum, s) => sum + (s.engagement || 0), 0) / sessions.length)
+            : 0;
+        
+        // Get top categories
+        const categoryMap = {};
+        sessions.forEach(s => {
+            if (s.category) {
+                categoryMap[s.category] = (categoryMap[s.category] || 0) + (s.duration || 0);
+            }
+        });
+        
+        const topCategory = Object.entries(categoryMap)
+            .sort((a, b) => b[1] - a[1])[0];
+        
+        const insights = {
+            summary: `You've spent ${Math.round(totalTime / 60000)} minutes learning across ${topics.length} topics.`,
+            topCategory: topCategory ? topCategory[0] : 'General',
+            avgEngagement,
+            recommendations: [
+                {
+                    title: 'Keep up the momentum!',
+                    description: `Your engagement is at ${avgEngagement}%. Try to maintain focused learning sessions.`,
+                    type: 'motivation',
+                    icon: '🎯'
+                }
+            ],
+            generatedAt: Date.now(),
+            source: 'local'
+        };
+        
+        await this.storage.saveAIInsights(insights);
+        return insights;
+    }
+
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <span class="notification-icon">${type === 'success' ? '✓' : type === 'warning' ? '⚠' : 'ℹ'}</span>
+            <span class="notification-message">${message}</span>
+        `;
+        
+        // Add styles if not exists
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease-out;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .notification-success { background: #10b981; color: white; }
+                .notification-warning { background: #f59e0b; color: white; }
+                .notification-info { background: #6366f1; color: white; }
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideIn 0.3s ease-out reverse';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
     }
 
     async exportData() {

@@ -2,6 +2,8 @@
 
 An intelligent Chrome extension that monitors your browsing behavior, analyzes learning patterns, and provides personalized study recommendations using AI/ML.
 
+> **✨ No Backend Required!** The extension works fully standalone. The Python backend is optional and provides enhanced ML analysis when available.
+
 ## 🚀 Features
 
 ### 1. Browser-Level Data Collection
@@ -77,6 +79,8 @@ SupriAI/
 6. The extension icon will appear in your toolbar
 
 ### Backend Setup (Optional - for advanced ML features)
+
+> **Note:** The extension works completely without the backend. Only set this up if you want enhanced ML-based analysis.
 
 1. **Navigate to backend folder**:
    ```bash
@@ -179,8 +183,8 @@ SECRET_KEY=your-secret-key
 - Python 3.9+
 - Flask (Web Framework)
 - SQLite (Database)
-- scikit-learn (ML/AI)
-- NumPy, Pandas (Data Processing)
+- scikit-learn (Optional - for advanced ML)
+- NumPy (Optional - for data processing)
 
 ## 🤝 Contributing
 
