@@ -616,10 +616,28 @@ class ContentAnalyzer {
     }
 }
 
-// Initialize only if document exists
+// Initialize only if document exists and extension context is valid
+let tracker = null;
+let analyzer = null;
+
 try {
-    const tracker = new ContentTracker();
-    const analyzer = new ContentAnalyzer();
+    if (isExtensionContextValid()) {
+        tracker = new ContentTracker();
+        analyzer = new ContentAnalyzer();
+    }
 } catch (error) {
     console.log('SupriAI: Could not initialize content tracker:', error.message);
+}
+
+// Clean up on context invalidation
+if (chrome && chrome.runtime) {
+    chrome.runtime.connect({ name: 'content-script' }).onDisconnect.addListener(() => {
+        extensionContextValid = false;
+        if (tracker) {
+            try {
+                tracker.stopTracking();
+            } catch (e) {}
+        }
+        console.log('SupriAI: Extension context invalidated, tracking stopped');
+    });
 }

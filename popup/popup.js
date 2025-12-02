@@ -4,7 +4,7 @@
  */
 
 import { StorageManager } from '../js/storage.js';
-import { formatTime, formatDate } from '../js/utils.js';
+import { formatTime, formatDate, isExtensionContextValid, safeSendMessage } from '../js/utils.js';
 
 class PopupController {
     constructor() {
@@ -55,8 +55,12 @@ class PopupController {
             await chrome.storage.local.set({ trackingEnabled: this.isTracking });
             this.updateTrackingUI();
             
-            // Notify background script
-            chrome.runtime.sendMessage({ type: 'TOGGLE_TRACKING', enabled: this.isTracking });
+            // Notify background script using safe message sender
+            try {
+                await safeSendMessage({ type: 'TOGGLE_TRACKING', enabled: this.isTracking });
+            } catch (error) {
+                console.error('Failed to notify background script:', error);
+            }
         });
 
         // Settings Link
@@ -102,12 +106,17 @@ class PopupController {
 
     async loadCurrentPage() {
         try {
+            // Check if extension context is valid
+            if (!isExtensionContextValid()) {
+                throw new Error('Extension context invalidated');
+            }
+
             // Get current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
             if (tab && tab.url) {
-                // Get current session data from background
-                const response = await chrome.runtime.sendMessage({ 
+                // Get current session data from background using safe message sender
+                const response = await safeSendMessage({ 
                     type: 'GET_CURRENT_SESSION',
                     tabId: tab.id 
                 });
@@ -131,6 +140,9 @@ class PopupController {
             }
         } catch (error) {
             console.error('Error loading current page:', error);
+            // Set default values on error
+            document.getElementById('currentPageTitle').textContent = 'Extension Reloaded';
+            document.getElementById('currentPageCategory').textContent = 'Refresh page to track';
         }
     }
 
@@ -237,17 +249,43 @@ class PopupController {
     startRealTimeUpdates() {
         // Update current page info every 5 seconds
         setInterval(() => {
-            this.loadCurrentPage();
+            try {
+                if (isExtensionContextValid()) {
+                    this.loadCurrentPage();
+                }
+            } catch (error) {
+                console.log('Extension context invalidated, stopping updates');
+            }
         }, 5000);
 
         // Update stats every 30 seconds
         setInterval(() => {
-            this.loadQuickStats();
+            try {
+                if (isExtensionContextValid()) {
+                    this.loadQuickStats();
+                }
+            } catch (error) {
+                console.log('Extension context invalidated, stopping updates');
+            }
         }, 30000);
     }
 }
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    new PopupController();
+    try {
+        if (isExtensionContextValid()) {
+            new PopupController();
+        } else {
+            throw new Error('Extension context invalidated');
+        }
+    } catch (error) {
+        console.error('Failed to initialize popup:', error);
+        document.body.innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+                <h3>Extension Reloaded</h3>
+                <p>Please refresh the extension popup or reload the extension.</p>
+            </div>
+        `;
+    }
 });

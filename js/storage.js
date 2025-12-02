@@ -337,22 +337,26 @@ export class StorageManager {
         // Handle different insight formats
         if (!insights) return;
         
-        // If insights is an array, iterate over it
-        if (Array.isArray(insights)) {
-            for (const insight of insights) {
-                if (insight && typeof insight === 'object') {
-                    await this.add('aiInsights', {
-                        ...insight,
-                        timestamp: Date.now()
-                    });
+        try {
+            // If insights is an array, iterate over it
+            if (Array.isArray(insights)) {
+                for (const insight of insights) {
+                    if (insight && typeof insight === 'object') {
+                        await this.add('aiInsights', {
+                            ...insight,
+                            timestamp: Date.now()
+                        });
+                    }
                 }
+            } else if (typeof insights === 'object') {
+                // If insights is a single object (like local insights), save it directly
+                await this.add('aiInsights', {
+                    ...insights,
+                    timestamp: Date.now()
+                });
             }
-        } else if (typeof insights === 'object') {
-            // If insights is a single object (like local insights), save it directly
-            await this.add('aiInsights', {
-                ...insights,
-                timestamp: Date.now()
-            });
+        } catch (error) {
+            console.error('Error saving AI insights:', error);
         }
     }
 

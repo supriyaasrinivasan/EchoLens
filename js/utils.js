@@ -3,6 +3,48 @@
  */
 
 /**
+ * Check if Chrome extension context is valid
+ */
+export function isExtensionContextValid() {
+    try {
+        return !!(chrome && chrome.runtime && chrome.runtime.id);
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Safe Chrome runtime message sender with timeout and error handling
+ */
+export function safeSendMessage(message, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        if (!isExtensionContextValid()) {
+            reject(new Error('Extension context invalidated'));
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            reject(new Error('Message timeout'));
+        }, timeout);
+
+        try {
+            chrome.runtime.sendMessage(message, (response) => {
+                clearTimeout(timer);
+                
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else {
+                    resolve(response);
+                }
+            });
+        } catch (error) {
+            clearTimeout(timer);
+            reject(error);
+        }
+    });
+}
+
+/**
  * Format duration in milliseconds to human readable string
  */
 export function formatTime(ms) {
