@@ -60,6 +60,25 @@ class AIAnalysisEngine:
         
         if SKLEARN_AVAILABLE:
             self.vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
+    
+    def get_status(self):
+        """Get AI engine status and capabilities"""
+        return {
+            'available': True,
+            'ml_enabled': SKLEARN_AVAILABLE and NUMPY_AVAILABLE,
+            'capabilities': {
+                'topic_extraction': True,
+                'pattern_detection': True,
+                'clustering': SKLEARN_AVAILABLE,
+                'tfidf_vectorization': SKLEARN_AVAILABLE,
+                'user_profiling': True
+            },
+            'libraries': {
+                'numpy': NUMPY_AVAILABLE,
+                'sklearn': SKLEARN_AVAILABLE
+            },
+            'mode': 'ML-Enhanced' if (SKLEARN_AVAILABLE and NUMPY_AVAILABLE) else 'Basic'
+        }
         
     def analyze(self, sessions, topics):
         """

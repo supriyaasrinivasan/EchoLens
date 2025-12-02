@@ -423,6 +423,41 @@
                                             <span class="toggle-slider"></span>
                                         </label>
                                     </div>
+
+                                    <!-- AI Model Status -->
+                                    <div id="aiModelStatus" class="ai-status-panel" style="display: none; margin-top: 15px;">
+                                        <div class="ai-status-header">
+                                            <i class="ri-cpu-line"></i>
+                                            <span>AI Model Status</span>
+                                        </div>
+                                        <div class="ai-status-grid">
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">Analysis Mode:</span>
+                                                <span class="ai-status-value" id="aiMode">-</span>
+                                            </div>
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">NumPy:</span>
+                                                <span class="ai-status-value" id="numpyStatus">-</span>
+                                            </div>
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">Scikit-learn:</span>
+                                                <span class="ai-status-value" id="sklearnStatus">-</span>
+                                            </div>
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">ML Clustering:</span>
+                                                <span class="ai-status-value" id="mlClusteringStatus">-</span>
+                                            </div>
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">Recommendations:</span>
+                                                <span class="ai-status-value" id="recommendationMode">-</span>
+                                            </div>
+                                            <div class="ai-status-item">
+                                                <span class="ai-status-label">Curated Resources:</span>
+                                                <span class="ai-status-value" id="resourceCount">-</span>
+                                            </div>
+                                        </div>
+                                        <div class="ai-status-note" id="aiStatusNote"></div>
+                                    </div>
                                 </div>
 
                                 <!-- General Settings -->

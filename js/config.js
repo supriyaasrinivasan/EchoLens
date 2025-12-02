@@ -40,10 +40,11 @@ export class BackendConnection {
         this.lastCheckTime = 0;
         this.healthCheckTimer = null;
         this.listeners = [];
+        this.detailedStatus = null;
     }
 
     /**
-     * Check if backend is available
+     * Check if backend is available and get detailed status
      */
     async checkHealth() {
         try {
@@ -60,16 +61,44 @@ export class BackendConnection {
             if (response.ok) {
                 const data = await response.json();
                 this.isConnected = data.status === 'healthy';
+                this.detailedStatus = data;
                 this.lastCheckTime = Date.now();
-                this.notifyListeners(this.isConnected);
+                this.notifyListeners(this.isConnected ? 'connected' : 'disconnected');
                 return this.isConnected;
             }
         } catch (error) {
             this.isConnected = false;
+            this.detailedStatus = null;
             this.lastCheckTime = Date.now();
-            this.notifyListeners(false);
+            this.notifyListeners('disconnected');
         }
         return false;
+    }
+
+    /**
+     * Get comprehensive backend status including AI models
+     */
+    async getDetailedStatus() {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const response = await fetch(`${CONFIG.BACKEND_URL}/api/status`, {
+                method: 'GET',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                this.detailedStatus = await response.json();
+                this.isConnected = this.detailedStatus.status === 'operational';
+                return this.detailedStatus;
+            }
+        } catch (error) {
+            console.error('Failed to get detailed status:', error);
+        }
+        return null;
     }
 
     /**

@@ -110,6 +110,29 @@ class MLRecommendationEngine:
             'advanced': 0.6
         }
     
+    def get_status(self):
+        """Get recommendation engine status and capabilities"""
+        resource_count = sum(len(resources) for resources in self.resources.values())
+        return {
+            'available': True,
+            'ml_enabled': SKLEARN_AVAILABLE and NUMPY_AVAILABLE,
+            'capabilities': {
+                'content_based': True,
+                'collaborative_filtering': SKLEARN_AVAILABLE,
+                'skill_path_recommendation': True,
+                'resource_curation': True
+            },
+            'libraries': {
+                'numpy': NUMPY_AVAILABLE,
+                'sklearn': SKLEARN_AVAILABLE
+            },
+            'resources': {
+                'total': resource_count,
+                'categories': list(self.resources.keys())
+            },
+            'mode': 'ML-Enhanced' if (SKLEARN_AVAILABLE and NUMPY_AVAILABLE) else 'Rule-Based'
+        }
+        
     def generate(self, sessions, topics, profile, skills):
         """
         Generate personalized recommendations with guaranteed structure

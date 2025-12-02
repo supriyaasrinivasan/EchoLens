@@ -168,7 +168,7 @@ class DashboardController {
             this.backend.baseUrl = e.target.value;
         });
 
-        document.getElementById('testConnectionBtn')?.addEventListener('click', () => this.testBackendConnection());
+        document.getElementById('testBackendBtn')?.addEventListener('click', () => this.testBackendConnection());
 
         document.getElementById('autoSyncToggle')?.addEventListener('change', (e) => {
             chrome.storage.local.set({ autoSync: e.target.checked });
@@ -966,7 +966,7 @@ class DashboardController {
     }
 
     async testBackendConnection() {
-        const testBtn = document.getElementById('testConnectionBtn');
+        const testBtn = document.getElementById('testBackendBtn');
         if (!testBtn) return;
 
         const originalText = testBtn.textContent;
@@ -974,18 +974,107 @@ class DashboardController {
         testBtn.textContent = 'Testing...';
 
         try {
-            const isHealthy = await this.backend.checkHealth();
+            // Get detailed status including AI models
+            const status = await this.backend.getDetailedStatus();
             
-            if (isHealthy) {
+            if (status && status.status === 'operational') {
                 this.showNotification('Backend connection successful!', 'success');
+                
+                // Update connection status description
+                const statusDesc = document.getElementById('connectionStatusDesc');
+                if (statusDesc) {
+                    statusDesc.textContent = `Connected - ${status.ai_models.mode}`;
+                    statusDesc.style.color = 'var(--success)';
+                }
+                
+                // Display AI model status
+                this.displayAIModelStatus(status);
             } else {
                 this.showNotification('Backend is not responding. Make sure the server is running.', 'error');
+                document.getElementById('aiModelStatus')?.style.setProperty('display', 'none');
             }
         } catch (error) {
             this.showNotification(`Connection failed: ${error.message}`, 'error');
+            const statusDesc = document.getElementById('connectionStatusDesc');
+            if (statusDesc) {
+                statusDesc.textContent = 'Disconnected - Server not responding';
+                statusDesc.style.color = 'var(--danger)';
+            }
+            document.getElementById('aiModelStatus')?.style.setProperty('display', 'none');
         } finally {
             testBtn.disabled = false;
             testBtn.textContent = originalText;
+        }
+    }
+
+    displayAIModelStatus(status) {
+        const aiPanel = document.getElementById('aiModelStatus');
+        if (!aiPanel || !status.ai_models) return;
+
+        aiPanel.style.display = 'block';
+
+        // Update AI mode
+        const aiMode = document.getElementById('aiMode');
+        if (aiMode) {
+            aiMode.textContent = status.ai_models.mode;
+            aiMode.className = 'ai-status-value ' + 
+                (status.ai_models.ai_engine.ml_enabled ? 'status-success' : 'status-warning');
+        }
+
+        // Update library status
+        const numpyStatus = document.getElementById('numpyStatus');
+        const sklearnStatus = document.getElementById('sklearnStatus');
+        const mlClusteringStatus = document.getElementById('mlClusteringStatus');
+        
+        if (numpyStatus) {
+            numpyStatus.textContent = status.ml_libraries.numpy ? '✓ Installed' : '✗ Not Installed';
+            numpyStatus.className = 'ai-status-value ' + 
+                (status.ml_libraries.numpy ? 'status-success' : 'status-warning');
+        }
+        
+        if (sklearnStatus) {
+            sklearnStatus.textContent = status.ml_libraries.scikit_learn ? '✓ Installed' : '✗ Not Installed';
+            sklearnStatus.className = 'ai-status-value ' + 
+                (status.ml_libraries.scikit_learn ? 'status-success' : 'status-warning');
+        }
+        
+        if (mlClusteringStatus) {
+            mlClusteringStatus.textContent = status.features.ml_clustering ? 'Enabled' : 'Disabled';
+            mlClusteringStatus.className = 'ai-status-value ' + 
+                (status.features.ml_clustering ? 'status-success' : 'status-warning');
+        }
+
+        // Update recommendation status
+        const recommendationMode = document.getElementById('recommendationMode');
+        if (recommendationMode && status.ai_models.recommendation_engine) {
+            recommendationMode.textContent = status.ai_models.recommendation_engine.mode;
+            recommendationMode.className = 'ai-status-value ' + 
+                (status.ai_models.recommendation_engine.ml_enabled ? 'status-success' : 'status-info');
+        }
+
+        // Update resource count
+        const resourceCount = document.getElementById('resourceCount');
+        if (resourceCount && status.ai_models.recommendation_engine?.resources) {
+            resourceCount.textContent = `${status.ai_models.recommendation_engine.resources.total} resources`;
+            resourceCount.className = 'ai-status-value status-info';
+        }
+
+        // Display status note
+        const statusNote = document.getElementById('aiStatusNote');
+        if (statusNote) {
+            if (!status.ml_libraries.installed) {
+                statusNote.innerHTML = `
+                    <i class="ri-information-line"></i>
+                    For enhanced ML analysis, install: <code>pip install numpy scikit-learn</code>
+                `;
+                statusNote.className = 'ai-status-note warning';
+            } else {
+                statusNote.innerHTML = `
+                    <i class="ri-check-line"></i>
+                    All ML libraries installed - Full AI capabilities active
+                `;
+                statusNote.className = 'ai-status-note success';
+            }
         }
     }
 

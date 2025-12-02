@@ -2438,3 +2438,104 @@ a:hover {
         font-size: 20px;
     }
 }
+
+/* ===== AI Model Status Panel ===== */
+.ai-status-panel {
+    margin-top: 20px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.ai-status-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.ai-status-header i {
+    font-size: 18px;
+    color: var(--accent-primary);
+}
+
+.ai-status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.ai-status-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ai-status-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.ai-status-value {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    display: inline-block;
+    width: fit-content;
+}
+
+.ai-status-value.status-success {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.ai-status-value.status-warning {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.ai-status-value.status-info {
+    background: var(--info-light);
+    color: var(--info);
+}
+
+.ai-status-note {
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.ai-status-note i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.ai-status-note.warning {
+    background: var(--warning-light);
+    color: var(--warning);
+    border-left: 3px solid var(--warning);
+}
+
+.ai-status-note.success {
+    background: var(--success-light);
+    color: var(--success);
+    border-left: 3px solid var(--success);
+}
+
+.ai-status-note code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 11px;
+}

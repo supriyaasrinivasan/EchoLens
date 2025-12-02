@@ -172,13 +172,14 @@ def init_db():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
+    """Health check endpoint with AI model status"""
     app.logger.info("Health check requested")
     
     # Verify database connection
     db_status = 'connected'
     session_count = 0
     topic_count = 0
+    rec_count = 0
     
     try:
         conn = get_db()
@@ -195,19 +196,29 @@ def health_check():
         db_status = f'error: {str(e)}'
         app.logger.error(f"Database health check failed: {e}")
     
+    # Check AI engine capabilities
+    ai_status = ai_engine.get_status()
+    rec_status = recommendation_engine.get_status()
+    
     api_config = get_config('api')
+    is_healthy = db_status == 'connected' and ai_status['available'] and rec_status['available']
+    
     health_status = {
-        'status': 'healthy' if db_status == 'connected' else 'degraded',
+        'status': 'healthy' if is_healthy else 'degraded',
         'service': 'SupriAI Backend',
         'version': api_config['version'],
         'database': {
             'status': db_status,
             'sessions': session_count,
             'topics': topic_count,
-            'recommendations': rec_count if db_status == 'connected' else 0
+            'recommendations': rec_count
         },
-        'ai_engine': 'ready',
-        'recommendation_engine': 'ready',
+        'ai_engine': ai_status,
+        'recommendation_engine': rec_status,
+        'ml_libraries': {
+            'numpy': NUMPY_AVAILABLE if 'NUMPY_AVAILABLE' in dir(ai_engine) else False,
+            'sklearn': SKLEARN_AVAILABLE if 'SKLEARN_AVAILABLE' in dir(ai_engine) else False
+        },
         'timestamp': datetime.now().isoformat()
     }
     
@@ -702,6 +713,92 @@ def topic_modeling():
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/status', methods=['GET'])
+def detailed_status():
+    """Comprehensive status endpoint with AI model information"""
+    try:
+        # Get database stats
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT COUNT(*) FROM sessions')
+        session_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM topics')
+        topic_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM recommendations')
+        rec_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM ai_insights')
+        insight_count = cursor.fetchone()[0]
+        
+        cursor.execute('SELECT COUNT(*) FROM skills')
+        skill_count = cursor.fetchone()[0]
+        
+        # Get recent activity
+        cursor.execute('SELECT MAX(created_at) FROM sessions')
+        last_session = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        # Get AI engine status
+        ai_status = ai_engine.get_status()
+        rec_status = recommendation_engine.get_status()
+        
+        # Check if ML libraries are actually working
+        ml_working = ai_status['ml_enabled'] and rec_status['ml_enabled']
+        
+        status = {
+            'service': 'SupriAI Backend',
+            'version': get_config('api')['version'],
+            'status': 'operational',
+            'uptime': 'running',
+            'database': {
+                'status': 'connected',
+                'data': {
+                    'sessions': session_count,
+                    'topics': topic_count,
+                    'recommendations': rec_count,
+                    'insights': insight_count,
+                    'skills': skill_count
+                },
+                'last_activity': last_session
+            },
+            'ai_models': {
+                'status': 'operational' if ai_status['available'] else 'unavailable',
+                'mode': ai_status['mode'],
+                'ai_engine': ai_status,
+                'recommendation_engine': rec_status
+            },
+            'ml_libraries': {
+                'installed': ml_working,
+                'numpy': ai_status['libraries']['numpy'],
+                'scikit_learn': ai_status['libraries']['sklearn'],
+                'status': 'ML-Enhanced Analysis' if ml_working else 'Basic Analysis (Install numpy & scikit-learn for ML features)'
+            },
+            'features': {
+                'topic_extraction': True,
+                'pattern_detection': True,
+                'ml_clustering': ml_working,
+                'collaborative_filtering': ml_working,
+                'content_recommendations': True,
+                'skill_progression': True
+            },
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify(status)
+        
+    except Exception as e:
+        app.logger.error(f"Status check failed: {e}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 
 if __name__ == '__main__':
