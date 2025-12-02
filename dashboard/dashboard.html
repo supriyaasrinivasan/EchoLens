@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupriAI - Learning Dashboard</title>
+    <link rel="stylesheet" href="../css/remixicon.css">
+    <link rel="stylesheet" href="../css/theme.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="../js/chart.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon"><i class="ri-brain-line"></i></span>
+                    <h1>SupriAI</h1>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-item active" data-section="overview">
+                    <span class="nav-icon"><i class="ri-dashboard-3-line"></i></span>
+                    <span class="nav-text">Overview</span>
+                </a>
+                <a href="#analytics" class="nav-item" data-section="analytics">
+                    <span class="nav-icon"><i class="ri-line-chart-line"></i></span>
+                    <span class="nav-text">Analytics</span>
+                </a>
+                <a href="#topics" class="nav-item" data-section="topics">
+                    <span class="nav-icon"><i class="ri-book-open-line"></i></span>
+                    <span class="nav-text">Topics</span>
+                </a>
+                <a href="#skills" class="nav-item" data-section="skills">
+                    <span class="nav-icon"><i class="ri-focus-3-line"></i></span>
+                    <span class="nav-text">Skills</span>
+                </a>
+                <a href="#recommendations" class="nav-item" data-section="recommendations">
+                    <span class="nav-icon"><i class="ri-lightbulb-flash-line"></i></span>
+                    <span class="nav-text">Recommendations</span>
+                </a>
+                <a href="#history" class="nav-item" data-section="history">
+                    <span class="nav-icon"><i class="ri-history-line"></i></span>
+                    <span class="nav-text">History</span>
+                </a>
+                <a href="#settings" class="nav-item" data-section="settings">
+                    <span class="nav-icon"><i class="ri-settings-3-line"></i></span>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                    <i class="ri-moon-line"></i>
+                    <i class="ri-sun-line"></i>
+                </button>
+                <div class="streak-badge">
+                    <span class="streak-icon"><i class="ri-fire-line"></i></span>
+                    <span class="streak-count" id="sidebarStreak">0</span>
+                    <span class="streak-label">Day Streak</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-left">
+                    <h2 id="sectionTitle">Overview</h2>
+                    <p class="header-subtitle" id="headerSubtitle">Your learning journey at a glance</p>
+                </div>
+                <div class="header-right">
+                    <div class="time-range-selector">
+                        <button class="range-btn active" data-range="week">Week</button>
+                        <button class="range-btn" data-range="month">Month</button>
+                        <button class="range-btn" data-range="year">Year</button>
+                    </div>
+                    <button class="sync-btn" id="syncBtn">
+                        <i class="ri-refresh-line"></i>
+                        Sync
+                    </button>
+                </div>
+            </header>
+
+            <!-- Sections Container -->
+            <div class="sections-container">
+                <!-- Overview Section -->
+                <section id="overview" class="section active">
+                    <!-- Stats Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card primary">
+                            <div class="stat-icon"><i class="ri-time-line"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="totalTime">0h</span>
+                                <span class="stat-label">Total Learning Time</span>
+                            </div>
+                            <div class="stat-trend positive">
+                                <span><i class="ri-arrow-up-line"></i> 12%</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="ri-book-open-line"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="totalTopics">0</span>
+                                <span class="stat-label">Topics Covered</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="ri-focus-3-line"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="avgEngagement">0%</span>
+                                <span class="stat-label">Avg Engagement</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="ri-calendar-check-line"></i></div>
+                            <div class="stat-content">
+                                <span class="stat-value" id="activeDays">0</span>
+                                <span class="stat-label">Active Days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="charts-row">
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3><i class="ri-line-chart-line"></i> Learning Trend</h3>
+                                <div class="chart-legend" id="trendLegend"></div>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="ri-pie-chart-line"></i> Topic Distribution</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="topicChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Row -->
+                    <div class="bottom-row">
+                        <!-- Recent Sessions -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ri-history-line"></i> Recent Sessions</h3>
+                                <a href="#history" class="view-all">View All <i class="ri-arrow-right-s-line"></i></a>
+                            </div>
+                            <div class="sessions-list" id="recentSessions">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Recommendations -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ri-lightbulb-flash-line"></i> AI Recommendations</h3>
+                                <a href="#recommendations" class="view-all">View All <i class="ri-arrow-right-s-line"></i></a>
+                            </div>
+                            <div class="recommendations-list" id="quickRecommendations">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analytics Section -->
+                <section id="analytics" class="section">
+                    <div class="analytics-grid">
+                        <!-- Engagement Metrics -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="ri-pulse-line"></i> Engagement Levels</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="engagementChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Hourly Distribution -->
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3><i class="ri-time-line"></i> Learning by Hour</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="hourlyChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Category Comparison -->
+                        <div class="chart-card large">
+                            <div class="chart-header">
+                                <h3><i class="ri-bar-chart-grouped-line"></i> Category Progress</h3>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Patterns Card -->
+                        <div class="card patterns-card">
+                            <div class="card-header">
+                                <h3><i class="ri-search-eye-line"></i> Learning Patterns</h3>
+                            </div>
+                            <div class="patterns-list" id="patternsList">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Topics Section -->
+                <section id="topics" class="section">
+                    <div class="topics-grid">
+                        <div class="card topics-overview">
+                            <div class="card-header">
+                                <h3><i class="ri-book-mark-line"></i> All Topics</h3>
+                                <div class="search-box">
+                                    <i class="ri-search-line"></i>
+                                    <input type="text" placeholder="Search topics..." id="topicSearch">
+                                </div>
+                            </div>
+                            <div class="topics-table-container">
+                                <table class="topics-table" id="topicsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Topic</th>
+                                            <th>Category</th>
+                                            <th>Time Spent</th>
+                                            <th>Sessions</th>
+                                            <th>Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Populated by JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card topic-details" id="topicDetails">
+                            <div class="empty-state">
+                                <span class="empty-icon"><i class="ri-bar-chart-box-line"></i></span>
+                                <p>Select a topic to view details</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Skills Section -->
+                <section id="skills" class="section">
+                    <div class="skills-grid">
+                        <!-- Skill Cards -->
+                        <div class="skills-list" id="skillsList">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <!-- Skill Tree -->
+                        <div class="card skill-tree-card">
+                            <div class="card-header">
+                                <h3><i class="ri-node-tree"></i> Learning Path</h3>
+                                <select id="pathSelector" class="path-select">
+                                    <option value="Programming">Programming</option>
+                                    <option value="Web Development">Web Development</option>
+                                    <option value="Data Science">Data Science</option>
+                                </select>
+                            </div>
+                            <div class="skill-tree" id="skillTree">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recommendations Section -->
+                <section id="recommendations" class="section">
+                    <div class="recommendations-grid">
+                        <!-- Personalized Recommendations -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ri-focus-3-line"></i> Personalized For You</h3>
+                                <button class="refresh-btn" id="refreshRecs"><i class="ri-refresh-line"></i> Refresh</button>
+                            </div>
+                            <div class="full-recommendations-list" id="fullRecommendations">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Learning Resources -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ri-book-open-line"></i> Curated Resources</h3>
+                            </div>
+                            <div class="resources-list" id="resourcesList">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Weekly Summary -->
+                        <div class="card weekly-summary">
+                            <div class="card-header">
+                                <h3><i class="ri-file-list-3-line"></i> Weekly Summary</h3>
+                            </div>
+                            <div class="summary-content" id="weeklySummary">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History Section -->
+                <section id="history" class="section">
+                    <div class="history-container">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3><i class="ri-history-line"></i> Learning History</h3>
+                                <div class="history-filters">
+                                    <select id="categoryFilter">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                    <input type="date" id="dateFilter">
+                                </div>
+                            </div>
+                            <div class="history-list" id="historyList">
+                                <!-- Populated by JS -->
+                            </div>
+                            <div class="pagination" id="historyPagination">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="settings" class="section">
+                    <div class="settings-container">
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3><i class="ri-settings-3-line"></i> Extension Settings</h3>
+                            </div>
+                            <div class="settings-list">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Enable Tracking</span>
+                                        <span class="setting-desc">Track your learning activity</span>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" id="trackingToggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Backend Sync</span>
+                                        <span class="setting-desc">Sync with AI analysis server</span>
+                                    </div>
+                                    <label class="toggle">
+                                        <input type="checkbox" id="syncToggle" checked>
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Daily Goal (minutes)</span>
+                                        <span class="setting-desc">Set your daily learning target</span>
+                                    </div>
+                                    <input type="number" id="dailyGoal" class="setting-input" value="30" min="5" max="480">
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Backend URL</span>
+                                        <span class="setting-desc">Python AI server address</span>
+                                    </div>
+                                    <input type="text" id="backendUrl" class="setting-input" value="http://localhost:5000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3><i class="ri-database-2-line"></i> Data Management</h3>
+                            </div>
+                            <div class="settings-list">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Export Data</span>
+                                        <span class="setting-desc">Download your learning data as JSON</span>
+                                    </div>
+                                    <button class="btn btn-secondary" id="exportBtn"><i class="ri-download-2-line"></i> Export</button>
+                                </div>
+                                <div class="setting-item danger">
+                                    <div class="setting-info">
+                                        <span class="setting-label">Clear All Data</span>
+                                        <span class="setting-desc">Permanently delete all stored data</span>
+                                    </div>
+                                    <button class="btn btn-danger" id="clearDataBtn"><i class="ri-delete-bin-line"></i> Clear</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card settings-card">
+                            <div class="card-header">
+                                <h3><i class="ri-information-line"></i> About</h3>
+                            </div>
+                            <div class="about-content">
+                                <p><strong>SupriAI</strong> - AI-Powered Learning Recommendation System</p>
+                                <p>Version 1.0.0</p>
+                                <p class="about-desc">
+                                    An intelligent browser companion that monitors your learning behavior,
+                                    analyzes patterns, and provides personalized recommendations to enhance
+                                    your learning journey.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="dashboard.js" type="module"></script>
+</body>
+</html>
