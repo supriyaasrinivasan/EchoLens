@@ -336,6 +336,10 @@ export class ContentClassifier {
     /**
      * Enhanced classification with page content
      */
+    async classifyContent(pageData) {
+        return this.classifyWithContent(pageData.url, pageData.title, pageData);
+    }
+
     classifyWithContent(url, title, pageData) {
         // Start with basic URL classification
         const baseClassification = this.classifyUrl(url, title);

@@ -149,6 +149,8 @@ class ContentTracker {
                     type: 'PAGE_READY',
                     url: window.location.href,
                     title: document.title
+                }).catch(err => {
+                    console.log('SupriAI: Failed to notify background script:', err.message);
                 });
             }
         } catch (error) {
@@ -167,7 +169,7 @@ class ContentTracker {
         this.startIdleDetection();
         this.startReporting();
         
-        console.log('SupriAI: Tracking started');
+        console.log('✓ SupriAI: Tracking started for session:', sessionId);
     }
 
     stopTracking() {
@@ -469,6 +471,8 @@ class ContentAnalyzer {
         safeSendMessage({
             type: 'PAGE_CONTENT',
             data: pageData
+        }).catch(err => {
+            console.log('SupriAI: Failed to send page content:', err.message);
         });
     }
 

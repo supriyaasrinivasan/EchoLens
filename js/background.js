@@ -129,17 +129,14 @@ class BackgroundController {
     }
 
     async startSession(tab) {
-        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
             return;
         }
 
         // Classify the content
         const classification = await this.classifier.classifyUrl(tab.url, tab.title);
         
-        if (!classification.isEducational) {
-            return; // Only track educational content
-        }
-
+        // Track all pages, not just educational ones (for better analytics)
         const session = {
             tabId: tab.id,
             windowId: tab.windowId,
@@ -148,9 +145,10 @@ class BackgroundController {
             domain: new URL(tab.url).hostname,
             startTime: Date.now(),
             lastUpdate: Date.now(),
-            category: classification.category,
-            topics: classification.topics,
-            confidence: classification.confidence,
+            category: classification.category || 'General',
+            topics: classification.topics || [],
+            confidence: classification.confidence || 0,
+            isEducational: classification.isEducational || false,
             engagementScore: 0,
             focusLevel: 0,
             scrollDepth: 0,
@@ -165,18 +163,17 @@ class BackgroundController {
 
         this.activeSessions.set(tab.id, session);
         
-        // Inject content script to start tracking
+        // Send message to content script to start tracking
         try {
             await chrome.tabs.sendMessage(tab.id, { 
                 type: 'START_TRACKING',
                 sessionId: tab.id
             });
+            console.log(`✓ Session started: ${session.title} [${session.category}]`);
         } catch (error) {
-            // Content script might not be ready yet
-            console.log('Content script not ready, will track when available');
+            // Content script might not be injected yet - that's ok, it will notify us when ready
+            console.log('Content script will start tracking when ready');
         }
-
-        console.log(`Session started: ${session.title} [${session.category}]`);
     }
 
     async endSession(tabId) {
@@ -282,50 +279,79 @@ class BackgroundController {
     }
 
     async handleMessage(message, sender, sendResponse) {
-        switch (message.type) {
-            case 'TOGGLE_TRACKING':
-                this.trackingEnabled = message.enabled;
-                await chrome.storage.local.set({ trackingEnabled: message.enabled });
-                sendResponse({ success: true });
-                break;
+        try {
+            switch (message.type) {
+                case 'PAGE_READY':
+                    // Content script is ready, check if we should track this page
+                    if (sender.tab) {
+                        await this.handleTabUpdate(sender.tab);
+                    }
+                    sendResponse({ success: true });
+                    break;
 
-            case 'GET_CURRENT_SESSION':
-                const session = this.activeSessions.get(message.tabId);
-                sendResponse({ session: session || null });
-                break;
+                case 'PAGE_CONTENT':
+                    // Received page content data for classification
+                    if (sender.tab) {
+                        const classification = await this.classifier.classifyContent(message.data);
+                        const session = this.activeSessions.get(sender.tab.id);
+                        if (session) {
+                            session.category = classification.category;
+                            session.topics = classification.topics;
+                            session.confidence = classification.confidence;
+                            console.log(`✓ Page classified: ${session.title} → ${session.category}`);
+                        }
+                    }
+                    sendResponse({ success: true });
+                    break;
 
-            case 'UPDATE_ENGAGEMENT':
-                await this.updateSessionMetrics(sender.tab.id, message.metrics);
-                sendResponse({ success: true });
-                break;
+                case 'TOGGLE_TRACKING':
+                    this.trackingEnabled = message.enabled;
+                    await chrome.storage.local.set({ trackingEnabled: message.enabled });
+                    console.log(`✓ Tracking ${message.enabled ? 'enabled' : 'disabled'}`);
+                    sendResponse({ success: true });
+                    break;
 
-            case 'MOUSE_METRICS':
-                await this.updateMouseMetrics(sender.tab.id, message.metrics);
-                sendResponse({ success: true });
-                break;
+                case 'GET_CURRENT_SESSION':
+                    const session = this.activeSessions.get(message.tabId);
+                    sendResponse({ session: session || null });
+                    break;
 
-            case 'SCROLL_UPDATE':
-                await this.updateScrollDepth(sender.tab.id, message.depth);
-                sendResponse({ success: true });
-                break;
+                case 'UPDATE_ENGAGEMENT':
+                    await this.updateSessionMetrics(sender.tab?.id, message.metrics);
+                    sendResponse({ success: true });
+                    break;
 
-            case 'GET_ANALYTICS':
-                const analytics = await this.analytics.getAnalytics(message.timeRange);
-                sendResponse({ analytics });
-                break;
+                case 'MOUSE_METRICS':
+                    await this.updateMouseMetrics(sender.tab?.id, message.metrics);
+                    sendResponse({ success: true });
+                    break;
 
-            case 'GET_RECOMMENDATIONS':
-                const recs = await this.recommendations.generate();
-                sendResponse({ recommendations: recs });
-                break;
+                case 'SCROLL_UPDATE':
+                    await this.updateScrollDepth(sender.tab?.id, message.depth);
+                    sendResponse({ success: true });
+                    break;
 
-            case 'SYNC_WITH_BACKEND':
-                await this.syncWithPythonBackend();
-                sendResponse({ success: true });
-                break;
+                case 'GET_ANALYTICS':
+                    const analytics = await this.analytics.getAnalytics(message.timeRange);
+                    sendResponse({ analytics });
+                    break;
 
-            default:
-                sendResponse({ error: 'Unknown message type' });
+                case 'GET_RECOMMENDATIONS':
+                    const recs = await this.recommendations.generate();
+                    sendResponse({ recommendations: recs });
+                    break;
+
+                case 'SYNC_WITH_BACKEND':
+                    await this.syncWithPythonBackend();
+                    sendResponse({ success: true });
+                    break;
+
+                default:
+                    sendResponse({ error: 'Unknown message type' });
+            }
+        } catch (error) {
+            console.error('Error handling message:', message.type, error);
+            sendResponse({ error: error.message });
         }
     }
 
@@ -532,4 +558,6 @@ class BackgroundController {
 }
 
 // Initialize the background controller
+console.log('SupriAI: Initializing background service worker...');
 const controller = new BackgroundController();
+console.log('SupriAI: Background service worker initialized');
