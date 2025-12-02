@@ -1,7 +1,3 @@
-"""
-SupriAI - AI Analysis Engine
-Topic modeling, pattern detection, and user profiling using ML
-"""
 
 import re
 import json
@@ -9,7 +5,6 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 import math
 
-# Try to import ML libraries, fall back to basic implementations if not available
 try:
     import numpy as np
     NUMPY_AVAILABLE = True
@@ -28,13 +23,8 @@ except ImportError:
 
 
 class AIAnalysisEngine:
-    """
-    AI-powered analysis engine for learning behavior
-    Performs topic modeling, pattern detection, and user profiling
-    """
     
     def __init__(self):
-        # Educational keywords for topic extraction
         self.topic_keywords = {
             'programming': ['code', 'programming', 'developer', 'software', 'algorithm', 
                            'function', 'variable', 'class', 'object', 'method'],
@@ -50,7 +40,6 @@ class AIAnalysisEngine:
                         'hacking', 'firewall', 'ssl', 'cyber']
         }
         
-        # Learning style indicators
         self.learning_styles = {
             'visual': ['video', 'diagram', 'chart', 'visualization', 'infographic'],
             'reading': ['article', 'documentation', 'book', 'tutorial', 'guide'],
@@ -62,7 +51,6 @@ class AIAnalysisEngine:
             self.vectorizer = TfidfVectorizer(max_features=1000, stop_words='english')
     
     def get_status(self):
-        """Get AI engine status and capabilities"""
         return {
             'available': True,
             'ml_enabled': SKLEARN_AVAILABLE and NUMPY_AVAILABLE,
@@ -81,54 +69,43 @@ class AIAnalysisEngine:
         }
         
     def analyze(self, sessions, topics):
-        """
-        Main analysis method - processes sessions and generates insights
-        Returns a list of insight objects with guaranteed structure
-        """
         insights = []
         
-        # Validate inputs
         if not isinstance(sessions, list):
             sessions = []
         if not isinstance(topics, list):
             topics = []
         
         try:
-            # 1. Learning pattern analysis
             pattern_insights = self.detect_learning_patterns(sessions)
             insights.extend(pattern_insights)
         except Exception as e:
             print(f"Pattern analysis error: {e}")
         
         try:
-            # 2. Topic clustering
             topic_insights = self.analyze_topics(topics)
             insights.extend(topic_insights)
         except Exception as e:
             print(f"Topic analysis error: {e}")
         
         try:
-            # 3. Engagement analysis
             engagement_insights = self.analyze_engagement(sessions)
             insights.extend(engagement_insights)
         except Exception as e:
             print(f"Engagement analysis error: {e}")
         
         try:
-            # 4. User profiling
             profile_insights = self.generate_user_profile(sessions, topics)
             insights.extend(profile_insights)
         except Exception as e:
             print(f"Profile analysis error: {e}")
         
         try:
-            # 5. Skill progression analysis
             skill_insights = self.analyze_skill_progression(sessions)
             insights.extend(skill_insights)
         except Exception as e:
             print(f"Skill analysis error: {e}")
         
-        # Ensure all insights have required fields
         validated_insights = []
         for insight in insights:
             validated_insights.append({
@@ -143,15 +120,11 @@ class AIAnalysisEngine:
         return validated_insights
     
     def detect_learning_patterns(self, sessions):
-        """
-        Detect learning patterns from session data
-        """
         insights = []
         
         if not sessions:
             return insights
         
-        # Time-of-day pattern
         hour_distribution = defaultdict(int)
         for session in sessions:
             if session.get('timestamp'):
@@ -173,7 +146,6 @@ class AIAnalysisEngine:
                 'data': dict(hour_distribution)
             })
         
-        # Session duration pattern
         durations = [s.get('duration', 0) for s in sessions if s.get('duration')]
         if durations:
             avg_duration = sum(durations) / len(durations)
@@ -192,7 +164,6 @@ class AIAnalysisEngine:
                 'avg_duration': avg_minutes
             })
         
-        # Category sequence pattern
         categories = [s.get('category') for s in sessions if s.get('category')]
         if len(categories) >= 2:
             transitions = defaultdict(int)
@@ -211,7 +182,6 @@ class AIAnalysisEngine:
                     'transitions': dict(transitions)
                 })
         
-        # Consistency pattern
         dates = set(s.get('date') for s in sessions if s.get('date'))
         if dates:
             total_days = (datetime.now() - datetime.now() + timedelta(days=7)).days or 7
@@ -229,18 +199,13 @@ class AIAnalysisEngine:
         return insights
     
     def analyze_topics(self, topics):
-        """
-        Analyze topic distribution and clustering
-        """
         insights = []
         
         if not topics:
             return insights
         
-        # Topic concentration
         total_time = sum(t.get('totalTime', 0) for t in topics)
         if total_time > 0:
-            # Find dominant topic
             sorted_topics = sorted(topics, key=lambda x: x.get('totalTime', 0), reverse=True)
             dominant = sorted_topics[0] if sorted_topics else None
             
@@ -256,9 +221,8 @@ class AIAnalysisEngine:
                     'concentration': concentration
                 })
             
-            # Topic diversity
             topic_count = len([t for t in topics if t.get('totalTime', 0) > 0])
-            diversity_score = min(topic_count / 10 * 100, 100)  # Normalize to 100
+            diversity_score = min(topic_count / 10 * 100, 100)
             
             diversity_level = 'specialist' if diversity_score < 30 else \
                              'balanced' if diversity_score < 60 else 'explorer'
@@ -276,9 +240,6 @@ class AIAnalysisEngine:
         return insights
     
     def analyze_engagement(self, sessions):
-        """
-        Analyze engagement patterns
-        """
         insights = []
         
         if not sessions:
@@ -290,7 +251,6 @@ class AIAnalysisEngine:
         if engagement_scores:
             avg_engagement = sum(engagement_scores) / len(engagement_scores)
             
-            # Engagement trend (compare recent vs older)
             mid = len(engagement_scores) // 2
             if mid > 0:
                 recent_avg = sum(engagement_scores[:mid]) / mid
@@ -309,7 +269,6 @@ class AIAnalysisEngine:
                     'trend_value': trend
                 })
             
-            # Engagement level insight
             level = 'high' if avg_engagement >= 70 else \
                    'medium' if avg_engagement >= 40 else 'low'
             
@@ -340,12 +299,8 @@ class AIAnalysisEngine:
         return insights
     
     def generate_user_profile(self, sessions, topics):
-        """
-        Generate user profile insights
-        """
         insights = []
         
-        # Determine learning style
         style_scores = defaultdict(int)
         
         for session in sessions:
@@ -371,7 +326,6 @@ class AIAnalysisEngine:
                 'style_distribution': dict(style_scores)
             })
         
-        # Skill level estimation
         if topics:
             total_time = sum(t.get('totalTime', 0) for t in topics)
             hours = total_time / (1000 * 60 * 60)
@@ -392,15 +346,11 @@ class AIAnalysisEngine:
         return insights
     
     def analyze_skill_progression(self, sessions):
-        """
-        Analyze skill progression over time
-        """
         insights = []
         
         if not sessions or len(sessions) < 5:
             return insights
         
-        # Group sessions by date
         daily_learning = defaultdict(lambda: {'time': 0, 'sessions': 0, 'topics': set()})
         
         for session in sessions:
@@ -415,7 +365,6 @@ class AIAnalysisEngine:
         if len(daily_learning) >= 3:
             dates = sorted(daily_learning.keys())
             
-            # Learning acceleration
             first_half = dates[:len(dates)//2]
             second_half = dates[len(dates)//2:]
             
@@ -440,9 +389,6 @@ class AIAnalysisEngine:
         return insights
     
     def extract_topics(self, texts):
-        """
-        Extract topics from text using TF-IDF or basic keyword matching
-        """
         if not texts:
             return []
         
@@ -452,20 +398,13 @@ class AIAnalysisEngine:
             return self._extract_topics_basic(texts)
     
     def _extract_topics_ml(self, texts):
-        """
-        Extract topics using TF-IDF and clustering
-        """
         try:
-            # Vectorize texts
             tfidf_matrix = self.vectorizer.fit_transform(texts)
             
-            # Get feature names
             feature_names = self.vectorizer.get_feature_names_out()
             
-            # Get top terms for each document
             topics = []
             for i, text in enumerate(texts):
-                # Get TF-IDF scores for this document
                 scores = tfidf_matrix[i].toarray().flatten()
                 top_indices = scores.argsort()[-5:][::-1]
                 top_terms = [feature_names[idx] for idx in top_indices if scores[idx] > 0]
@@ -484,9 +423,6 @@ class AIAnalysisEngine:
             return self._extract_topics_basic(texts)
     
     def _extract_topics_basic(self, texts):
-        """
-        Basic keyword-based topic extraction
-        """
         topics = []
         
         for i, text in enumerate(texts):
@@ -510,12 +446,8 @@ class AIAnalysisEngine:
         return topics
     
     def analyze_content(self, url, title, content=''):
-        """
-        Analyze specific content for educational classification
-        """
         combined_text = f"{title} {content}".lower()
         
-        # Determine category
         category_scores = {}
         for category, keywords in self.topic_keywords.items():
             score = sum(1 for kw in keywords if kw in combined_text)
@@ -524,12 +456,10 @@ class AIAnalysisEngine:
         
         best_category = max(category_scores, key=category_scores.get) if category_scores else 'general'
         
-        # Extract keywords
         words = re.findall(r'\b[a-z]{4,}\b', combined_text)
         word_freq = Counter(words)
         top_keywords = [word for word, _ in word_freq.most_common(10)]
         
-        # Estimate educational value
         edu_indicators = ['learn', 'tutorial', 'course', 'guide', 'documentation',
                          'example', 'how to', 'introduction', 'beginner', 'advanced']
         edu_score = sum(1 for ind in edu_indicators if ind in combined_text) / len(edu_indicators)
