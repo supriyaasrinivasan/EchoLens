@@ -3,6 +3,54 @@
  * Tracks user interactions on web pages (mouse, scroll, focus, clicks)
  */
 
+// Global flag to stop all extension communication once context is invalidated
+let extensionContextValid = true;
+
+// Helper to check if extension context is still valid
+function isExtensionContextValid() {
+    if (!extensionContextValid) return false;
+    
+    try {
+        // Try to access chrome.runtime.id - this throws if context is invalid
+        if (!chrome || !chrome.runtime || !chrome.runtime.id) {
+            extensionContextValid = false;
+            return false;
+        }
+        return true;
+    } catch (e) {
+        extensionContextValid = false;
+        return false;
+    }
+}
+
+// Safe message sender that handles context invalidation
+function safeSendMessage(message, callback) {
+    if (!extensionContextValid) return;
+    
+    try {
+        if (!chrome || !chrome.runtime || !chrome.runtime.id) {
+            extensionContextValid = false;
+            return;
+        }
+        
+        chrome.runtime.sendMessage(message, (response) => {
+            // Check for errors after sending
+            try {
+                if (chrome.runtime.lastError) {
+                    // Extension context was invalidated
+                    extensionContextValid = false;
+                    return;
+                }
+                if (callback) callback(response);
+            } catch (e) {
+                extensionContextValid = false;
+            }
+        });
+    } catch (error) {
+        extensionContextValid = false;
+    }
+}
+
 class ContentTracker {
     constructor() {
         this.isTracking = false;
@@ -46,38 +94,65 @@ class ContentTracker {
     }
 
     setupMessageListener() {
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            switch (message.type) {
-                case 'START_TRACKING':
-                    this.startTracking(message.sessionId);
-                    sendResponse({ success: true });
-                    break;
-                case 'STOP_TRACKING':
-                    this.stopTracking();
-                    sendResponse({ success: true });
-                    break;
-                case 'GET_METRICS':
-                    sendResponse({ metrics: this.metrics });
-                    break;
+        if (!extensionContextValid) return;
+        
+        try {
+            if (!chrome || !chrome.runtime || !chrome.runtime.onMessage) {
+                extensionContextValid = false;
+                return;
             }
-            return true;
-        });
+            
+            chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+                // Check context validity first
+                if (!extensionContextValid) {
+                    return false;
+                }
+                
+                try {
+                    switch (message.type) {
+                        case 'START_TRACKING':
+                            this.startTracking(message.sessionId);
+                            sendResponse({ success: true });
+                            break;
+                        case 'STOP_TRACKING':
+                            this.stopTracking();
+                            sendResponse({ success: true });
+                            break;
+                        case 'GET_METRICS':
+                            sendResponse({ metrics: this.metrics });
+                            break;
+                    }
+                } catch (error) {
+                    extensionContextValid = false;
+                }
+                return true;
+            });
+        } catch (error) {
+            extensionContextValid = false;
+        }
     }
 
     async checkIfShouldTrack() {
         // Check if we should auto-start tracking
+        if (!extensionContextValid) return;
+        
         try {
+            if (!chrome || !chrome.storage || !chrome.storage.local) {
+                extensionContextValid = false;
+                return;
+            }
+            
             const result = await chrome.storage.local.get(['trackingEnabled']);
             if (result.trackingEnabled !== false) {
                 // Notify background to potentially start a session
-                chrome.runtime.sendMessage({ 
+                safeSendMessage({ 
                     type: 'PAGE_READY',
                     url: window.location.href,
                     title: document.title
                 });
             }
         } catch (error) {
-            console.log('Could not check tracking status:', error);
+            extensionContextValid = false;
         }
     }
 
@@ -111,6 +186,7 @@ class ContentTracker {
     attachEventListeners() {
         // Mouse movement (throttled)
         this.onMouseMove = this.throttle((e) => {
+            if (!extensionContextValid) return;
             this.metrics.mouseMovements++;
             this.recordActivity();
         }, this.throttleDelay);
@@ -118,6 +194,7 @@ class ContentTracker {
 
         // Mouse clicks
         this.onClick = (e) => {
+            if (!extensionContextValid) return;
             this.metrics.clicks++;
             this.recordActivity();
             this.analyzeClick(e);
@@ -126,6 +203,7 @@ class ContentTracker {
 
         // Scroll (throttled)
         this.onScroll = this.throttle(() => {
+            if (!extensionContextValid) return;
             this.updateScrollDepth();
             this.recordActivity();
         }, this.throttleDelay);
@@ -133,6 +211,7 @@ class ContentTracker {
 
         // Hover events (on interactive elements)
         this.onMouseOver = (e) => {
+            if (!extensionContextValid) return;
             if (this.isInteractiveElement(e.target)) {
                 this.metrics.hoverEvents++;
             }
@@ -141,6 +220,7 @@ class ContentTracker {
 
         // Key presses
         this.onKeyPress = () => {
+            if (!extensionContextValid) return;
             this.metrics.keyPresses++;
             this.recordActivity();
         };
@@ -148,6 +228,7 @@ class ContentTracker {
 
         // Visibility change
         this.onVisibilityChange = () => {
+            if (!extensionContextValid) return;
             if (document.hidden) {
                 this.isIdle = true;
             } else {
@@ -158,6 +239,7 @@ class ContentTracker {
 
         // Page unload
         this.onUnload = () => {
+            if (!extensionContextValid) return;
             this.sendReport();
         };
         window.addEventListener('beforeunload', this.onUnload);
@@ -199,7 +281,7 @@ class ContentTracker {
         this.metrics.maxScrollDepth = Math.max(this.metrics.maxScrollDepth, this.metrics.scrollDepth);
         
         // Send scroll update to background
-        chrome.runtime.sendMessage({
+        safeSendMessage({
             type: 'SCROLL_UPDATE',
             depth: this.metrics.maxScrollDepth
         });
@@ -263,6 +345,12 @@ class ContentTracker {
     // ==================== Reporting ====================
     startReporting() {
         this.reportTimer = setInterval(() => {
+            // Stop reporting if context is invalid
+            if (!extensionContextValid) {
+                this.stopReporting();
+                this.stopTracking();
+                return;
+            }
             this.sendReport();
         }, this.reportInterval);
     }
@@ -270,11 +358,12 @@ class ContentTracker {
     stopReporting() {
         if (this.reportTimer) {
             clearInterval(this.reportTimer);
+            this.reportTimer = null;
         }
     }
 
     sendReport() {
-        if (!this.isTracking) return;
+        if (!this.isTracking || !extensionContextValid) return;
 
         // Calculate engagement and focus
         const totalTime = this.metrics.activeTime + this.metrics.idleTime;
@@ -285,7 +374,7 @@ class ContentTracker {
         const focusLevel = this.calculateFocusLevel();
 
         // Send mouse metrics
-        chrome.runtime.sendMessage({
+        safeSendMessage({
             type: 'MOUSE_METRICS',
             metrics: {
                 movements: this.metrics.mouseMovements,
@@ -296,7 +385,7 @@ class ContentTracker {
         });
 
         // Send engagement update
-        chrome.runtime.sendMessage({
+        safeSendMessage({
             type: 'UPDATE_ENGAGEMENT',
             metrics: {
                 engagement: engagement,
@@ -361,6 +450,8 @@ class ContentAnalyzer {
     }
 
     init() {
+        if (!extensionContextValid) return;
+        
         // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.analyze());
@@ -370,10 +461,12 @@ class ContentAnalyzer {
     }
 
     analyze() {
+        if (!extensionContextValid) return;
+        
         const pageData = this.extractPageData();
         
         // Send page data to background for classification
-        chrome.runtime.sendMessage({
+        safeSendMessage({
             type: 'PAGE_CONTENT',
             data: pageData
         });

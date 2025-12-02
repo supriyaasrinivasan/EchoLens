@@ -864,20 +864,43 @@ class DashboardController {
                 if (response.ok) {
                     const result = await response.json();
                     
-                    if (result.insights) {
-                        await this.storage.saveAIInsights(result.insights);
+                    // Handle structured response
+                    if (result.success) {
+                        // Store insights
+                        if (result.insights && Array.isArray(result.insights)) {
+                            await this.storage.saveAIInsights(result.insights);
+                        }
+                        
+                        // Store recommendations
+                        if (result.recommendations && Array.isArray(result.recommendations)) {
+                            await this.storage.saveRecommendations(result.recommendations);
+                        }
+                        
+                        // Log sync statistics
+                        const stats = result.data || {};
+                        console.log('Sync complete:', {
+                            sessions: stats.sessions_stored,
+                            insights: stats.insights_generated,
+                            recommendations: stats.recommendations_generated
+                        });
+                        
+                        this.showNotification(
+                            `Synced! ${stats.insights_generated || 0} insights, ${stats.recommendations_generated || 0} recommendations`,
+                            'success'
+                        );
+                        this.loadDashboard();
+                        return;
+                    } else {
+                        // Handle error response
+                        console.error('Sync returned error:', result.error);
+                        throw new Error(result.error || 'Sync failed');
                     }
-                    if (result.recommendations) {
-                        await this.storage.saveRecommendations(result.recommendations);
-                    }
-                    
-                    this.showNotification('Synced successfully with AI backend!', 'success');
-                    this.loadDashboard();
-                    return;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
                 }
             } catch (fetchError) {
                 clearTimeout(timeoutId);
-                console.log('Backend not available, generating local insights...');
+                console.log('Backend not available:', fetchError.message);
             }
             
             // Backend not available - generate local insights instead

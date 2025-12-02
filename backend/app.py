@@ -9,15 +9,47 @@ import sqlite3
 import json
 from datetime import datetime, timedelta
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
 from ai_engine import AIAnalysisEngine
 from recommendation_engine import MLRecommendationEngine
+from config import get_config, ensure_directories
+
+# Ensure directories exist
+ensure_directories()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for Chrome extension
+
+# Configure CORS
+cors_config = get_config('cors')
+CORS(app, origins=cors_config['origins'], 
+     methods=cors_config['methods'],
+     allow_headers=cors_config['allow_headers'])
+
+# Configure logging
+log_config = get_config('logging')
+log_dir = os.path.dirname(log_config['log_file'])
+if not os.path.exists(log_dir):
+    os.makedirs(log_dir)
+
+handler = RotatingFileHandler(
+    log_config['log_file'],
+    maxBytes=log_config['max_bytes'],
+    backupCount=log_config['backup_count']
+)
+handler.setFormatter(logging.Formatter(log_config['format']))
+app.logger.addHandler(handler)
+app.logger.setLevel(getattr(logging, log_config['level']))
+
+# Also log to console
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(log_config['format']))
+app.logger.addHandler(console_handler)
 
 # Database path
-DB_PATH = os.path.join(os.path.dirname(__file__), 'supriai.db')
+db_config = get_config('database')
+DB_PATH = str(db_config['path'])
 
 # Initialize AI engines
 ai_engine = AIAnalysisEngine()
@@ -141,8 +173,13 @@ def init_db():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    app.logger.info("Health check requested")
+    
     # Verify database connection
     db_status = 'connected'
+    session_count = 0
+    topic_count = 0
+    
     try:
         conn = get_db()
         cursor = conn.cursor()
@@ -150,25 +187,31 @@ def health_check():
         session_count = cursor.fetchone()[0]
         cursor.execute('SELECT COUNT(*) FROM topics')
         topic_count = cursor.fetchone()[0]
+        cursor.execute('SELECT COUNT(*) FROM recommendations')
+        rec_count = cursor.fetchone()[0]
         conn.close()
+        app.logger.info(f"Database check: {session_count} sessions, {topic_count} topics, {rec_count} recommendations")
     except Exception as e:
         db_status = f'error: {str(e)}'
-        session_count = 0
-        topic_count = 0
+        app.logger.error(f"Database health check failed: {e}")
     
-    return jsonify({
+    api_config = get_config('api')
+    health_status = {
         'status': 'healthy' if db_status == 'connected' else 'degraded',
         'service': 'SupriAI Backend',
-        'version': '1.0.0',
+        'version': api_config['version'],
         'database': {
             'status': db_status,
             'sessions': session_count,
-            'topics': topic_count
+            'topics': topic_count,
+            'recommendations': rec_count if db_status == 'connected' else 0
         },
         'ai_engine': 'ready',
         'recommendation_engine': 'ready',
         'timestamp': datetime.now().isoformat()
-    })
+    }
+    
+    return jsonify(health_status)
 
 
 @app.route('/api/sync', methods=['POST'])
@@ -177,10 +220,13 @@ def sync_data():
     Main sync endpoint - receives data from Chrome extension
     Performs AI analysis and returns insights + recommendations
     """
+    app.logger.info("Sync request received")
+    
     try:
         data = request.json
         
         if not data:
+            app.logger.warning("Sync request with no data")
             return jsonify({
                 'success': False,
                 'error': 'No data provided',
@@ -190,11 +236,14 @@ def sync_data():
         # Validate required fields
         sessions = data.get('sessions', [])
         if not isinstance(sessions, list):
+            app.logger.warning(f"Invalid sessions type: {type(sessions)}")
             return jsonify({
                 'success': False,
                 'error': 'Sessions must be an array',
                 'code': 'INVALID_SESSIONS'
             }), 400
+        
+        app.logger.info(f"Processing {len(sessions)} sessions")
         
         # Store sessions with validation
         stored_sessions = store_sessions(sessions)
@@ -216,9 +265,11 @@ def sync_data():
         
         # Run AI analysis
         try:
+            app.logger.info("Running AI analysis...")
             insights = ai_engine.analyze(sessions, topics)
+            app.logger.info(f"Generated {len(insights)} insights")
         except Exception as ai_error:
-            print(f"AI analysis error: {ai_error}")
+            app.logger.error(f"AI analysis error: {ai_error}", exc_info=True)
             insights = [{
                 'type': 'error',
                 'title': 'Analysis Error',
@@ -228,21 +279,23 @@ def sync_data():
         
         # Generate ML-based recommendations
         try:
+            app.logger.info("Generating recommendations...")
             recommendations = recommendation_engine.generate(
                 sessions=sessions,
                 topics=topics,
                 profile=profile,
                 skills=skills
             )
+            app.logger.info(f"Generated {len(recommendations)} recommendations")
         except Exception as rec_error:
-            print(f"Recommendation error: {rec_error}")
+            app.logger.error(f"Recommendation error: {rec_error}", exc_info=True)
             recommendations = []
         
         # Store insights and recommendations
         store_insights(insights)
         store_recommendations(recommendations)
         
-        return jsonify({
+        response_data = {
             'success': True,
             'code': 'SYNC_COMPLETE',
             'data': {
@@ -255,16 +308,20 @@ def sync_data():
             'insights': insights,
             'recommendations': recommendations,
             'timestamp': datetime.now().isoformat()
-        })
+        }
         
-    except json.JSONDecodeError:
+        app.logger.info(f"Sync completed successfully: {stored_sessions} sessions, {len(insights)} insights, {len(recommendations)} recommendations")
+        return jsonify(response_data)
+        
+    except json.JSONDecodeError as e:
+        app.logger.error(f"JSON decode error: {e}")
         return jsonify({
             'success': False,
             'error': 'Invalid JSON data',
             'code': 'INVALID_JSON'
         }), 400
     except Exception as e:
-        print(f"Sync error: {str(e)}")
+        app.logger.error(f"Sync error: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'error': str(e),
@@ -649,6 +706,15 @@ def topic_modeling():
 
 if __name__ == '__main__':
     init_db()
-    print("Starting SupriAI Backend Server...")
-    print("Server running on http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    server_config = get_config('server')
+    app.logger.info("=" * 60)
+    app.logger.info("Starting SupriAI Backend Server...")
+    app.logger.info(f"Server URL: http://localhost:{server_config['port']}")
+    app.logger.info(f"Health Check: http://localhost:{server_config['port']}/api/health")
+    app.logger.info("=" * 60)
+    
+    app.run(
+        host=server_config['host'],
+        port=server_config['port'],
+        debug=server_config['debug']
+    )

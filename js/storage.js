@@ -334,9 +334,23 @@ export class StorageManager {
 
     // ==================== AI Insights Operations ====================
     async saveAIInsights(insights) {
-        for (const insight of insights) {
+        // Handle different insight formats
+        if (!insights) return;
+        
+        // If insights is an array, iterate over it
+        if (Array.isArray(insights)) {
+            for (const insight of insights) {
+                if (insight && typeof insight === 'object') {
+                    await this.add('aiInsights', {
+                        ...insight,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+        } else if (typeof insights === 'object') {
+            // If insights is a single object (like local insights), save it directly
             await this.add('aiInsights', {
-                ...insight,
+                ...insights,
                 timestamp: Date.now()
             });
         }
@@ -423,18 +437,38 @@ export class StorageManager {
 
         return {
             sessions: sessions.map(s => ({
-                url: s.url,
-                domain: s.domain,
-                category: s.category,
-                topics: s.topics,
-                duration: s.duration,
-                engagementScore: s.engagementScore,
-                scrollDepth: s.scrollDepth,
-                date: s.date
+                url: s.url || '',
+                domain: s.domain || '',
+                title: s.title || 'Unknown',
+                category: s.category || 'General',
+                topics: Array.isArray(s.topics) ? s.topics : [],
+                duration: s.duration || 0,
+                engagementScore: s.engagementScore || 0,
+                scrollDepth: s.scrollDepth || 0,
+                date: s.date || new Date().toISOString().split('T')[0],
+                timestamp: s.timestamp || Date.now()
             })),
-            topics: topics,
-            profile: profile,
-            skills: skills,
+            topics: topics.map(t => ({
+                name: t.name || 'Unknown',
+                category: t.category || 'General',
+                totalTime: t.totalTime || 0,
+                sessionCount: t.sessionCount || 0,
+                averageEngagement: t.averageEngagement || 0
+            })),
+            profile: {
+                interestClusters: profile.interestClusters || [],
+                learningStyle: profile.learningStyle || 'balanced',
+                skillLevel: profile.skillLevel || 'beginner',
+                preferredCategories: profile.preferredCategories || [],
+                weeklyGoal: profile.weeklyGoal || 300
+            },
+            skills: skills.map(sk => ({
+                name: sk.name || 'Unknown',
+                category: sk.category || 'General',
+                experience: sk.experience || 0,
+                level: sk.level || 0,
+                lastPracticed: sk.lastPracticed || null
+            })),
             timestamp: Date.now()
         };
     }
