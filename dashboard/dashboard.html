@@ -74,6 +74,12 @@
                     <p class="header-subtitle" id="headerSubtitle">Your learning journey at a glance</p>
                 </div>
                 <div class="header-right">
+                    <div class="backend-status" id="backendStatus" title="Backend connection status">
+                        <div class="status-indicator" id="statusIndicator">
+                            <i class="ri-cloud-off-line"></i>
+                        </div>
+                        <span class="status-text" id="statusText">Checking...</span>
+                    </div>
                     <div class="time-range-selector">
                         <button class="range-btn active" data-range="week">Week</button>
                         <button class="range-btn" data-range="month">Month</button>
@@ -371,6 +377,60 @@
                                 <h3><i class="ri-settings-3-line"></i> Extension Settings</h3>
                             </div>
                             <div class="settings-list">
+                                <!-- Backend Connection Settings -->
+                                <div class="setting-section">
+                                    <h4 class="setting-section-title">
+                                        <i class="ri-server-line"></i> Backend Connection
+                                    </h4>
+                                    
+                                    <div class="setting-item">
+                                        <div class="setting-info">
+                                            <span class="setting-label">Backend Server</span>
+                                            <span class="setting-desc">Python backend for enhanced AI analysis</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="backendEnabled" checked>
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-info">
+                                            <span class="setting-label">Backend URL</span>
+                                            <span class="setting-desc">Server address (default: http://localhost:5000)</span>
+                                        </div>
+                                        <input type="text" id="backendUrl" class="setting-input" 
+                                               value="http://localhost:5000" placeholder="http://localhost:5000">
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-info">
+                                            <span class="setting-label">Connection Status</span>
+                                            <span class="setting-desc" id="connectionStatusDesc">Click test to check connection</span>
+                                        </div>
+                                        <button class="btn btn-primary" id="testBackendBtn">
+                                            <i class="ri-wifi-line"></i> Test Connection
+                                        </button>
+                                    </div>
+
+                                    <div class="setting-item">
+                                        <div class="setting-info">
+                                            <span class="setting-label">Auto Sync</span>
+                                            <span class="setting-desc">Automatically sync data every 5 minutes</span>
+                                        </div>
+                                        <label class="toggle">
+                                            <input type="checkbox" id="autoSync">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- General Settings -->
+                                <div class="setting-section">
+                                    <h4 class="setting-section-title">
+                                        <i class="ri-settings-4-line"></i> General
+                                    </h4>
+
                                 <div class="setting-item">
                                     <div class="setting-info">
                                         <span class="setting-label">Enable Tracking</span>
@@ -380,6 +440,7 @@
                                         <input type="checkbox" id="trackingToggle" checked>
                                         <span class="toggle-slider"></span>
                                     </label>
+                                </div>
                                 </div>
                                 <div class="setting-item">
                                     <div class="setting-info">

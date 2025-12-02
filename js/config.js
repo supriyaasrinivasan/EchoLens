@@ -9,6 +9,9 @@ const CONFIG = {
     
     AUTO_SYNC_INTERVAL: 300000,
     
+    // Health check interval (30 seconds)
+    HEALTH_CHECK_INTERVAL: 30000,
+    
     API_ENDPOINTS: {
         HEALTH: '/api/health',
         SYNC: '/api/sync',
@@ -26,5 +29,126 @@ const CONFIG = {
         BACKOFF_MULTIPLIER: 2
     }
 };
+
+/**
+ * Backend Connection Manager
+ * Handles connection status, health checks, and retries
+ */
+export class BackendConnection {
+    constructor() {
+        this.isConnected = false;
+        this.lastCheckTime = 0;
+        this.healthCheckTimer = null;
+        this.listeners = [];
+    }
+
+    /**
+     * Check if backend is available
+     */
+    async checkHealth() {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            
+            const response = await fetch(`${CONFIG.BACKEND_URL}${CONFIG.API_ENDPOINTS.HEALTH}`, {
+                method: 'GET',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.isConnected = data.status === 'healthy';
+                this.lastCheckTime = Date.now();
+                this.notifyListeners(this.isConnected);
+                return this.isConnected;
+            }
+        } catch (error) {
+            this.isConnected = false;
+            this.lastCheckTime = Date.now();
+            this.notifyListeners(false);
+        }
+        return false;
+    }
+
+    /**
+     * Start periodic health checks
+     */
+    startHealthChecks() {
+        this.checkHealth();
+        this.healthCheckTimer = setInterval(() => {
+            this.checkHealth();
+        }, CONFIG.HEALTH_CHECK_INTERVAL);
+    }
+
+    /**
+     * Stop health checks
+     */
+    stopHealthChecks() {
+        if (this.healthCheckTimer) {
+            clearInterval(this.healthCheckTimer);
+            this.healthCheckTimer = null;
+        }
+    }
+
+    /**
+     * Add listener for connection status changes
+     */
+    addListener(callback) {
+        this.listeners.push(callback);
+    }
+
+    /**
+     * Notify all listeners of status change
+     */
+    notifyListeners(status) {
+        this.listeners.forEach(callback => {
+            try {
+                callback(status);
+            } catch (error) {
+                console.error('Error notifying connection listener:', error);
+            }
+        });
+    }
+
+    /**
+     * Make API request with retry logic
+     */
+    async request(endpoint, options = {}, retries = CONFIG.RETRY_CONFIG.MAX_RETRIES) {
+        const url = `${CONFIG.BACKEND_URL}${endpoint}`;
+        
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.SYNC_TIMEOUT);
+                
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    this.isConnected = true;
+                    return await response.json();
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                if (attempt === retries) {
+                    this.isConnected = false;
+                    throw error;
+                }
+                
+                // Wait before retry with exponential backoff
+                const delay = CONFIG.RETRY_CONFIG.RETRY_DELAY * 
+                             Math.pow(CONFIG.RETRY_CONFIG.BACKOFF_MULTIPLIER, attempt);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+}
 
 export default CONFIG;

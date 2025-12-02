@@ -8,7 +8,7 @@ import { AnalyticsEngine } from '../js/analytics.js';
 import { RecommendationEngine } from '../js/recommendations.js';
 import { D3Visualizations } from '../js/d3-viz.js';
 import { formatTime, formatDate, getCategoryColor, getCategoryIcon, getRelativeTime } from '../js/utils.js';
-import CONFIG from '../js/config.js';
+import CONFIG, { BackendConnection } from '../js/config.js';
 
 class DashboardController {
     constructor() {
@@ -16,6 +16,7 @@ class DashboardController {
         this.analytics = new AnalyticsEngine();
         this.recommendations = new RecommendationEngine();
         this.d3viz = new D3Visualizations();
+        this.backend = new BackendConnection();
         
         this.currentTimeRange = 'week';
         this.charts = {};
@@ -29,6 +30,7 @@ class DashboardController {
         this.initTheme();
         this.setupNavigation();
         this.setupEventListeners();
+        this.setupBackendConnection();
         
         await this.loadDashboard();
         
@@ -150,6 +152,32 @@ class DashboardController {
 
         // Sync button
         document.getElementById('syncBtn').addEventListener('click', () => this.syncWithBackend());
+
+        // Backend settings
+        document.getElementById('backendToggle')?.addEventListener('change', (e) => {
+            chrome.storage.local.set({ backendEnabled: e.target.checked });
+            if (e.target.checked) {
+                this.backend.startHealthChecks();
+            } else {
+                this.backend.stopHealthChecks();
+            }
+        });
+
+        document.getElementById('backendUrl')?.addEventListener('change', (e) => {
+            chrome.storage.local.set({ backendUrl: e.target.value });
+            this.backend.baseUrl = e.target.value;
+        });
+
+        document.getElementById('testConnectionBtn')?.addEventListener('click', () => this.testBackendConnection());
+
+        document.getElementById('autoSyncToggle')?.addEventListener('change', (e) => {
+            chrome.storage.local.set({ autoSync: e.target.checked });
+            if (e.target.checked) {
+                this.startAutoSync();
+            } else {
+                this.stopAutoSync();
+            }
+        });
 
         // Settings
         document.getElementById('trackingToggle').addEventListener('change', (e) => {
@@ -858,6 +886,130 @@ class DashboardController {
         if (categoryFilter) {
             categoryFilter.innerHTML = '<option value="">All Categories</option>' +
                 categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+    }
+
+    setupBackendConnection() {
+        // Listen for backend status changes
+        this.backend.addStatusListener((status) => {
+            this.updateBackendStatus(status);
+        });
+
+        // Load backend settings
+        chrome.storage.local.get(['backendEnabled', 'backendUrl', 'autoSync'], (settings) => {
+            const backendToggle = document.getElementById('backendToggle');
+            const backendUrl = document.getElementById('backendUrl');
+            const autoSyncToggle = document.getElementById('autoSyncToggle');
+
+            if (backendToggle) {
+                backendToggle.checked = settings.backendEnabled !== false;
+            }
+
+            if (backendUrl) {
+                backendUrl.value = settings.backendUrl || CONFIG.BACKEND_URL;
+                this.backend.baseUrl = backendUrl.value;
+            }
+
+            if (autoSyncToggle) {
+                autoSyncToggle.checked = settings.autoSync || false;
+            }
+
+            // Start health checks if enabled
+            if (settings.backendEnabled !== false) {
+                this.backend.startHealthChecks();
+            }
+
+            // Start auto-sync if enabled
+            if (settings.autoSync) {
+                this.startAutoSync();
+            }
+        });
+
+        // Make backend status clickable to show settings
+        document.querySelector('.backend-status')?.addEventListener('click', () => {
+            // Navigate to settings section
+            window.location.hash = 'settings';
+        });
+    }
+
+    updateBackendStatus(status) {
+        const statusIndicator = document.querySelector('.status-indicator');
+        const statusText = document.querySelector('.status-text');
+        const connectionStatus = document.getElementById('connectionStatus');
+
+        if (!statusIndicator || !statusText) return;
+
+        // Remove all status classes
+        statusIndicator.classList.remove('connected', 'disconnected', 'checking');
+        statusText.classList.remove('connected', 'disconnected');
+
+        // Update based on current status
+        if (status === 'checking') {
+            statusIndicator.classList.add('checking');
+            statusIndicator.innerHTML = '<i class="ri-loader-4-line"></i>';
+            statusText.textContent = 'Checking...';
+            statusText.classList.remove('connected', 'disconnected');
+            if (connectionStatus) connectionStatus.textContent = 'Checking connection...';
+        } else if (status === 'connected') {
+            statusIndicator.classList.add('connected');
+            statusIndicator.innerHTML = '<i class="ri-database-2-line"></i>';
+            statusText.textContent = 'Backend Online';
+            statusText.classList.add('connected');
+            if (connectionStatus) connectionStatus.textContent = 'Connected';
+        } else {
+            statusIndicator.classList.add('disconnected');
+            statusIndicator.innerHTML = '<i class="ri-database-2-line"></i>';
+            statusText.textContent = 'Backend Offline';
+            statusText.classList.add('disconnected');
+            if (connectionStatus) connectionStatus.textContent = 'Disconnected';
+        }
+    }
+
+    async testBackendConnection() {
+        const testBtn = document.getElementById('testConnectionBtn');
+        if (!testBtn) return;
+
+        const originalText = testBtn.textContent;
+        testBtn.disabled = true;
+        testBtn.textContent = 'Testing...';
+
+        try {
+            const isHealthy = await this.backend.checkHealth();
+            
+            if (isHealthy) {
+                this.showNotification('Backend connection successful!', 'success');
+            } else {
+                this.showNotification('Backend is not responding. Make sure the server is running.', 'error');
+            }
+        } catch (error) {
+            this.showNotification(`Connection failed: ${error.message}`, 'error');
+        } finally {
+            testBtn.disabled = false;
+            testBtn.textContent = originalText;
+        }
+    }
+
+    startAutoSync() {
+        // Clear any existing interval
+        this.stopAutoSync();
+
+        // Sync every 5 minutes
+        this.autoSyncInterval = setInterval(() => {
+            chrome.storage.local.get(['backendEnabled'], (settings) => {
+                if (settings.backendEnabled !== false) {
+                    this.syncWithBackend();
+                }
+            });
+        }, 5 * 60 * 1000);
+
+        console.log('Auto-sync started (every 5 minutes)');
+    }
+
+    stopAutoSync() {
+        if (this.autoSyncInterval) {
+            clearInterval(this.autoSyncInterval);
+            this.autoSyncInterval = null;
+            console.log('Auto-sync stopped');
         }
     }
 

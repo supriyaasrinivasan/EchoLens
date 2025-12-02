@@ -248,6 +248,102 @@ a:hover {
     50% { opacity: 0.6; transform: scale(0.9); }
 }
 
+/* ===== Backend Status Indicator ===== */
+.backend-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.backend-status:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-hover);
+}
+
+.status-indicator {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--bg-card);
+    font-size: 16px;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.status-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-card);
+    transition: all var(--transition-fast);
+}
+
+.status-indicator.connected {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.status-indicator.connected::after {
+    background: var(--success);
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-indicator.disconnected {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.status-indicator.disconnected::after {
+    background: var(--danger);
+}
+
+.status-indicator.checking {
+    background: var(--warning-light);
+    color: var(--warning);
+}
+
+.status-indicator.checking i {
+    animation: spin 1.5s linear infinite;
+}
+
+.status-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 100px;
+}
+
+.status-text.connected {
+    color: var(--success);
+}
+
+.status-text.disconnected {
+    color: var(--danger);
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .header-right {
     display: flex;
     align-items: center;

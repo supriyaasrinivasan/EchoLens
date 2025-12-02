@@ -1031,6 +1031,125 @@ cd backend; python test_backend.py
 curl http://localhost:5000/api/health
 ```
 
+# Backend Connectivity Features
+
+## Overview
+The SupriAI Chrome Extension now has clear, visual backend connectivity indicators to help users understand when the Python backend is running and available.
+
+## Features Added
+
+### 1. Backend Status Indicator (Dashboard Header)
+- **Location**: Top-right corner of the dashboard header
+- **States**:
+  - 🟢 **Connected** (green) - Backend is online and responding
+    - Shows "Backend Online" with pulsing green indicator
+  - 🔴 **Disconnected** (red) - Backend is offline
+    - Shows "Backend Offline" with static red indicator
+  - 🟡 **Checking** (yellow) - Currently testing connection
+    - Shows "Checking..." with spinning loader icon
+
+### 2. Backend Settings Section
+- **Location**: Settings page → Backend Connection section
+- **Controls**:
+  - **Enable Backend**: Toggle to enable/disable backend features
+  - **Backend URL**: Configure the backend server address (default: http://localhost:5000)
+  - **Connection Status**: Real-time display of connection state
+  - **Test Connection**: Button to manually test backend connectivity
+  - **Auto-Sync**: Toggle to automatically sync data every 5 minutes
+
+### 3. Auto-Health Checks
+- Backend connection is automatically checked every 30 seconds
+- Health checks run in the background without user intervention
+- Status indicator updates in real-time based on health check results
+
+### 4. Test Connection Feature
+- Click "Test Connection" button to manually verify backend status
+- Shows success/error notifications
+- Helpful for troubleshooting backend issues
+
+### 5. Auto-Sync Feature
+- When enabled, automatically syncs learning data with backend every 5 minutes
+- Only runs when backend is enabled
+- Provides notifications on sync success/failure
+
+## User Benefits
+
+1. **Immediate Visibility**: Users can see at a glance if the backend is running
+2. **Easy Troubleshooting**: Clear error messages help diagnose connection issues
+3. **Flexible Configuration**: Users can change backend URL if running on different host/port
+4. **Automatic Updates**: Health checks ensure status is always current
+5. **Manual Control**: Test connection button for on-demand verification
+
+## Technical Implementation
+
+### Files Modified
+- `js/config.js`: Added `BackendConnection` class with health checks and retry logic
+- `dashboard/dashboard.html`: Added status indicator and backend settings UI
+- `dashboard/dashboard.css`: Added status indicator styles with animations
+- `dashboard/dashboard.js`: Integrated backend connection with dashboard
+
+### Key Classes and Methods
+- `BackendConnection.checkHealth()`: Tests backend availability
+- `BackendConnection.startHealthChecks()`: Begins periodic health monitoring
+- `DashboardController.setupBackendConnection()`: Initializes status listeners
+- `DashboardController.updateBackendStatus()`: Updates UI based on connection state
+- `DashboardController.testBackendConnection()`: Manual connection test
+- `DashboardController.startAutoSync()`: Enables automatic background sync
+
+### Connection Flow
+1. Dashboard loads and initializes `BackendConnection` instance
+2. Settings are loaded from Chrome storage (backend URL, enabled state)
+3. If enabled, health checks start automatically (every 30 seconds)
+4. Status changes trigger UI updates via listener pattern
+5. Users can click status indicator to navigate to settings
+6. Test connection button provides on-demand verification
+
+## Usage Instructions
+
+### For Users
+1. **Check Backend Status**: Look at the top-right corner of the dashboard
+2. **Enable Backend**: Go to Settings → Backend Connection → Toggle "Enable Backend"
+3. **Configure URL**: If backend is on different port/host, update Backend URL field
+4. **Test Connection**: Click "Test Connection" to verify backend is running
+5. **Enable Auto-Sync**: Toggle "Auto-Sync" to automatically sync data every 5 minutes
+
+### For Developers
+1. **Start Backend Server**:
+   ```bash
+   cd backend
+   python start_server.py
+   ```
+2. Backend will run on `http://localhost:5000` by default
+3. Dashboard will automatically detect when backend comes online
+4. Check browser console for detailed connection logs
+
+## Troubleshooting
+
+### Backend Shows "Offline" Even Though Server is Running
+- Check if backend URL is correct in settings
+- Verify backend server is running on the specified port
+- Check browser console for CORS or network errors
+- Click "Test Connection" for detailed error message
+
+### Auto-Sync Not Working
+- Ensure "Enable Backend" is toggled on
+- Ensure "Auto-Sync" toggle is enabled
+- Verify backend is connected (green indicator)
+- Check that backend server is running continuously
+
+### Status Stuck on "Checking..."
+- Backend server may be slow to respond
+- Check if backend is actually running
+- Try manual "Test Connection" to force check
+- Restart the backend server
+
+## Future Enhancements
+- Backend server status in popup (quick view without opening dashboard)
+- Configurable sync interval (instead of fixed 5 minutes)
+- Multiple backend server support (failover)
+- Offline mode indicator with queue for pending syncs
+- Backend performance metrics (response time, uptime)
+
 
 **Last Updated:** December 2, 2025  
 **Version:** 1.0.0
