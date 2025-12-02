@@ -1,21 +1,12 @@
-/*
-* Remix Icon v4.0.0
-* https://remixicon.com
-* https://github.com/Remix-Design/RemixIcon
-*
-* Copyright RemixIcon.com
-* Released under the Apache License Version 2.0
-*
-* Date: 2023-12-16
-*/
+
 @font-face {
   font-family: "remixicon";
-  src: url('remixicon.eot?t=1702724036775'); /* IE9*/
-  src: url('remixicon.eot?t=1702724036775#iefix') format('embedded-opentype'), /* IE6-IE8 */
+  src: url('remixicon.eot?t=1702724036775'); 
+  src: url('remixicon.eot?t=1702724036775#iefix') format('embedded-opentype'), 
   url("remixicon.woff2?t=1702724036775") format("woff2"),
   url("remixicon.woff?t=1702724036775") format("woff"),
-  url('remixicon.ttf?t=1702724036775') format('truetype'), /* chrome, firefox, opera, Safari, Android, iOS 4.2+*/
-  url('remixicon.svg?t=1702724036775#remixicon') format('svg'); /* iOS 4.1- */
+  url('remixicon.ttf?t=1702724036775') format('truetype'), 
+  url('remixicon.svg?t=1702724036775#remixicon') format('svg'); 
   font-display: swap;
 }
 

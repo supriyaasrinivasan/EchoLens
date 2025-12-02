@@ -7,6 +7,7 @@ import { StorageManager } from '../js/storage.js';
 import { AnalyticsEngine } from '../js/analytics.js';
 import { RecommendationEngine } from '../js/recommendations.js';
 import { formatTime, formatDate, getCategoryColor, getCategoryIcon, getRelativeTime } from '../js/utils.js';
+import CONFIG from '../js/config.js';
 
 class DashboardController {
     constructor() {
@@ -845,11 +846,11 @@ class DashboardController {
             const data = await this.storage.getDataForSync();
             
             const settings = await chrome.storage.local.get(['backendUrl']);
-            const url = settings.backendUrl || 'http://localhost:5000';
+            const url = settings.backendUrl || CONFIG.BACKEND_URL;
             
             // Check if backend is available first with a timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), CONFIG.SYNC_TIMEOUT);
             
             try {
                 const response = await fetch(`${url}/api/sync`, {

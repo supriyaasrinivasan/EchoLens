@@ -93,38 +93,14 @@ SupriAI/
    ```bash
    python start_server.py
    ```
-   
-   OR on Windows, simply **double-click** `START_SERVER.bat`
 
 3. **Verify server is running**:
    - Open: http://localhost:5000/api/health
    - Should see: `{"status": "healthy", ...}`
 
-4. **Test all endpoints**:
-   ```bash
-   python test_backend.py
-   ```
-   
-   OR on Windows, **double-click** `RUN_TESTS.bat`
+4. **Extension auto-connects** - No configuration needed! ✅
 
-#### Manual Setup
-
-1. **Navigate to backend folder**:
-   ```bash
-   cd backend
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the server**:
-   ```bash
-   python app.py
-   ```
-   
-   Server runs at `http://localhost:5000`
+**Detailed Setup Guide:** See [`CONNECTIVITY_GUIDE.md`](CONNECTIVITY_GUIDE.md) for troubleshooting, custom URLs, and production deployment.
 
 ## 📊 Usage
 
@@ -155,9 +131,7 @@ When backend is running, the extension can connect to:
 | `/api/analyze` | POST | Analyze specific content |
 | `/api/topic-modeling` | POST | Extract topics from text |
 
-**Full API documentation:** See [`backend/README.md`](backend/README.md)
-
-**Connection troubleshooting:** See [`backend/CONNECTION_GUIDE.md`](backend/CONNECTION_GUIDE.md)
+**Full API documentation:** See [`BACKEND_API.md`](BACKEND_API.md) for complete API reference and connectivity guide.
 
 ## 🔧 Configuration
 
