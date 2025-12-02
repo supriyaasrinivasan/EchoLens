@@ -1,8 +1,3 @@
-"""
-SupriAI - ML-Based Recommendation Engine
-Generates personalized learning recommendations using machine learning
-"""
-
 import json
 from collections import defaultdict
 from datetime import datetime, timedelta
