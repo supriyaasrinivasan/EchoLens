@@ -117,37 +117,85 @@ class MLRecommendationEngine:
     
     def generate(self, sessions, topics, profile, skills):
         """
-        Generate personalized recommendations
+        Generate personalized recommendations with guaranteed structure
         """
         recommendations = []
         
-        # 1. Content-based recommendations
-        content_recs = self.content_based_recommendations(sessions, topics)
-        recommendations.extend(content_recs)
+        # Validate inputs
+        if not isinstance(sessions, list):
+            sessions = []
+        if not isinstance(topics, list):
+            topics = []
+        if not isinstance(profile, dict):
+            profile = {}
+        if not isinstance(skills, list):
+            skills = []
         
-        # 2. Skill progression recommendations
-        skill_recs = self.skill_progression_recommendations(skills, topics)
-        recommendations.extend(skill_recs)
+        try:
+            # 1. Content-based recommendations
+            content_recs = self.content_based_recommendations(sessions, topics)
+            recommendations.extend(content_recs)
+        except Exception as e:
+            print(f"Content-based recommendation error: {e}")
         
-        # 3. Pattern-based recommendations
-        pattern_recs = self.pattern_based_recommendations(sessions)
-        recommendations.extend(pattern_recs)
+        try:
+            # 2. Skill progression recommendations
+            skill_recs = self.skill_progression_recommendations(skills, topics)
+            recommendations.extend(skill_recs)
+        except Exception as e:
+            print(f"Skill progression recommendation error: {e}")
         
-        # 4. Exploration recommendations
-        exploration_recs = self.exploration_recommendations(topics)
-        recommendations.extend(exploration_recs)
+        try:
+            # 3. Pattern-based recommendations
+            pattern_recs = self.pattern_based_recommendations(sessions)
+            recommendations.extend(pattern_recs)
+        except Exception as e:
+            print(f"Pattern-based recommendation error: {e}")
         
-        # 5. Resource recommendations
-        resource_recs = self.resource_recommendations(topics, profile)
-        recommendations.extend(resource_recs)
+        try:
+            # 4. Exploration recommendations
+            exploration_recs = self.exploration_recommendations(topics)
+            recommendations.extend(exploration_recs)
+        except Exception as e:
+            print(f"Exploration recommendation error: {e}")
+        
+        try:
+            # 5. Resource recommendations
+            resource_recs = self.resource_recommendations(topics, profile)
+            recommendations.extend(resource_recs)
+        except Exception as e:
+            print(f"Resource recommendation error: {e}")
         
         # Score and rank recommendations
-        scored_recs = self.score_recommendations(recommendations, sessions, profile)
+        try:
+            scored_recs = self.score_recommendations(recommendations, sessions, profile)
+        except Exception as e:
+            print(f"Scoring error: {e}")
+            scored_recs = recommendations
         
         # Deduplicate and return top recommendations
-        unique_recs = self.deduplicate_recommendations(scored_recs)
+        try:
+            unique_recs = self.deduplicate_recommendations(scored_recs)
+        except Exception as e:
+            print(f"Deduplication error: {e}")
+            unique_recs = scored_recs
         
-        return unique_recs[:10]
+        # Ensure all recommendations have required fields
+        validated_recs = []
+        for rec in unique_recs[:10]:
+            validated_recs.append({
+                'type': rec.get('type', 'suggestion'),
+                'title': rec.get('title', 'Recommendation'),
+                'description': rec.get('description', ''),
+                'url': rec.get('url'),
+                'topic': rec.get('topic'),
+                'category': rec.get('category', 'General'),
+                'priority': rec.get('priority', 'medium'),
+                'icon': rec.get('icon', '💡'),
+                'score': rec.get('score', 0.5)
+            })
+        
+        return validated_recs
     
     def content_based_recommendations(self, sessions, topics):
         """

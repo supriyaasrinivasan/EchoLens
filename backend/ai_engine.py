@@ -64,30 +64,64 @@ class AIAnalysisEngine:
     def analyze(self, sessions, topics):
         """
         Main analysis method - processes sessions and generates insights
+        Returns a list of insight objects with guaranteed structure
         """
         insights = []
         
-        # 1. Learning pattern analysis
-        pattern_insights = self.detect_learning_patterns(sessions)
-        insights.extend(pattern_insights)
+        # Validate inputs
+        if not isinstance(sessions, list):
+            sessions = []
+        if not isinstance(topics, list):
+            topics = []
         
-        # 2. Topic clustering
-        topic_insights = self.analyze_topics(topics)
-        insights.extend(topic_insights)
+        try:
+            # 1. Learning pattern analysis
+            pattern_insights = self.detect_learning_patterns(sessions)
+            insights.extend(pattern_insights)
+        except Exception as e:
+            print(f"Pattern analysis error: {e}")
         
-        # 3. Engagement analysis
-        engagement_insights = self.analyze_engagement(sessions)
-        insights.extend(engagement_insights)
+        try:
+            # 2. Topic clustering
+            topic_insights = self.analyze_topics(topics)
+            insights.extend(topic_insights)
+        except Exception as e:
+            print(f"Topic analysis error: {e}")
         
-        # 4. User profiling
-        profile_insights = self.generate_user_profile(sessions, topics)
-        insights.extend(profile_insights)
+        try:
+            # 3. Engagement analysis
+            engagement_insights = self.analyze_engagement(sessions)
+            insights.extend(engagement_insights)
+        except Exception as e:
+            print(f"Engagement analysis error: {e}")
         
-        # 5. Skill progression analysis
-        skill_insights = self.analyze_skill_progression(sessions)
-        insights.extend(skill_insights)
+        try:
+            # 4. User profiling
+            profile_insights = self.generate_user_profile(sessions, topics)
+            insights.extend(profile_insights)
+        except Exception as e:
+            print(f"Profile analysis error: {e}")
         
-        return insights
+        try:
+            # 5. Skill progression analysis
+            skill_insights = self.analyze_skill_progression(sessions)
+            insights.extend(skill_insights)
+        except Exception as e:
+            print(f"Skill analysis error: {e}")
+        
+        # Ensure all insights have required fields
+        validated_insights = []
+        for insight in insights:
+            validated_insights.append({
+                'type': insight.get('type', 'general'),
+                'title': insight.get('title', 'Insight'),
+                'description': insight.get('description', ''),
+                'confidence': insight.get('confidence', 0.5),
+                'value': insight.get('value'),
+                'data': insight.get('data')
+            })
+        
+        return validated_insights
     
     def detect_learning_patterns(self, sessions):
         """

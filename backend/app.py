@@ -141,10 +141,32 @@ def init_db():
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    # Verify database connection
+    db_status = 'connected'
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM sessions')
+        session_count = cursor.fetchone()[0]
+        cursor.execute('SELECT COUNT(*) FROM topics')
+        topic_count = cursor.fetchone()[0]
+        conn.close()
+    except Exception as e:
+        db_status = f'error: {str(e)}'
+        session_count = 0
+        topic_count = 0
+    
     return jsonify({
-        'status': 'healthy',
+        'status': 'healthy' if db_status == 'connected' else 'degraded',
         'service': 'SupriAI Backend',
         'version': '1.0.0',
+        'database': {
+            'status': db_status,
+            'sessions': session_count,
+            'topics': topic_count
+        },
+        'ai_engine': 'ready',
+        'recommendation_engine': 'ready',
         'timestamp': datetime.now().isoformat()
     })
 
@@ -159,34 +181,62 @@ def sync_data():
         data = request.json
         
         if not data:
-            return jsonify({'error': 'No data provided'}), 400
+            return jsonify({
+                'success': False,
+                'error': 'No data provided',
+                'code': 'EMPTY_REQUEST'
+            }), 400
         
-        # Store sessions
+        # Validate required fields
         sessions = data.get('sessions', [])
+        if not isinstance(sessions, list):
+            return jsonify({
+                'success': False,
+                'error': 'Sessions must be an array',
+                'code': 'INVALID_SESSIONS'
+            }), 400
+        
+        # Store sessions with validation
         stored_sessions = store_sessions(sessions)
         
         # Update topics
         topics = data.get('topics', [])
-        store_topics(topics)
+        if isinstance(topics, list):
+            store_topics(topics)
         
         # Update user profile
         profile = data.get('profile', {})
-        update_profile(profile)
+        if isinstance(profile, dict):
+            update_profile(profile)
         
         # Update skills
         skills = data.get('skills', [])
-        store_skills(skills)
+        if isinstance(skills, list):
+            store_skills(skills)
         
         # Run AI analysis
-        insights = ai_engine.analyze(sessions, topics)
+        try:
+            insights = ai_engine.analyze(sessions, topics)
+        except Exception as ai_error:
+            print(f"AI analysis error: {ai_error}")
+            insights = [{
+                'type': 'error',
+                'title': 'Analysis Error',
+                'description': 'Could not generate insights',
+                'confidence': 0
+            }]
         
         # Generate ML-based recommendations
-        recommendations = recommendation_engine.generate(
-            sessions=sessions,
-            topics=topics,
-            profile=profile,
-            skills=skills
-        )
+        try:
+            recommendations = recommendation_engine.generate(
+                sessions=sessions,
+                topics=topics,
+                profile=profile,
+                skills=skills
+            )
+        except Exception as rec_error:
+            print(f"Recommendation error: {rec_error}")
+            recommendations = []
         
         # Store insights and recommendations
         store_insights(insights)
@@ -194,15 +244,32 @@ def sync_data():
         
         return jsonify({
             'success': True,
-            'sessions_stored': stored_sessions,
+            'code': 'SYNC_COMPLETE',
+            'data': {
+                'sessions_stored': stored_sessions,
+                'topics_processed': len(topics),
+                'skills_updated': len(skills),
+                'insights_generated': len(insights),
+                'recommendations_generated': len(recommendations)
+            },
             'insights': insights,
             'recommendations': recommendations,
             'timestamp': datetime.now().isoformat()
         })
         
+    except json.JSONDecodeError:
+        return jsonify({
+            'success': False,
+            'error': 'Invalid JSON data',
+            'code': 'INVALID_JSON'
+        }), 400
     except Exception as e:
         print(f"Sync error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'SYNC_ERROR'
+        }), 500
 
 
 def store_sessions(sessions):
@@ -370,7 +437,7 @@ def store_recommendations(recommendations):
 
 @app.route('/api/analytics', methods=['GET'])
 def get_analytics():
-    """Get analytics data"""
+    """Get analytics data with computed statistics"""
     try:
         time_range = request.args.get('range', 'week')
         
@@ -402,37 +469,107 @@ def get_analytics():
         
         # Get insights
         cursor.execute('SELECT * FROM ai_insights ORDER BY created_at DESC LIMIT 20')
-        insights = [dict(row) for row in cursor.fetchall()]
+        insights_raw = cursor.fetchall()
+        insights = []
+        for row in insights_raw:
+            try:
+                insight = dict(row)
+                if insight.get('content'):
+                    insight['content'] = json.loads(insight['content'])
+                insights.append(insight)
+            except:
+                insights.append(dict(row))
         
         conn.close()
         
+        # Calculate summary statistics
+        total_time = sum(s.get('duration', 0) for s in sessions)
+        total_sessions = len(sessions)
+        avg_engagement = round(sum(s.get('engagement_score', 0) for s in sessions) / max(total_sessions, 1), 1)
+        unique_topics = len(set(t.get('name') for t in topics if t.get('name')))
+        unique_days = len(set(s.get('date') for s in sessions if s.get('date')))
+        
+        # Category breakdown
+        category_stats = {}
+        for s in sessions:
+            cat = s.get('category', 'Other')
+            if cat not in category_stats:
+                category_stats[cat] = {'count': 0, 'time': 0}
+            category_stats[cat]['count'] += 1
+            category_stats[cat]['time'] += s.get('duration', 0)
+        
         return jsonify({
-            'sessions': sessions,
-            'topics': topics,
-            'insights': insights,
-            'timeRange': time_range
+            'success': True,
+            'data': {
+                'sessions': sessions,
+                'topics': topics,
+                'insights': insights
+            },
+            'summary': {
+                'totalTime': total_time,
+                'totalSessions': total_sessions,
+                'avgEngagement': avg_engagement,
+                'uniqueTopics': unique_topics,
+                'uniqueDays': unique_days,
+                'categoryBreakdown': category_stats
+            },
+            'timeRange': time_range,
+            'timestamp': datetime.now().isoformat()
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'ANALYTICS_ERROR'
+        }), 500
 
 
 @app.route('/api/recommendations', methods=['GET'])
 def get_recommendations():
-    """Get current recommendations"""
+    """Get current recommendations with metadata"""
     try:
+        limit = request.args.get('limit', 10, type=int)
+        category = request.args.get('category', None)
+        
         conn = get_db()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT * FROM recommendations ORDER BY score DESC LIMIT 10')
+        if category:
+            cursor.execute('''
+                SELECT * FROM recommendations 
+                WHERE category = ? 
+                ORDER BY score DESC LIMIT ?
+            ''', (category, limit))
+        else:
+            cursor.execute('SELECT * FROM recommendations ORDER BY score DESC LIMIT ?', (limit,))
+        
         recommendations = [dict(row) for row in cursor.fetchall()]
+        
+        # Get total count
+        cursor.execute('SELECT COUNT(*) FROM recommendations')
+        total = cursor.fetchone()[0]
         
         conn.close()
         
-        return jsonify({'recommendations': recommendations})
+        return jsonify({
+            'success': True,
+            'recommendations': recommendations,
+            'metadata': {
+                'total': total,
+                'returned': len(recommendations),
+                'limit': limit,
+                'category': category
+            },
+            'timestamp': datetime.now().isoformat()
+        })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'code': 'RECOMMENDATIONS_ERROR'
+        }), 500
 
 
 @app.route('/api/patterns', methods=['GET'])
