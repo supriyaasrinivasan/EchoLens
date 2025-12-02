@@ -221,26 +221,24 @@ class PopupController {
 
             const recIcons = ['📖', '🎥', '📝', '🔗', '💡'];
             
+            // Create clickable recommendation cards that open official sites
             container.innerHTML = recommendations.map((rec, index) => `
-                <div class="recommendation-card" data-url="${rec.url || '#'}">
-                    <div class="rec-icon">${recIcons[index % recIcons.length]}</div>
+                <a href="${rec.url || '#'}" 
+                   class="recommendation-card" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   ${!rec.url ? 'style="pointer-events: none; opacity: 0.7;"' : ''}>
+                    <div class="rec-icon">${rec.icon || recIcons[index % recIcons.length]}</div>
                     <div class="rec-content">
-                        <div class="rec-title">${rec.title}</div>
+                        <div class="rec-title">
+                            ${rec.title}
+                            ${rec.url ? '<i class="ri-external-link-line" style="font-size: 14px; opacity: 0.7;"></i>' : ''}
+                        </div>
                         <div class="rec-description">${rec.description}</div>
                         <span class="rec-tag">${rec.type || 'Suggested'}</span>
                     </div>
-                </div>
+                </a>
             `).join('');
-
-            // Add click handlers
-            container.querySelectorAll('.recommendation-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const url = card.dataset.url;
-                    if (url && url !== '#') {
-                        chrome.tabs.create({ url });
-                    }
-                });
-            });
         } catch (error) {
             console.error('Error loading recommendations:', error);
         }

@@ -6,6 +6,7 @@
 import { StorageManager } from '../js/storage.js';
 import { AnalyticsEngine } from '../js/analytics.js';
 import { RecommendationEngine } from '../js/recommendations.js';
+import { D3Visualizations } from '../js/d3-viz.js';
 import { formatTime, formatDate, getCategoryColor, getCategoryIcon, getRelativeTime } from '../js/utils.js';
 import CONFIG from '../js/config.js';
 
@@ -14,6 +15,7 @@ class DashboardController {
         this.storage = new StorageManager();
         this.analytics = new AnalyticsEngine();
         this.recommendations = new RecommendationEngine();
+        this.d3viz = new D3Visualizations();
         
         this.currentTimeRange = 'week';
         this.charts = {};
@@ -191,6 +193,10 @@ class DashboardController {
             this.renderHourlyChart(analytics.learningTrends.hourlyDistribution);
             this.renderCategoryChart(analytics.topicDistribution);
             this.renderPatterns(analytics.patterns);
+            
+            // D3.js visualizations
+            this.renderD3CategoryPie(analytics.topicDistribution);
+            this.renderD3Timeline(analytics.learningTrends);
             
             // Topics section
             await this.loadTopics();
@@ -757,19 +763,38 @@ class DashboardController {
             return;
         }
 
+        // Create clickable recommendation items with external links
         container.innerHTML = recs.map(rec => `
-            <div class="full-rec-item" ${rec.url ? `onclick="window.open('${rec.url}')"` : ''}>
+            <a href="${rec.url || '#'}" 
+               class="recommendation-item" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               ${!rec.url ? 'style="pointer-events: none; opacity: 0.7;"' : ''}>
                 <div class="rec-icon">${rec.icon || '📖'}</div>
                 <div class="rec-content">
-                    <div class="rec-title">${rec.title}</div>
-                    <div class="rec-description">${rec.description}</div>
-                    <span class="rec-tag">${rec.type || 'Suggestion'}</span>
+                    <div class="rec-title">
+                        ${rec.title}
+                        ${rec.url ? '<i class="ri-external-link-line external-link"></i>' : ''}
+                    </div>
+                    <div class="rec-desc">${rec.description}</div>
+                    <div class="rec-meta">
+                        <span class="rec-tag">${rec.type || 'Suggestion'}</span>
+                        ${rec.difficulty ? `
+                            <span class="rec-difficulty">
+                                <i class="ri-signal-${rec.difficulty === 'beginner' ? '2' : rec.difficulty === 'intermediate' ? '3' : '4'}-line"></i>
+                                ${rec.difficulty}
+                            </span>
+                        ` : ''}
+                    </div>
                 </div>
-            </div>
+            </a>
         `).join('');
 
         // Load weekly summary
         this.loadWeeklySummary();
+        
+        // Load curated resources
+        this.loadCuratedResources();
     }
 
     async loadWeeklySummary() {
@@ -1042,6 +1067,113 @@ class DashboardController {
     truncate(str, length) {
         if (!str) return '';
         return str.length > length ? str.substring(0, length) + '...' : str;
+    }
+
+    // ==================== D3.js Visualizations ====================
+    
+    renderD3CategoryPie(distribution) {
+        if (!distribution || !distribution.byCategory) return;
+        
+        // Prepare data for D3 pie chart
+        const total = distribution.byCategory.reduce((sum, cat) => sum + cat.totalTime, 0);
+        const pieData = distribution.byCategory.map(cat => ({
+            category: cat.category,
+            time: cat.totalTime,
+            percentage: (cat.totalTime / total) * 100
+        }));
+        
+        this.d3viz.createCategoryPieChart(pieData, 'categoryPieChart');
+    }
+
+    renderD3Timeline(trends) {
+        if (!trends || !trends.daily) return;
+        
+        // Prepare data for timeline
+        const timelineData = trends.daily.map(d => ({
+            date: new Date(d.date).toISOString().split('T')[0],
+            time: d.totalTime,
+            sessions: d.sessions || 1
+        }));
+        
+        this.d3viz.createTimelineChart(timelineData, 'timelineChart');
+    }
+
+    // ==================== Curated Resources ====================
+    
+    async loadCuratedResources() {
+        const container = document.getElementById('resourcesList');
+        if (!container) return;
+
+        // Get user's top categories to show relevant resources
+        const topics = await this.storage.getTopTopics(3);
+        const categories = [...new Set(topics.map(t => t.category || t.name))];
+        
+        // Get curated resources from recommendation engine
+        const resources = this.recommendations.resourceDatabase;
+        
+        // Filter and display resources for user's interests
+        let displayResources = [];
+        categories.forEach(category => {
+            if (resources[category]) {
+                displayResources.push(...resources[category].slice(0, 2));
+            }
+        });
+        
+        // If no specific categories, show general programming resources
+        if (displayResources.length === 0 && resources['Programming']) {
+            displayResources = resources['Programming'].slice(0, 5);
+        }
+
+        if (displayResources.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <span class="empty-icon">📚</span>
+                    <p>Start learning to see curated resources!</p>
+                </div>
+            `;
+            return;
+        }
+
+        const difficultyIcons = {
+            'beginner': 'ri-seedling-line',
+            'intermediate': 'ri-plant-line',
+            'advanced': 'ri-trophy-line'
+        };
+
+        const typeIcons = {
+            'Course': '🎓',
+            'Tutorial': '📖',
+            'Documentation': '📚',
+            'Video': '🎥',
+            'Practice': '💪',
+            'Articles': '📝',
+            'Interactive': '🎮',
+            'Platform': '🌐',
+            'Roadmap': '🗺️',
+            'Research': '🔬'
+        };
+
+        container.innerHTML = displayResources.map(resource => `
+            <a href="${resource.url}" 
+               class="resource-item" 
+               target="_blank" 
+               rel="noopener noreferrer">
+                <div class="resource-icon">${typeIcons[resource.type] || '📖'}</div>
+                <div class="resource-content">
+                    <div class="resource-title">
+                        ${resource.title}
+                        <i class="ri-external-link-line"></i>
+                    </div>
+                    <div class="resource-meta">
+                        <span class="resource-type">${resource.type}</span>
+                        <span class="resource-difficulty">
+                            <i class="${difficultyIcons[resource.difficulty] || 'ri-bookmark-line'}"></i>
+                            ${resource.difficulty}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        `).join('');
     }
 }
 

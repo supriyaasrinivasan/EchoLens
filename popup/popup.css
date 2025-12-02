@@ -422,12 +422,32 @@ body {
     gap: 12px;
     cursor: pointer;
     transition: all var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+}
+
+.recommendation-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--accent-gradient);
+    opacity: 0;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
+    transition: opacity var(--transition-fast);
 }
 
 .recommendation-card:hover {
     transform: translateX(4px);
     box-shadow: var(--shadow-md);
     border-color: var(--accent-primary);
+}
+
+.recommendation-card:hover::before {
+    opacity: 1;
 }
 
 .rec-icon {
@@ -441,6 +461,11 @@ body {
     justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
+    transition: transform var(--transition-fast);
+}
+
+.recommendation-card:hover .rec-icon {
+    transform: scale(1.1) rotate(-5deg);
 }
 
 .rec-content {
@@ -454,6 +479,19 @@ body {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rec-title i {
+    color: var(--accent-primary);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.recommendation-card:hover .rec-title i {
+    opacity: 1;
 }
 
 .rec-description {
@@ -469,6 +507,9 @@ body {
     padding: 2px 8px;
     border-radius: var(--radius-full);
     width: fit-content;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 /* ===== Actions ===== */
