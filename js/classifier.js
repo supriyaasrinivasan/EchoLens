@@ -1,11 +1,7 @@
-/**
- * SupriAI - Content Classifier
- * Hybrid classification model using keywords + ML for educational content detection
- */
+
 
 export class ContentClassifier {
     constructor() {
-        // Educational domain patterns
         this.educationalDomains = new Set([
             'youtube.com', 'coursera.org', 'udemy.com', 'edx.org', 'khanacademy.org',
             'codecademy.com', 'freecodecamp.org', 'w3schools.com', 'mdn.mozilla.org',
@@ -20,7 +16,6 @@ export class ContentClassifier {
             'brilliant.org', 'duolingo.com', 'memrise.com', 'quizlet.com'
         ]);
 
-        // Category-specific keywords
         this.categoryKeywords = {
             'Programming': [
                 'programming', 'coding', 'developer', 'software', 'algorithm', 'code',
@@ -79,7 +74,6 @@ export class ContentClassifier {
             ]
         };
 
-        // Educational content patterns in URLs
         this.educationalPatterns = [
             /\/tutorial/i, /\/guide/i, /\/learn/i, /\/course/i, /\/lesson/i,
             /\/documentation/i, /\/docs/i, /\/api/i, /\/reference/i,
@@ -90,7 +84,6 @@ export class ContentClassifier {
             /\/example/i, /\/sample/i, /\/demo/i
         ];
 
-        // Non-educational patterns (to filter out)
         this.nonEducationalPatterns = [
             /\/cart/i, /\/checkout/i, /\/payment/i, /\/order/i,
             /\/login/i, /\/signup/i, /\/register/i, /\/account/i,
@@ -99,7 +92,6 @@ export class ContentClassifier {
             /\/shop/i, /\/store/i, /\/product/i, /\/buy/i
         ];
 
-        // Video platform educational patterns
         this.videoEducationalPatterns = [
             /tutorial/i, /course/i, /lesson/i, /lecture/i, /learn/i,
             /how to/i, /explained/i, /introduction/i, /beginner/i,
@@ -108,9 +100,7 @@ export class ContentClassifier {
         ];
     }
 
-    /**
-     * Main classification method
-     */
+    
     async classifyUrl(url, title = '') {
         try {
             const urlObj = new URL(url);
@@ -118,26 +108,20 @@ export class ContentClassifier {
             const path = urlObj.pathname.toLowerCase();
             const fullText = `${title} ${path}`.toLowerCase();
 
-            // Step 1: Check if it's a known educational domain
             const domainScore = this.checkEducationalDomain(domain);
 
-            // Step 2: Check URL patterns
             const patternScore = this.checkUrlPatterns(path);
 
-            // Step 3: Analyze title and content keywords
             const keywordAnalysis = this.analyzeKeywords(fullText);
 
-            // Step 4: Calculate overall educational score
             const educationalScore = this.calculateEducationalScore(
                 domainScore, 
                 patternScore, 
                 keywordAnalysis.score
             );
 
-            // Step 5: Determine if content is educational
             const isEducational = educationalScore >= 0.5;
 
-            // Step 6: Extract topics
             const topics = this.extractTopics(fullText, keywordAnalysis.category);
 
             return {
@@ -166,19 +150,16 @@ export class ContentClassifier {
     }
 
     checkEducationalDomain(domain) {
-        // Check exact match
         if (this.educationalDomains.has(domain)) {
             return 1.0;
         }
 
-        // Check if it's a subdomain of educational domain
         for (const eduDomain of this.educationalDomains) {
             if (domain.endsWith('.' + eduDomain)) {
                 return 0.9;
             }
         }
 
-        // Check for educational TLDs
         if (domain.endsWith('.edu') || domain.endsWith('.ac.uk') || domain.endsWith('.edu.au')) {
             return 0.95;
         }
@@ -187,14 +168,12 @@ export class ContentClassifier {
     }
 
     checkUrlPatterns(path) {
-        // Check for non-educational patterns first
         for (const pattern of this.nonEducationalPatterns) {
             if (pattern.test(path)) {
                 return -0.5;
             }
         }
 
-        // Check for educational patterns
         let score = 0;
         for (const pattern of this.educationalPatterns) {
             if (pattern.test(path)) {
@@ -209,7 +188,6 @@ export class ContentClassifier {
         const words = text.toLowerCase().split(/\W+/);
         const categoryScores = {};
 
-        // Count keyword matches for each category
         for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
             let matches = 0;
             for (const keyword of keywords) {
@@ -220,7 +198,6 @@ export class ContentClassifier {
             categoryScores[category] = matches / keywords.length;
         }
 
-        // Find best matching category
         let bestCategory = null;
         let bestScore = 0;
 
@@ -231,7 +208,6 @@ export class ContentClassifier {
             }
         }
 
-        // Calculate overall keyword score
         const totalMatches = Object.values(categoryScores).reduce((a, b) => a + b, 0);
         const keywordScore = Math.min(totalMatches * 2, 1.0);
 
@@ -243,7 +219,6 @@ export class ContentClassifier {
     }
 
     calculateEducationalScore(domainScore, patternScore, keywordScore) {
-        // Weighted combination
         const weights = {
             domain: 0.4,
             pattern: 0.3,
@@ -255,12 +230,10 @@ export class ContentClassifier {
             Math.max(patternScore, 0) * weights.pattern +
             keywordScore * weights.keyword;
 
-        // Domain is strong signal - boost if known educational domain
         if (domainScore >= 0.9) {
             score = Math.max(score, 0.7);
         }
 
-        // Penalize if has non-educational patterns
         if (patternScore < 0) {
             score *= 0.5;
         }
@@ -272,12 +245,10 @@ export class ContentClassifier {
         const topics = new Set();
         const words = text.toLowerCase();
 
-        // Add main category as topic
         if (category) {
             topics.add(category);
         }
 
-        // Extract specific technologies/concepts mentioned
         const specificTopics = {
             'JavaScript': ['javascript', 'js', 'node.js', 'nodejs', 'npm'],
             'Python': ['python', 'pip', 'django', 'flask', 'pandas', 'numpy'],
@@ -307,13 +278,10 @@ export class ContentClassifier {
         return Array.from(topics).slice(0, 5);
     }
 
-    /**
-     * Classify video content (e.g., YouTube)
-     */
+    
     classifyVideo(title, description = '') {
         const text = `${title} ${description}`.toLowerCase();
 
-        // Check for educational video patterns
         let score = 0;
         for (const pattern of this.videoEducationalPatterns) {
             if (pattern.test(text)) {
@@ -321,7 +289,6 @@ export class ContentClassifier {
             }
         }
 
-        // Analyze keywords
         const keywordAnalysis = this.analyzeKeywords(text);
         score += keywordAnalysis.score * 0.5;
 
@@ -333,52 +300,41 @@ export class ContentClassifier {
         };
     }
 
-    /**
-     * Enhanced classification with page content
-     */
+    
     async classifyContent(pageData) {
         return this.classifyWithContent(pageData.url, pageData.title, pageData);
     }
 
     classifyWithContent(url, title, pageData) {
-        // Start with basic URL classification
         const baseClassification = this.classifyUrl(url, title);
 
-        // Enhance with page content signals
         let contentBoost = 0;
 
-        // Code blocks indicate educational/technical content
         if (pageData.codeBlocks > 0) {
             contentBoost += Math.min(pageData.codeBlocks * 0.05, 0.2);
         }
 
-        // Educational videos
         if (pageData.videos > 0) {
             contentBoost += 0.1;
         }
 
-        // Structured content (headings) indicate organized learning material
         if (pageData.headings && pageData.headings.length > 3) {
             contentBoost += 0.1;
         }
 
-        // Longer content (more words) suggests in-depth material
         if (pageData.wordCount > 1000) {
             contentBoost += 0.1;
         }
 
-        // Reading time indicator
         if (pageData.readingTime > 5) {
             contentBoost += 0.05;
         }
 
-        // Update confidence with content boost
         const enhancedConfidence = Math.min(
             baseClassification.confidence + contentBoost,
             1.0
         );
 
-        // Extract additional topics from headings
         const headingTopics = [];
         if (pageData.headings) {
             for (const heading of pageData.headings) {

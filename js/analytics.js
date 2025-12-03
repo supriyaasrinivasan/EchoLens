@@ -1,7 +1,4 @@
-/**
- * SupriAI - Analytics Engine
- * Analyzes learning patterns and generates insights
- */
+
 
 import { StorageManager } from './storage.js';
 import { groupBy, average, getDateRange } from './utils.js';
@@ -15,9 +12,7 @@ export class AnalyticsEngine {
         await this.storage.init();
     }
 
-    /**
-     * Get comprehensive analytics for a time range
-     */
+    
     async getAnalytics(timeRange = 'week') {
         const data = await this.storage.getAnalyticsData(timeRange);
         
@@ -32,9 +27,7 @@ export class AnalyticsEngine {
         };
     }
 
-    /**
-     * Calculate overview statistics
-     */
+    
     calculateOverview(data) {
         const { sessions } = data;
         
@@ -55,13 +48,10 @@ export class AnalyticsEngine {
         };
     }
 
-    /**
-     * Calculate topic distribution
-     */
+    
     calculateTopicDistribution(data) {
         const { sessions, topics } = data;
         
-        // Category distribution
         const categoryGroups = groupBy(sessions, 'category');
         const categoryDistribution = Object.entries(categoryGroups).map(([category, items]) => ({
             category,
@@ -70,7 +60,6 @@ export class AnalyticsEngine {
             avgEngagement: average(items, 'engagementScore')
         })).sort((a, b) => b.totalTime - a.totalTime);
 
-        // Topic distribution
         const topicTime = {};
         sessions.forEach(session => {
             (session.topics || []).forEach(topic => {
@@ -91,13 +80,10 @@ export class AnalyticsEngine {
         };
     }
 
-    /**
-     * Calculate learning trends over time
-     */
+    
     calculateLearningTrends(data) {
         const { sessions, summaries } = data;
         
-        // Daily trends
         const dailyGroups = groupBy(sessions, 'date');
         const dailyTrends = Object.entries(dailyGroups)
             .map(([date, items]) => ({
@@ -109,14 +95,11 @@ export class AnalyticsEngine {
             }))
             .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-        // Weekly summary
         const weeklyData = this.aggregateByWeek(dailyTrends);
 
-        // Best learning day
         const bestDay = dailyTrends.reduce((best, day) => 
             day.totalTime > (best?.totalTime || 0) ? day : best, null);
 
-        // Most productive hour (if we had hourly data)
         const hourlyDistribution = this.calculateHourlyDistribution(sessions);
 
         return {
@@ -160,7 +143,6 @@ export class AnalyticsEngine {
     }
 
     calculateHourlyDistribution(sessions) {
-        // Simulated hourly distribution based on session timestamps
         const hours = new Array(24).fill(0);
         
         sessions.forEach(session => {
@@ -182,9 +164,7 @@ export class AnalyticsEngine {
         return Math.round((activeDays / totalDays) * 100);
     }
 
-    /**
-     * Calculate engagement metrics
-     */
+    
     calculateEngagementMetrics(data) {
         const { sessions } = data;
         
@@ -197,7 +177,6 @@ export class AnalyticsEngine {
         const avgScrollDepth = average(sessions, 'scrollDepth');
         const avgFocusLevel = average(sessions.map(s => s.focusLevel || 0));
 
-        // Engagement trend
         const recentSessions = sessions.slice(-10);
         const olderSessions = sessions.slice(-20, -10);
         const trend = average(recentSessions, 'engagementScore') - average(olderSessions, 'engagementScore');
@@ -211,9 +190,7 @@ export class AnalyticsEngine {
         };
     }
 
-    /**
-     * Calculate skill progress
-     */
+    
     async calculateSkillProgress() {
         const skills = await this.storage.getSkills();
         
@@ -222,20 +199,17 @@ export class AnalyticsEngine {
             level: skill.level,
             experience: skill.experience,
             category: skill.category,
-            progress: (skill.experience % 100), // Progress to next level
+            progress: (skill.experience % 100),
             lastPracticed: skill.lastPracticed,
             milestones: skill.milestones?.length || 0
         })).sort((a, b) => b.experience - a.experience);
     }
 
-    /**
-     * Detect learning patterns
-     */
+    
     async detectPatterns() {
         const sessions = await this.storage.getSessions({ limit: 100 });
         const patterns = [];
 
-        // Time-of-day pattern
         const morningCount = sessions.filter(s => {
             const hour = new Date(s.timestamp).getHours();
             return hour >= 6 && hour < 12;
@@ -260,13 +234,11 @@ export class AnalyticsEngine {
             patterns.push({ type: 'time_preference', value: 'evening', confidence: eveningCount / sessions.length });
         }
 
-        // Topic sequencing pattern
         const topicSequences = this.findTopicSequences(sessions);
         if (topicSequences.length > 0) {
             patterns.push({ type: 'topic_sequence', sequences: topicSequences.slice(0, 3) });
         }
 
-        // Session duration pattern
         const avgDuration = average(sessions, 'duration');
         patterns.push({
             type: 'session_duration',
@@ -274,7 +246,6 @@ export class AnalyticsEngine {
             preference: avgDuration > 1800000 ? 'deep_focus' : avgDuration > 600000 ? 'moderate' : 'quick_sessions'
         });
 
-        // Revisit pattern
         const revisitPattern = await this.analyzeRevisitPattern();
         if (revisitPattern) {
             patterns.push(revisitPattern);
@@ -317,9 +288,7 @@ export class AnalyticsEngine {
         };
     }
 
-    /**
-     * Generate daily summary
-     */
+    
     async generateDailySummary() {
         const today = new Date().toISOString().split('T')[0];
         const sessions = await this.storage.getSessions({ startDate: today, endDate: today });
@@ -340,9 +309,7 @@ export class AnalyticsEngine {
         return summary;
     }
 
-    /**
-     * Generate weekly report
-     */
+    
     async generateWeeklyReport() {
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
@@ -372,7 +339,6 @@ export class AnalyticsEngine {
     generateInsights(analytics, patterns) {
         const insights = [];
 
-        // Learning consistency insight
         if (analytics.learningTrends.consistency >= 80) {
             insights.push({
                 type: 'positive',
@@ -387,7 +353,6 @@ export class AnalyticsEngine {
             });
         }
 
-        // Engagement insight
         if (analytics.engagementMetrics.trend === 'improving') {
             insights.push({
                 type: 'positive',
@@ -396,7 +361,6 @@ export class AnalyticsEngine {
             });
         }
 
-        // Time preference insight
         const timePattern = patterns.find(p => p.type === 'time_preference');
         if (timePattern) {
             insights.push({
@@ -412,7 +376,6 @@ export class AnalyticsEngine {
     generateWeeklyRecommendations(analytics, patterns) {
         const recommendations = [];
 
-        // Based on top topics, suggest related content
         const topTopics = analytics.topicDistribution.byTopic.slice(0, 3);
         topTopics.forEach(topic => {
             recommendations.push({
@@ -423,7 +386,6 @@ export class AnalyticsEngine {
             });
         });
 
-        // Based on session duration pattern
         const durationPattern = patterns.find(p => p.type === 'session_duration');
         if (durationPattern?.preference === 'quick_sessions') {
             recommendations.push({

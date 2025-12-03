@@ -1,7 +1,4 @@
-/**
- * SupriAI - Popup Script
- * Handles popup UI interactions and data display
- */
+
 
 import { StorageManager } from '../js/storage.js';
 import { formatTime, formatDate, isExtensionContextValid, safeSendMessage } from '../js/utils.js';
@@ -25,7 +22,6 @@ class PopupController {
     }
 
     initTheme() {
-        // Check for saved theme or system preference
         const savedTheme = localStorage.getItem('supriai-theme');
         if (savedTheme) {
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -36,7 +32,6 @@ class PopupController {
     }
 
     setupEventListeners() {
-        // Theme Toggle
         document.getElementById('themeToggle')?.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -44,18 +39,15 @@ class PopupController {
             localStorage.setItem('supriai-theme', newTheme);
         });
 
-        // Open Dashboard
         document.getElementById('openDashboard').addEventListener('click', () => {
             chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/dashboard.html') });
         });
 
-        // Toggle Tracking
         document.getElementById('toggleTracking').addEventListener('click', async () => {
             this.isTracking = !this.isTracking;
             await chrome.storage.local.set({ trackingEnabled: this.isTracking });
             this.updateTrackingUI();
             
-            // Notify background script using safe message sender
             try {
                 await safeSendMessage({ type: 'TOGGLE_TRACKING', enabled: this.isTracking });
             } catch (error) {
@@ -63,7 +55,6 @@ class PopupController {
             }
         });
 
-        // Settings Link
         document.getElementById('settingsLink').addEventListener('click', (e) => {
             e.preventDefault();
             chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/dashboard.html#settings') });
@@ -106,16 +97,13 @@ class PopupController {
 
     async loadCurrentPage() {
         try {
-            // Check if extension context is valid
             if (!isExtensionContextValid()) {
                 throw new Error('Extension context invalidated');
             }
 
-            // Get current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
             if (tab && tab.url) {
-                // Get current session data from background using safe message sender
                 const response = await safeSendMessage({ 
                     type: 'GET_CURRENT_SESSION',
                     tabId: tab.id 
@@ -126,12 +114,10 @@ class PopupController {
                     document.getElementById('currentPageTitle').textContent = session.title || tab.title || 'Unknown Page';
                     document.getElementById('currentPageCategory').textContent = session.category || 'Analyzing...';
                     
-                    // Update engagement meter
                     const engagement = session.engagementScore || 0;
                     document.getElementById('engagementMeter').style.width = `${engagement}%`;
                     document.getElementById('engagementValue').textContent = `${Math.round(engagement)}%`;
                     
-                    // Update focus dots
                     this.updateFocusDots(session.focusLevel || 0);
                 } else {
                     document.getElementById('currentPageTitle').textContent = tab.title || 'Unknown Page';
@@ -140,7 +126,6 @@ class PopupController {
             }
         } catch (error) {
             console.error('Error loading current page:', error);
-            // Set default values on error
             document.getElementById('currentPageTitle').textContent = 'Extension Reloaded';
             document.getElementById('currentPageCategory').textContent = 'Refresh page to track';
         }
@@ -148,7 +133,7 @@ class PopupController {
 
     updateFocusDots(level) {
         const dots = document.querySelectorAll('.focus-dot');
-        const activeDots = Math.ceil(level / 20); // 0-100 to 0-5
+        const activeDots = Math.ceil(level / 20);
         
         dots.forEach((dot, index) => {
             if (index < activeDots) {
@@ -221,7 +206,6 @@ class PopupController {
 
             const recIcons = ['📖', '🎥', '📝', '🔗', '💡'];
             
-            // Create clickable recommendation cards that open official sites
             container.innerHTML = recommendations.map((rec, index) => `
                 <a href="${rec.url || '#'}" 
                    class="recommendation-card" 
@@ -245,7 +229,6 @@ class PopupController {
     }
 
     startRealTimeUpdates() {
-        // Update current page info every 5 seconds
         setInterval(() => {
             try {
                 if (isExtensionContextValid()) {
@@ -256,7 +239,6 @@ class PopupController {
             }
         }, 5000);
 
-        // Update stats every 30 seconds
         setInterval(() => {
             try {
                 if (isExtensionContextValid()) {
@@ -269,7 +251,6 @@ class PopupController {
     }
 }
 
-// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     try {
         if (isExtensionContextValid()) {

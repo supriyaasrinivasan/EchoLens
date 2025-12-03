@@ -1,7 +1,4 @@
-/**
- * SupriAI - Storage Manager
- * Handles IndexedDB operations for persistent local storage
- */
+
 
 export class StorageManager {
     constructor() {
@@ -32,7 +29,6 @@ export class StorageManager {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
 
-                // Sessions store - individual learning sessions
                 if (!db.objectStoreNames.contains('sessions')) {
                     const sessionsStore = db.createObjectStore('sessions', { 
                         keyPath: 'id', 
@@ -44,7 +40,6 @@ export class StorageManager {
                     sessionsStore.createIndex('url', 'url', { unique: false });
                 }
 
-                // Topics store - aggregated topic data
                 if (!db.objectStoreNames.contains('topics')) {
                     const topicsStore = db.createObjectStore('topics', { 
                         keyPath: 'name' 
@@ -53,14 +48,12 @@ export class StorageManager {
                     topicsStore.createIndex('category', 'category', { unique: false });
                 }
 
-                // Daily summaries store
                 if (!db.objectStoreNames.contains('dailySummaries')) {
                     const summariesStore = db.createObjectStore('dailySummaries', { 
                         keyPath: 'date' 
                     });
                 }
 
-                // Navigation patterns store
                 if (!db.objectStoreNames.contains('navigation')) {
                     const navStore = db.createObjectStore('navigation', { 
                         keyPath: 'id', 
@@ -69,7 +62,6 @@ export class StorageManager {
                     navStore.createIndex('timestamp', 'timestamp', { unique: false });
                 }
 
-                // Visits store - for revisit pattern analysis
                 if (!db.objectStoreNames.contains('visits')) {
                     const visitsStore = db.createObjectStore('visits', { 
                         keyPath: 'url' 
@@ -78,7 +70,6 @@ export class StorageManager {
                     visitsStore.createIndex('visitCount', 'visitCount', { unique: false });
                 }
 
-                // Recommendations store
                 if (!db.objectStoreNames.contains('recommendations')) {
                     const recsStore = db.createObjectStore('recommendations', { 
                         keyPath: 'id', 
@@ -88,7 +79,6 @@ export class StorageManager {
                     recsStore.createIndex('type', 'type', { unique: false });
                 }
 
-                // AI Insights store
                 if (!db.objectStoreNames.contains('aiInsights')) {
                     const insightsStore = db.createObjectStore('aiInsights', { 
                         keyPath: 'id', 
@@ -98,12 +88,10 @@ export class StorageManager {
                     insightsStore.createIndex('type', 'type', { unique: false });
                 }
 
-                // User profile store
                 if (!db.objectStoreNames.contains('userProfile')) {
                     db.createObjectStore('userProfile', { keyPath: 'id' });
                 }
 
-                // Skill progression store
                 if (!db.objectStoreNames.contains('skills')) {
                     const skillsStore = db.createObjectStore('skills', { 
                         keyPath: 'name' 
@@ -115,7 +103,6 @@ export class StorageManager {
         });
     }
 
-    // ==================== Session Operations ====================
     async saveSession(session) {
         const sessionData = {
             ...session,
@@ -125,7 +112,6 @@ export class StorageManager {
 
         await this.add('sessions', sessionData);
         
-        // Update topic aggregates
         for (const topic of session.topics || []) {
             await this.updateTopic(topic, session);
         }
@@ -162,7 +148,6 @@ export class StorageManager {
         const sessions = await this.getAll('sessions');
         const todaySessions = sessions.filter(s => s.date === today);
 
-        // Calculate stats
         const uniqueTopics = new Set();
         let totalTime = 0;
 
@@ -171,7 +156,6 @@ export class StorageManager {
             (session.topics || []).forEach(t => uniqueTopics.add(t));
         });
 
-        // Calculate streak
         const streak = await this.calculateStreak();
 
         return {
@@ -200,7 +184,6 @@ export class StorageManager {
             if (summaryDate.getTime() === expectedDate.getTime() && summaries[i].totalTime > 0) {
                 streak++;
             } else if (i === 0 && summaryDate.getTime() < expectedDate.getTime()) {
-                // Today might not have a summary yet, check yesterday
                 const yesterday = new Date(today);
                 yesterday.setDate(yesterday.getDate() - 1);
                 if (summaryDate.getTime() === yesterday.getTime()) {
@@ -214,7 +197,6 @@ export class StorageManager {
         return streak;
     }
 
-    // ==================== Topic Operations ====================
     async updateTopic(topicName, session) {
         const existing = await this.get('topics', topicName);
         
@@ -236,7 +218,7 @@ export class StorageManager {
             topicData.sessionCount
         );
         topicData.lastStudied = new Date().toISOString();
-        topicData.progress = Math.min(100, topicData.progress + (session.duration / 600000) * 5); // 5% per 10 mins
+        topicData.progress = Math.min(100, topicData.progress + (session.duration / 600000) * 5);
 
         await this.put('topics', topicData);
         
@@ -255,7 +237,6 @@ export class StorageManager {
         return topics.filter(t => t.category === category);
     }
 
-    // ==================== Daily Summary Operations ====================
     async saveDailySummary(summary) {
         const date = new Date().toISOString().split('T')[0];
         summary.date = date;
@@ -273,7 +254,6 @@ export class StorageManager {
             .sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
-    // ==================== Navigation Operations ====================
     async recordNavigation(navData) {
         await this.add('navigation', {
             ...navData,
@@ -288,7 +268,6 @@ export class StorageManager {
             .slice(0, limit);
     }
 
-    // ==================== Visit Operations ====================
     async recordVisit(visitData) {
         const existing = await this.get('visits', visitData.url);
         
@@ -312,9 +291,7 @@ export class StorageManager {
             .slice(0, limit);
     }
 
-    // ==================== Recommendations Operations ====================
     async saveRecommendations(recommendations) {
-        // Clear old recommendations
         await this.clear('recommendations');
         
         for (const rec of recommendations) {
@@ -332,13 +309,10 @@ export class StorageManager {
             .slice(0, limit);
     }
 
-    // ==================== AI Insights Operations ====================
     async saveAIInsights(insights) {
-        // Handle different insight formats
         if (!insights) return;
         
         try {
-            // If insights is an array, iterate over it
             if (Array.isArray(insights)) {
                 for (const insight of insights) {
                     if (insight && typeof insight === 'object') {
@@ -349,7 +323,6 @@ export class StorageManager {
                     }
                 }
             } else if (typeof insights === 'object') {
-                // If insights is a single object (like local insights), save it directly
                 await this.add('aiInsights', {
                     ...insights,
                     timestamp: Date.now()
@@ -372,7 +345,6 @@ export class StorageManager {
             .slice(0, limit);
     }
 
-    // ==================== Skills Operations ====================
     async updateSkill(skillName, data) {
         const existing = await this.get('skills', skillName);
         
@@ -404,7 +376,6 @@ export class StorageManager {
         return await this.getAll('skills');
     }
 
-    // ==================== User Profile Operations ====================
     async getUserProfile() {
         const profile = await this.get('userProfile', 'main');
         return profile || {
@@ -425,7 +396,6 @@ export class StorageManager {
         return updated;
     }
 
-    // ==================== Data Export for Backend Sync ====================
     async getDataForSync() {
         const today = new Date();
         const weekAgo = new Date(today);
@@ -477,7 +447,6 @@ export class StorageManager {
         };
     }
 
-    // ==================== Analytics Data ====================
     async getAnalyticsData(timeRange = 'week') {
         const today = new Date();
         let startDate = new Date(today);
@@ -514,7 +483,6 @@ export class StorageManager {
         };
     }
 
-    // ==================== IndexedDB Helpers ====================
     async add(storeName, data) {
         await this.ensureInitialized();
         return new Promise((resolve, reject) => {

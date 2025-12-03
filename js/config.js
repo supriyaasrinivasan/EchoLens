@@ -9,7 +9,6 @@ const CONFIG = {
     
     AUTO_SYNC_INTERVAL: 300000,
     
-    // Health check interval (30 seconds)
     HEALTH_CHECK_INTERVAL: 30000,
     
     API_ENDPOINTS: {
@@ -30,10 +29,7 @@ const CONFIG = {
     }
 };
 
-/**
- * Backend Connection Manager
- * Handles connection status, health checks, and retries
- */
+
 export class BackendConnection {
     constructor() {
         this.isConnected = false;
@@ -43,9 +39,7 @@ export class BackendConnection {
         this.detailedStatus = null;
     }
 
-    /**
-     * Check if backend is available and get detailed status
-     */
+    
     async checkHealth() {
         try {
             const controller = new AbortController();
@@ -75,9 +69,7 @@ export class BackendConnection {
         return false;
     }
 
-    /**
-     * Get comprehensive backend status including AI models
-     */
+    
     async getDetailedStatus() {
         try {
             const controller = new AbortController();
@@ -101,9 +93,7 @@ export class BackendConnection {
         return null;
     }
 
-    /**
-     * Start periodic health checks
-     */
+    
     startHealthChecks() {
         this.checkHealth();
         this.healthCheckTimer = setInterval(() => {
@@ -111,9 +101,7 @@ export class BackendConnection {
         }, CONFIG.HEALTH_CHECK_INTERVAL);
     }
 
-    /**
-     * Stop health checks
-     */
+    
     stopHealthChecks() {
         if (this.healthCheckTimer) {
             clearInterval(this.healthCheckTimer);
@@ -121,16 +109,12 @@ export class BackendConnection {
         }
     }
 
-    /**
-     * Add listener for connection status changes
-     */
+    
     addListener(callback) {
         this.listeners.push(callback);
     }
 
-    /**
-     * Notify all listeners of status change
-     */
+    
     notifyListeners(status) {
         this.listeners.forEach(callback => {
             try {
@@ -141,9 +125,7 @@ export class BackendConnection {
         });
     }
 
-    /**
-     * Make API request with retry logic
-     */
+    
     async request(endpoint, options = {}, retries = CONFIG.RETRY_CONFIG.MAX_RETRIES) {
         const url = `${CONFIG.BACKEND_URL}${endpoint}`;
         
@@ -171,7 +153,6 @@ export class BackendConnection {
                     throw error;
                 }
                 
-                // Wait before retry with exponential backoff
                 const delay = CONFIG.RETRY_CONFIG.RETRY_DELAY * 
                              Math.pow(CONFIG.RETRY_CONFIG.BACKOFF_MULTIPLIER, attempt);
                 await new Promise(resolve => setTimeout(resolve, delay));

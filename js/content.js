@@ -1,17 +1,11 @@
-/**
- * SupriAI - Content Script
- * Tracks user interactions on web pages (mouse, scroll, focus, clicks)
- */
 
-// Global flag to stop all extension communication once context is invalidated
+
 let extensionContextValid = true;
 
-// Helper to check if extension context is still valid
 function isExtensionContextValid() {
     if (!extensionContextValid) return false;
     
     try {
-        // Try to access chrome.runtime.id - this throws if context is invalid
         if (!chrome || !chrome.runtime || !chrome.runtime.id) {
             extensionContextValid = false;
             return false;
@@ -23,7 +17,6 @@ function isExtensionContextValid() {
     }
 }
 
-// Safe message sender that handles context invalidation
 function safeSendMessage(message, callback) {
     if (!extensionContextValid) return;
     
@@ -34,10 +27,8 @@ function safeSendMessage(message, callback) {
         }
         
         chrome.runtime.sendMessage(message, (response) => {
-            // Check for errors after sending
             try {
                 if (chrome.runtime.lastError) {
-                    // Extension context was invalidated
                     extensionContextValid = false;
                     return;
                 }
@@ -56,7 +47,6 @@ class ContentTracker {
         this.isTracking = false;
         this.sessionId = null;
         
-        // Tracking metrics
         this.metrics = {
             mouseMovements: 0,
             clicks: 0,
@@ -71,18 +61,15 @@ class ContentTracker {
             focusLevel: 0
         };
 
-        // Idle detection
-        this.idleThreshold = 30000; // 30 seconds
+        this.idleThreshold = 30000;
         this.idleTimer = null;
         this.isIdle = false;
 
-        // Throttle settings
         this.throttleDelay = 100;
         this.lastMouseMove = 0;
         this.lastScroll = 0;
 
-        // Report interval
-        this.reportInterval = 5000; // Report every 5 seconds
+        this.reportInterval = 5000;
         this.reportTimer = null;
 
         this.init();
@@ -103,7 +90,6 @@ class ContentTracker {
             }
             
             chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-                // Check context validity first
                 if (!extensionContextValid) {
                     return false;
                 }
@@ -133,7 +119,6 @@ class ContentTracker {
     }
 
     async checkIfShouldTrack() {
-        // Check if we should auto-start tracking
         if (!extensionContextValid) return;
         
         try {
@@ -144,7 +129,6 @@ class ContentTracker {
             
             const result = await chrome.storage.local.get(['trackingEnabled']);
             if (result.trackingEnabled !== false) {
-                // Notify background to potentially start a session
                 safeSendMessage({ 
                     type: 'PAGE_READY',
                     url: window.location.href,
@@ -178,15 +162,12 @@ class ContentTracker {
         this.stopIdleDetection();
         this.stopReporting();
         
-        // Send final report
         this.sendReport();
         
         console.log('SupriAI: Tracking stopped');
     }
 
-    // ==================== Event Listeners ====================
     attachEventListeners() {
-        // Mouse movement (throttled)
         this.onMouseMove = this.throttle((e) => {
             if (!extensionContextValid) return;
             this.metrics.mouseMovements++;
@@ -194,7 +175,6 @@ class ContentTracker {
         }, this.throttleDelay);
         document.addEventListener('mousemove', this.onMouseMove);
 
-        // Mouse clicks
         this.onClick = (e) => {
             if (!extensionContextValid) return;
             this.metrics.clicks++;
@@ -203,7 +183,6 @@ class ContentTracker {
         };
         document.addEventListener('click', this.onClick);
 
-        // Scroll (throttled)
         this.onScroll = this.throttle(() => {
             if (!extensionContextValid) return;
             this.updateScrollDepth();
@@ -211,7 +190,6 @@ class ContentTracker {
         }, this.throttleDelay);
         window.addEventListener('scroll', this.onScroll);
 
-        // Hover events (on interactive elements)
         this.onMouseOver = (e) => {
             if (!extensionContextValid) return;
             if (this.isInteractiveElement(e.target)) {
@@ -220,7 +198,6 @@ class ContentTracker {
         };
         document.addEventListener('mouseover', this.onMouseOver);
 
-        // Key presses
         this.onKeyPress = () => {
             if (!extensionContextValid) return;
             this.metrics.keyPresses++;
@@ -228,7 +205,6 @@ class ContentTracker {
         };
         document.addEventListener('keydown', this.onKeyPress);
 
-        // Visibility change
         this.onVisibilityChange = () => {
             if (!extensionContextValid) return;
             if (document.hidden) {
@@ -239,7 +215,6 @@ class ContentTracker {
         };
         document.addEventListener('visibilitychange', this.onVisibilityChange);
 
-        // Page unload
         this.onUnload = () => {
             if (!extensionContextValid) return;
             this.sendReport();
@@ -257,7 +232,6 @@ class ContentTracker {
         window.removeEventListener('beforeunload', this.onUnload);
     }
 
-    // ==================== Tracking Logic ====================
     recordActivity() {
         const now = Date.now();
         const elapsed = now - this.metrics.lastActivity;
@@ -282,7 +256,6 @@ class ContentTracker {
         this.metrics.scrollDepth = Math.round(scrollPercentage);
         this.metrics.maxScrollDepth = Math.max(this.metrics.maxScrollDepth, this.metrics.scrollDepth);
         
-        // Send scroll update to background
         safeSendMessage({
             type: 'SCROLL_UPDATE',
             depth: this.metrics.maxScrollDepth
@@ -292,7 +265,6 @@ class ContentTracker {
     analyzeClick(event) {
         const target = event.target;
         
-        // Track clicks on different element types
         const clickData = {
             element: target.tagName,
             isLink: target.tagName === 'A',
@@ -302,7 +274,6 @@ class ContentTracker {
             timestamp: Date.now()
         };
 
-        // Educational content interaction (video controls, code blocks, etc.)
         if (this.isEducationalInteraction(target)) {
             clickData.isEducational = true;
         }
@@ -316,13 +287,11 @@ class ContentTracker {
     }
 
     isEducationalInteraction(element) {
-        // Check if clicking on code blocks, video players, quizzes, etc.
         const educationalClasses = ['code', 'highlight', 'video-player', 'quiz', 'exercise', 'example'];
         const classList = element.className?.toLowerCase() || '';
         return educationalClasses.some(cls => classList.includes(cls));
     }
 
-    // ==================== Idle Detection ====================
     startIdleDetection() {
         this.resetIdleTimer();
     }
@@ -344,10 +313,8 @@ class ContentTracker {
         }, this.idleThreshold);
     }
 
-    // ==================== Reporting ====================
     startReporting() {
         this.reportTimer = setInterval(() => {
-            // Stop reporting if context is invalid
             if (!extensionContextValid) {
                 this.stopReporting();
                 this.stopTracking();
@@ -367,7 +334,6 @@ class ContentTracker {
     sendReport() {
         if (!this.isTracking || !extensionContextValid) return;
 
-        // Calculate engagement and focus
         const totalTime = this.metrics.activeTime + this.metrics.idleTime;
         const engagement = totalTime > 0 
             ? (this.metrics.activeTime / totalTime) * 100 
@@ -375,7 +341,6 @@ class ContentTracker {
         
         const focusLevel = this.calculateFocusLevel();
 
-        // Send mouse metrics
         safeSendMessage({
             type: 'MOUSE_METRICS',
             metrics: {
@@ -386,7 +351,6 @@ class ContentTracker {
             }
         });
 
-        // Send engagement update
         safeSendMessage({
             type: 'UPDATE_ENGAGEMENT',
             metrics: {
@@ -397,42 +361,34 @@ class ContentTracker {
             }
         });
 
-        // Reset counters for next interval
         this.resetIntervalMetrics();
     }
 
     calculateFocusLevel() {
-        // Calculate focus based on activity patterns
         const recentActivity = Date.now() - this.metrics.lastActivity;
         const isActive = recentActivity < this.idleThreshold;
         
         let focusScore = 0;
         
-        // Mouse activity contribution
         if (this.metrics.mouseMovements > 5) focusScore += 20;
         if (this.metrics.clicks > 0) focusScore += 20;
         
-        // Scroll engagement
         if (this.metrics.maxScrollDepth > 50) focusScore += 20;
         
-        // Keyboard activity (taking notes, searching)
         if (this.metrics.keyPresses > 0) focusScore += 20;
         
-        // Active vs idle time
         if (isActive) focusScore += 20;
         
         return Math.min(focusScore, 100);
     }
 
     resetIntervalMetrics() {
-        // Keep cumulative metrics but reset interval-specific ones
         this.metrics.mouseMovements = 0;
         this.metrics.clicks = 0;
         this.metrics.hoverEvents = 0;
         this.metrics.keyPresses = 0;
     }
 
-    // ==================== Utilities ====================
     throttle(func, delay) {
         let lastCall = 0;
         return function(...args) {
@@ -445,7 +401,6 @@ class ContentTracker {
     }
 }
 
-// ==================== Page Content Analysis ====================
 class ContentAnalyzer {
     constructor() {
         this.init();
@@ -454,7 +409,6 @@ class ContentAnalyzer {
     init() {
         if (!extensionContextValid) return;
         
-        // Wait for DOM to be ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.analyze());
         } else {
@@ -467,7 +421,6 @@ class ContentAnalyzer {
         
         const pageData = this.extractPageData();
         
-        // Send page data to background for classification
         safeSendMessage({
             type: 'PAGE_CONTENT',
             data: pageData
@@ -520,7 +473,6 @@ class ContentAnalyzer {
         try {
             const keywords = [];
             
-            // From meta keywords
             const metaKeywords = document.querySelector('meta[name="keywords"]');
             if (metaKeywords) {
                 const content = metaKeywords.getAttribute('content');
@@ -529,7 +481,6 @@ class ContentAnalyzer {
                 }
             }
             
-            // From headings
             const headings = document.querySelectorAll('h1, h2, h3');
             headings.forEach(h => {
                 if (h.textContent) {
@@ -620,7 +571,6 @@ class ContentAnalyzer {
     }
 }
 
-// Initialize only if document exists and extension context is valid
 let tracker = null;
 let analyzer = null;
 
@@ -633,7 +583,6 @@ try {
     console.log('SupriAI: Could not initialize content tracker:', error.message);
 }
 
-// Clean up on context invalidation
 if (chrome && chrome.runtime) {
     chrome.runtime.connect({ name: 'content-script' }).onDisconnect.addListener(() => {
         extensionContextValid = false;

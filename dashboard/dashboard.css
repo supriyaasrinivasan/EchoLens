@@ -1,15 +1,12 @@
-/**
- * SupriAI - Dashboard Styles
- * Uses CSS variables from theme.css for dual theme support
- */
 
-/* ===== Layout Variables ===== */
+
+
 :root {
     --sidebar-width: 260px;
     --header-height: 70px;
 }
 
-/* ===== Reset & Base ===== */
+
 * {
     margin: 0;
     padding: 0;
@@ -34,13 +31,13 @@ a:hover {
     color: var(--accent-hover);
 }
 
-/* ===== Dashboard Layout ===== */
+
 .dashboard-container {
     display: flex;
     min-height: 100vh;
 }
 
-/* ===== Sidebar ===== */
+
 .sidebar {
     width: var(--sidebar-width);
     background: var(--bg-card);
@@ -157,7 +154,7 @@ a:hover {
     font-size: 18px;
 }
 
-/* Theme toggle icon visibility */
+
 [data-theme="dark"] .theme-toggle .ri-moon-line { display: none; }
 [data-theme="dark"] .theme-toggle .ri-sun-line { display: block; }
 :root:not([data-theme="dark"]) .theme-toggle .ri-moon-line,
@@ -191,7 +188,7 @@ a:hover {
     color: var(--text-secondary);
 }
 
-/* ===== Main Content ===== */
+
 .main-content {
     flex: 1;
     margin-left: var(--sidebar-width);
@@ -248,7 +245,7 @@ a:hover {
     50% { opacity: 0.6; transform: scale(0.9); }
 }
 
-/* ===== Backend Status Indicator ===== */
+
 .backend-status {
     display: flex;
     align-items: center;
@@ -416,7 +413,7 @@ a:hover {
     font-size: 18px;
 }
 
-/* ===== Sections Container ===== */
+
 .sections-container {
     padding: 28px;
 }
@@ -441,7 +438,7 @@ a:hover {
     display: block;
 }
 
-/* ===== Stats Grid ===== */
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -528,7 +525,7 @@ a:hover {
     transform: scale(1.1) rotate(-5deg);
 }
 
-/* Color variants for stat icons */
+
 .stat-card:nth-child(2) .stat-icon {
     background: var(--success-light);
     color: var(--success);
@@ -592,7 +589,7 @@ a:hover {
     color: var(--error);
 }
 
-/* ===== Cards ===== */
+
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -645,7 +642,7 @@ a:hover {
     background: var(--accent-light);
 }
 
-/* ===== Chart Cards ===== */
+
 .charts-row {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -715,14 +712,14 @@ a:hover {
     height: 300px;
 }
 
-/* ===== Bottom Row ===== */
+
 .bottom-row {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
 }
 
-/* ===== Sessions List ===== */
+
 .sessions-list {
     display: flex;
     flex-direction: column;
@@ -821,7 +818,7 @@ a:hover {
     white-space: nowrap;
 }
 
-/* ===== Recommendations List (Overview) ===== */
+
 .rec-info-banner {
     display: flex;
     align-items: center;
@@ -968,7 +965,7 @@ a:hover {
     font-size: 14px;
 }
 
-/* ===== D3.js Visualization Containers ===== */
+
 #categoryPieChart,
 #timelineChart {
     width: 100%;
@@ -1014,7 +1011,7 @@ a:hover {
     font-size: 12px;
 }
 
-/* D3.js Pie Chart Styles */
+
 .pie-slice {
     cursor: pointer;
     transition: opacity 0.3s;
@@ -1031,7 +1028,7 @@ a:hover {
     pointer-events: none;
 }
 
-/* D3.js Timeline Styles */
+
 .timeline-line {
     fill: none;
     stroke-width: 2;
@@ -1066,7 +1063,7 @@ a:hover {
     stroke-dasharray: 2, 2;
 }
 
-/* ===== Analytics Grid ===== */
+
 .analytics-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -1077,7 +1074,7 @@ a:hover {
     grid-column: span 2;
 }
 
-/* ===== Patterns Card ===== */
+
 .patterns-list {
     display: flex;
     flex-direction: column;
@@ -1143,7 +1140,7 @@ a:hover {
     font-weight: 500;
 }
 
-/* ===== Topics Grid ===== */
+
 .topics-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -1251,7 +1248,7 @@ a:hover {
     font-size: 18px;
 }
 
-/* Topic Details Card */
+
 .topic-details-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1339,7 +1336,7 @@ a:hover {
     color: var(--text-tertiary);
 }
 
-/* ===== Empty States ===== */
+
 .empty-state {
     text-align: center;
     padding: 60px 24px;
@@ -1369,7 +1366,7 @@ a:hover {
     margin-top: 20px;
 }
 
-/* ===== Progress Bar (used in topics table) ===== */
+
 .progress-bar {
     width: 100%;
     height: 6px;
@@ -1385,7 +1382,7 @@ a:hover {
     transition: width 0.5s ease;
 }
 
-/* ===== Custom Scrollbar ===== */
+
 .history-list::-webkit-scrollbar,
 .topics-table-container::-webkit-scrollbar {
     width: 6px;
@@ -1407,7 +1404,7 @@ a:hover {
     background: var(--text-tertiary);
 }
 
-/* ===== Skills Section ===== */
+
 .skills-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1542,7 +1539,7 @@ a:hover {
     position: relative;
 }
 
-/* Skill Tree Card */
+
 .skill-tree-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -1635,7 +1632,7 @@ a:hover {
     color: var(--accent-primary);
 }
 
-/* ===== Settings Section ===== */
+
 .settings-container {
     display: grid;
     gap: 20px;
@@ -1693,7 +1690,7 @@ a:hover {
     border-color: var(--accent-primary);
 }
 
-/* Toggle Switch */
+
 .toggle {
     position: relative;
     width: 48px;
@@ -1738,7 +1735,7 @@ a:hover {
     transform: translateX(22px);
 }
 
-/* ===== Buttons ===== */
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -1807,7 +1804,7 @@ a:hover {
     color: var(--accent-primary);
 }
 
-/* ===== History Section ===== */
+
 .history-container {
     max-width: 100%;
 }
@@ -2005,7 +2002,7 @@ a:hover {
     padding: 0 12px;
 }
 
-/* ===== About Section ===== */
+
 .about-content {
     padding: 16px;
     background: var(--bg-secondary);
@@ -2023,7 +2020,7 @@ a:hover {
     line-height: 1.6;
 }
 
-/* ===== Recommendations Grid ===== */
+
 .recommendations-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2289,7 +2286,7 @@ a:hover {
     color: var(--text-tertiary);
 }
 
-/* Weekly Summary Card */
+
 .weekly-summary .card-header {
     padding: 20px;
     border-bottom: 1px solid var(--border-color);
@@ -2331,7 +2328,7 @@ a:hover {
     font-weight: 500;
 }
 
-/* ===== Responsive ===== */
+
 @media (max-width: 1200px) {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -2439,7 +2436,7 @@ a:hover {
     }
 }
 
-/* ===== AI Model Status Panel ===== */
+
 .ai-status-panel {
     margin-top: 20px;
     padding: 20px;

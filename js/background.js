@@ -1,12 +1,10 @@
-/**
- * SupriAI - Background Service Worker
- * Handles browser-level data collection, tab tracking, and AI analysis coordination
- */
+
 
 import { StorageManager } from './storage.js';
 import { ContentClassifier } from './classifier.js';
 import { AnalyticsEngine } from './analytics.js';
 import { RecommendationEngine } from './recommendations.js';
+import { checkServer, startLocalServer, LOCAL_SERVER } from './server-manager.js';
 
 class BackgroundController {
     constructor() {
@@ -15,16 +13,15 @@ class BackgroundController {
         this.analytics = new AnalyticsEngine();
         this.recommendations = new RecommendationEngine();
         
-        // Active sessions tracking
         this.activeSessions = new Map();
         this.trackingEnabled = true;
+        this.backendUrl = LOCAL_SERVER;
         
-        // Configuration
         this.config = {
-            minSessionDuration: 5000, // 5 seconds minimum to track
-            updateInterval: 10000, // Update every 10 seconds
-            analysisInterval: 300000, // Run analysis every 5 minutes
-            dailyAnalysisHour: 23 // Run daily analysis at 11 PM
+            minSessionDuration: 5000,
+            updateInterval: 10000,
+            analysisInterval: 300000,
+            dailyAnalysisHour: 23
         };
 
         this.init();
@@ -33,13 +30,12 @@ class BackgroundController {
     async init() {
         console.log('SupriAI Background Service Starting...');
         
-        // Load settings
+        await startLocalServer();
+        
         await this.loadSettings();
         
-        // Initialize storage
         await this.storage.init();
         
-        // Set up event listeners
         this.setupTabListeners();
         this.setupNavigationListeners();
         this.setupMessageListeners();
@@ -56,9 +52,7 @@ class BackgroundController {
         }
     }
 
-    // ==================== Tab Tracking ====================
     setupTabListeners() {
-        // Tab activated
         chrome.tabs.onActivated.addListener(async (activeInfo) => {
             if (!this.trackingEnabled) return;
             
@@ -70,7 +64,6 @@ class BackgroundController {
             }
         });
 
-        // Tab updated (URL change, title change)
         chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
             if (!this.trackingEnabled) return;
             if (changeInfo.status !== 'complete') return;
@@ -78,20 +71,16 @@ class BackgroundController {
             await this.handleTabUpdate(tab);
         });
 
-        // Tab removed
         chrome.tabs.onRemoved.addListener(async (tabId) => {
             await this.endSession(tabId);
         });
 
-        // Window focus changed
         chrome.windows.onFocusChanged.addListener(async (windowId) => {
             if (!this.trackingEnabled) return;
             
             if (windowId === chrome.windows.WINDOW_ID_NONE) {
-                // Browser lost focus - pause all sessions
                 this.pauseAllSessions();
             } else {
-                // Browser gained focus - get active tab
                 try {
                     const [tab] = await chrome.tabs.query({ active: true, windowId });
                     if (tab) {
@@ -105,14 +94,12 @@ class BackgroundController {
     }
 
     async handleTabChange(tab) {
-        // End previous active session in this window
         for (const [tabId, session] of this.activeSessions.entries()) {
             if (session.windowId === tab.windowId && tabId !== tab.id) {
                 await this.endSession(tabId);
             }
         }
 
-        // Start new session
         await this.startSession(tab);
     }
 
@@ -120,7 +107,6 @@ class BackgroundController {
         const existingSession = this.activeSessions.get(tab.id);
         
         if (existingSession && existingSession.url !== tab.url) {
-            // URL changed - end old session and start new
             await this.endSession(tab.id);
             await this.startSession(tab);
         } else if (!existingSession) {
@@ -129,14 +115,12 @@ class BackgroundController {
     }
 
     async startSession(tab) {
-        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
+        if (!tab.url || tab.url.startsWith('chrome:
             return;
         }
 
-        // Classify the content
         const classification = await this.classifier.classifyUrl(tab.url, tab.title);
         
-        // Track all pages, not just educational ones (for better analytics)
         const session = {
             tabId: tab.id,
             windowId: tab.windowId,
@@ -163,7 +147,6 @@ class BackgroundController {
 
         this.activeSessions.set(tab.id, session);
         
-        // Send message to content script to start tracking
         try {
             await chrome.tabs.sendMessage(tab.id, { 
                 type: 'START_TRACKING',
@@ -171,7 +154,6 @@ class BackgroundController {
             });
             console.log(`✓ Session started: ${session.title} [${session.category}]`);
         } catch (error) {
-            // Content script might not be injected yet - that's ok, it will notify us when ready
             console.log('Content script will start tracking when ready');
         }
     }
@@ -182,15 +164,12 @@ class BackgroundController {
 
         const duration = Date.now() - session.startTime;
         
-        // Only save if session was long enough
         if (duration >= this.config.minSessionDuration) {
             session.endTime = Date.now();
             session.duration = duration;
             
-            // Calculate final engagement score
             session.engagementScore = this.calculateEngagement(session);
             
-            // Save to storage
             await this.storage.saveSession(session);
             
             console.log(`Session ended: ${session.title} - ${Math.round(duration / 1000)}s`);
@@ -215,19 +194,15 @@ class BackgroundController {
             focusTime: 0.2
         };
 
-        // Normalize duration (max 30 minutes for 100%)
         const durationScore = Math.min(session.duration / (30 * 60 * 1000), 1) * 100;
         
-        // Scroll depth is already 0-100
         const scrollScore = session.scrollDepth;
         
-        // Mouse activity score
         const mouseScore = Math.min(
             (session.mouseMetrics.movements + session.mouseMetrics.clicks * 5) / 100,
             1
         ) * 100;
         
-        // Focus time score (inverse of idle time ratio)
         const activeTime = session.duration - session.mouseMetrics.idleTime;
         const focusScore = (activeTime / session.duration) * 100;
 
@@ -239,13 +214,11 @@ class BackgroundController {
         );
     }
 
-    // ==================== Navigation Tracking ====================
     setupNavigationListeners() {
         chrome.webNavigation.onCompleted.addListener(async (details) => {
             if (!this.trackingEnabled) return;
-            if (details.frameId !== 0) return; // Only main frame
+            if (details.frameId !== 0) return;
             
-            // Track navigation patterns
             await this.storage.recordNavigation({
                 url: details.url,
                 timestamp: details.timeStamp,
@@ -253,7 +226,6 @@ class BackgroundController {
             });
         });
 
-        // Track history for revisit patterns
         chrome.history.onVisited.addListener(async (historyItem) => {
             if (!this.trackingEnabled) return;
             
@@ -270,11 +242,10 @@ class BackgroundController {
         });
     }
 
-    // ==================== Message Handling ====================
     setupMessageListeners() {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             this.handleMessage(message, sender, sendResponse);
-            return true; // Keep channel open for async response
+            return true;
         });
     }
 
@@ -282,7 +253,6 @@ class BackgroundController {
         try {
             switch (message.type) {
                 case 'PAGE_READY':
-                    // Content script is ready, check if we should track this page
                     if (sender.tab) {
                         await this.handleTabUpdate(sender.tab);
                     }
@@ -290,7 +260,6 @@ class BackgroundController {
                     break;
 
                 case 'PAGE_CONTENT':
-                    // Received page content data for classification
                     if (sender.tab) {
                         const classification = await this.classifier.classifyContent(message.data);
                         const session = this.activeSessions.get(sender.tab.id);
@@ -373,18 +342,15 @@ class BackgroundController {
             session.mouseMetrics.idleTime += metrics.idleTime || 0;
             session.lastUpdate = Date.now();
             
-            // Update focus level based on mouse activity
             session.focusLevel = this.calculateFocusLevel(session.mouseMetrics);
         }
     }
 
     calculateFocusLevel(mouseMetrics) {
-        // Higher activity = higher focus (0-100)
         const activityScore = Math.min(
             (mouseMetrics.movements / 10 + mouseMetrics.clicks * 3) / 50,
             1
         );
-        // Lower idle time = higher focus
         const activeScore = mouseMetrics.idleTime < 30000 ? 1 : 0.5;
         
         return (activityScore * 0.6 + activeScore * 0.4) * 100;
@@ -397,14 +363,11 @@ class BackgroundController {
         }
     }
 
-    // ==================== Alarms and Scheduled Tasks ====================
     setupAlarms() {
-        // Periodic analysis
         chrome.alarms.create('periodicAnalysis', {
             periodInMinutes: 5
         });
 
-        // Daily summary
         chrome.alarms.create('dailySummary', {
             when: this.getNextDailyAlarmTime(),
             periodInMinutes: 24 * 60
@@ -435,15 +398,12 @@ class BackgroundController {
     async runPeriodicAnalysis() {
         console.log('Running periodic analysis...');
         
-        // Update all active sessions
         for (const session of this.activeSessions.values()) {
             session.engagementScore = this.calculateEngagement(session);
         }
 
-        // Run pattern detection
         await this.analytics.detectPatterns();
         
-        // Generate new recommendations
         await this.recommendations.generate();
     }
 
@@ -453,21 +413,17 @@ class BackgroundController {
         const summary = await this.analytics.generateDailySummary();
         await this.storage.saveDailySummary(summary);
         
-        // Generate local AI insights (works without backend)
         await this.generateLocalInsights();
         
-        // Try to sync with Python backend for advanced AI analysis (optional)
         await this.syncWithPythonBackend();
     }
 
-    // ==================== Local AI Analysis (No Backend Required) ====================
     async generateLocalInsights() {
         try {
             const sessions = await this.storage.getSessions({ limit: 50 });
             const topics = await this.storage.getTopTopics(10);
             const insights = [];
 
-            // Time pattern insight
             if (sessions.length >= 5) {
                 const hourCounts = {};
                 sessions.forEach(s => {
@@ -488,7 +444,6 @@ class BackgroundController {
                 }
             }
 
-            // Topic focus insight
             if (topics.length > 0) {
                 const topTopic = topics[0];
                 insights.push({
@@ -499,7 +454,6 @@ class BackgroundController {
                 });
             }
 
-            // Engagement insight
             const avgEngagement = sessions.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / (sessions.length || 1);
             if (avgEngagement > 0) {
                 const level = avgEngagement >= 70 ? 'excellent' : avgEngagement >= 50 ? 'good' : 'moderate';
@@ -518,14 +472,11 @@ class BackgroundController {
         }
     }
 
-    // ==================== Python Backend Integration (Optional) ====================
     async syncWithPythonBackend() {
-        // This is OPTIONAL - the extension works fully without the backend
-        // Backend provides enhanced ML-based analysis when available
         try {
             const data = await this.storage.getDataForSync();
             
-            const response = await fetch('http://localhost:5000/api/sync', {
+            const response = await fetch('http:
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -536,12 +487,10 @@ class BackgroundController {
             if (response.ok) {
                 const result = await response.json();
                 
-                // Store AI insights from backend
                 if (result.insights) {
                     await this.storage.saveAIInsights(result.insights);
                 }
                 
-                // Store new recommendations
                 if (result.recommendations) {
                     await this.storage.saveRecommendations(result.recommendations);
                 }
@@ -550,14 +499,12 @@ class BackgroundController {
                 return true;
             }
         } catch (error) {
-            // Backend not available - this is fine, extension works without it
             console.log('Backend not available - using local analysis only');
         }
         return false;
     }
 }
 
-// Initialize the background controller
 console.log('SupriAI: Initializing background service worker...');
 const controller = new BackgroundController();
 console.log('SupriAI: Background service worker initialized');

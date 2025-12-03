@@ -1,7 +1,4 @@
-/**
- * SupriAI - Dashboard Controller
- * Main dashboard JavaScript for analytics visualization
- */
+
 
 import { StorageManager } from '../js/storage.js';
 import { AnalyticsEngine } from '../js/analytics.js';
@@ -34,13 +31,11 @@ class DashboardController {
         
         await this.loadDashboard();
         
-        // Check URL hash for direct section navigation
         this.handleHashChange();
         window.addEventListener('hashchange', () => this.handleHashChange());
     }
 
     initTheme() {
-        // Check for saved theme or system preference
         const savedTheme = localStorage.getItem('supriai-theme');
         if (savedTheme) {
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -49,14 +44,12 @@ class DashboardController {
             document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
         }
 
-        // Theme toggle event listener
         document.getElementById('themeToggle')?.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('supriai-theme', newTheme);
             
-            // Update charts for new theme
             this.updateChartsTheme();
         });
     }
@@ -91,11 +84,9 @@ class DashboardController {
                 const section = item.dataset.section;
                 this.showSection(section);
                 
-                // Update active state
                 navItems.forEach(n => n.classList.remove('active'));
                 item.classList.add('active');
                 
-                // Update URL hash
                 window.location.hash = section;
             });
         });
@@ -105,25 +96,21 @@ class DashboardController {
         const hash = window.location.hash.slice(1) || 'overview';
         this.showSection(hash);
         
-        // Update nav active state
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.section === hash);
         });
     }
 
     showSection(sectionId) {
-        // Hide all sections
         document.querySelectorAll('.section').forEach(section => {
             section.classList.remove('active');
         });
         
-        // Show target section
         const targetSection = document.getElementById(sectionId);
         if (targetSection) {
             targetSection.classList.add('active');
         }
         
-        // Update header
         const titles = {
             'overview': { title: 'Overview', subtitle: 'Your learning journey at a glance' },
             'analytics': { title: 'Analytics', subtitle: 'Deep dive into your learning patterns' },
@@ -140,7 +127,6 @@ class DashboardController {
     }
 
     setupEventListeners() {
-        // Time range buttons
         document.querySelectorAll('.range-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
@@ -150,10 +136,8 @@ class DashboardController {
             });
         });
 
-        // Sync button
         document.getElementById('syncBtn').addEventListener('click', () => this.syncWithBackend());
 
-        // Backend settings
         document.getElementById('backendToggle')?.addEventListener('change', (e) => {
             chrome.storage.local.set({ backendEnabled: e.target.checked });
             if (e.target.checked) {
@@ -179,7 +163,6 @@ class DashboardController {
             }
         });
 
-        // Settings
         document.getElementById('trackingToggle').addEventListener('change', (e) => {
             chrome.storage.local.set({ trackingEnabled: e.target.checked });
         });
@@ -187,15 +170,12 @@ class DashboardController {
         document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
         document.getElementById('clearDataBtn').addEventListener('click', () => this.clearData());
 
-        // Refresh recommendations
         document.getElementById('refreshRecs')?.addEventListener('click', () => this.loadRecommendations());
 
-        // Path selector for skill tree
         document.getElementById('pathSelector')?.addEventListener('change', (e) => {
             this.renderSkillTree(e.target.value);
         });
 
-        // Topic search
         document.getElementById('topicSearch')?.addEventListener('input', (e) => {
             this.filterTopics(e.target.value);
         });
@@ -205,40 +185,30 @@ class DashboardController {
         try {
             const analytics = await this.analytics.getAnalytics(this.currentTimeRange);
             
-            // Update overview stats
             this.updateOverviewStats(analytics);
             
-            // Render charts
             this.renderTrendChart(analytics.learningTrends);
             this.renderTopicChart(analytics.topicDistribution);
             
-            // Load other sections
             this.loadRecentSessions();
             this.loadQuickRecommendations();
             
-            // Analytics section
             this.renderEngagementChart(analytics.engagementMetrics);
             this.renderHourlyChart(analytics.learningTrends.hourlyDistribution);
             this.renderCategoryChart(analytics.topicDistribution);
             this.renderPatterns(analytics.patterns);
             
-            // D3.js visualizations
             this.renderD3CategoryPie(analytics.topicDistribution);
             this.renderD3Timeline(analytics.learningTrends);
             
-            // Topics section
             await this.loadTopics();
             
-            // Skills section
             await this.loadSkills();
             
-            // Recommendations section
             await this.loadRecommendations();
             
-            // History section
             await this.loadHistory();
             
-            // Update sidebar streak
             const stats = await this.storage.getTodayStats();
             document.getElementById('sidebarStreak').textContent = stats.streak || 0;
             
@@ -260,7 +230,6 @@ class DashboardController {
         const ctx = document.getElementById('trendChart');
         if (!ctx) return;
 
-        // Destroy existing chart
         if (this.charts.trend) {
             this.charts.trend.destroy();
         }
@@ -644,7 +613,6 @@ class DashboardController {
             </tr>
         `).join('');
 
-        // Add click handlers
         tbody.querySelectorAll('tr').forEach(row => {
             row.addEventListener('click', () => this.showTopicDetails(row.dataset.topic));
         });
@@ -728,7 +696,6 @@ class DashboardController {
             </div>
         `).join('');
 
-        // Render skill tree
         this.renderSkillTree('Programming');
     }
 
@@ -775,7 +742,6 @@ class DashboardController {
     }
 
     async loadRecommendations() {
-        // Generate fresh recommendations
         const recs = await this.recommendations.generate();
         const container = document.getElementById('fullRecommendations');
         
@@ -791,7 +757,6 @@ class DashboardController {
             return;
         }
 
-        // Create clickable recommendation items with external links
         container.innerHTML = recs.map(rec => `
             <a href="${rec.url || '#'}" 
                class="recommendation-item" 
@@ -818,10 +783,8 @@ class DashboardController {
             </a>
         `).join('');
 
-        // Load weekly summary
         this.loadWeeklySummary();
         
-        // Load curated resources
         this.loadCuratedResources();
     }
 
@@ -880,7 +843,6 @@ class DashboardController {
             </div>
         `).join('');
 
-        // Populate category filter
         const categories = [...new Set(sessions.map(s => s.category).filter(Boolean))];
         const categoryFilter = document.getElementById('categoryFilter');
         if (categoryFilter) {
@@ -890,12 +852,10 @@ class DashboardController {
     }
 
     setupBackendConnection() {
-        // Listen for backend status changes
         this.backend.addStatusListener((status) => {
             this.updateBackendStatus(status);
         });
 
-        // Load backend settings
         chrome.storage.local.get(['backendEnabled', 'backendUrl', 'autoSync'], (settings) => {
             const backendToggle = document.getElementById('backendToggle');
             const backendUrl = document.getElementById('backendUrl');
@@ -914,20 +874,16 @@ class DashboardController {
                 autoSyncToggle.checked = settings.autoSync || false;
             }
 
-            // Start health checks if enabled
             if (settings.backendEnabled !== false) {
                 this.backend.startHealthChecks();
             }
 
-            // Start auto-sync if enabled
             if (settings.autoSync) {
                 this.startAutoSync();
             }
         });
 
-        // Make backend status clickable to show settings
         document.querySelector('.backend-status')?.addEventListener('click', () => {
-            // Navigate to settings section
             window.location.hash = 'settings';
         });
     }
@@ -939,11 +895,9 @@ class DashboardController {
 
         if (!statusIndicator || !statusText) return;
 
-        // Remove all status classes
         statusIndicator.classList.remove('connected', 'disconnected', 'checking');
         statusText.classList.remove('connected', 'disconnected');
 
-        // Update based on current status
         if (status === 'checking') {
             statusIndicator.classList.add('checking');
             statusIndicator.innerHTML = '<i class="ri-loader-4-line"></i>';
@@ -974,20 +928,17 @@ class DashboardController {
         testBtn.textContent = 'Testing...';
 
         try {
-            // Get detailed status including AI models
             const status = await this.backend.getDetailedStatus();
             
             if (status && status.status === 'operational') {
                 this.showNotification('Backend connection successful!', 'success');
                 
-                // Update connection status description
                 const statusDesc = document.getElementById('connectionStatusDesc');
                 if (statusDesc) {
                     statusDesc.textContent = `Connected - ${status.ai_models.mode}`;
                     statusDesc.style.color = 'var(--success)';
                 }
                 
-                // Display AI model status
                 this.displayAIModelStatus(status);
             } else {
                 this.showNotification('Backend is not responding. Make sure the server is running.', 'error');
@@ -1013,7 +964,6 @@ class DashboardController {
 
         aiPanel.style.display = 'block';
 
-        // Update AI mode
         const aiMode = document.getElementById('aiMode');
         if (aiMode) {
             aiMode.textContent = status.ai_models.mode;
@@ -1021,7 +971,6 @@ class DashboardController {
                 (status.ai_models.ai_engine.ml_enabled ? 'status-success' : 'status-warning');
         }
 
-        // Update library status
         const numpyStatus = document.getElementById('numpyStatus');
         const sklearnStatus = document.getElementById('sklearnStatus');
         const mlClusteringStatus = document.getElementById('mlClusteringStatus');
@@ -1044,7 +993,6 @@ class DashboardController {
                 (status.features.ml_clustering ? 'status-success' : 'status-warning');
         }
 
-        // Update recommendation status
         const recommendationMode = document.getElementById('recommendationMode');
         if (recommendationMode && status.ai_models.recommendation_engine) {
             recommendationMode.textContent = status.ai_models.recommendation_engine.mode;
@@ -1052,14 +1000,12 @@ class DashboardController {
                 (status.ai_models.recommendation_engine.ml_enabled ? 'status-success' : 'status-info');
         }
 
-        // Update resource count
         const resourceCount = document.getElementById('resourceCount');
         if (resourceCount && status.ai_models.recommendation_engine?.resources) {
             resourceCount.textContent = `${status.ai_models.recommendation_engine.resources.total} resources`;
             resourceCount.className = 'ai-status-value status-info';
         }
 
-        // Display status note
         const statusNote = document.getElementById('aiStatusNote');
         if (statusNote) {
             if (!status.ml_libraries.installed) {
@@ -1079,10 +1025,8 @@ class DashboardController {
     }
 
     startAutoSync() {
-        // Clear any existing interval
         this.stopAutoSync();
 
-        // Sync every 5 minutes
         this.autoSyncInterval = setInterval(() => {
             chrome.storage.local.get(['backendEnabled'], (settings) => {
                 if (settings.backendEnabled !== false) {
@@ -1114,7 +1058,6 @@ class DashboardController {
             const settings = await chrome.storage.local.get(['backendUrl']);
             const url = settings.backendUrl || CONFIG.BACKEND_URL;
             
-            // Check if backend is available first with a timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), CONFIG.SYNC_TIMEOUT);
             
@@ -1131,19 +1074,15 @@ class DashboardController {
                 if (response.ok) {
                     const result = await response.json();
                     
-                    // Handle structured response
                     if (result.success) {
-                        // Store insights
                         if (result.insights && Array.isArray(result.insights)) {
                             await this.storage.saveAIInsights(result.insights);
                         }
                         
-                        // Store recommendations
                         if (result.recommendations && Array.isArray(result.recommendations)) {
                             await this.storage.saveRecommendations(result.recommendations);
                         }
                         
-                        // Log sync statistics
                         const stats = result.data || {};
                         console.log('Sync complete:', {
                             sessions: stats.sessions_stored,
@@ -1158,7 +1097,6 @@ class DashboardController {
                         this.loadDashboard();
                         return;
                     } else {
-                        // Handle error response
                         console.error('Sync returned error:', result.error);
                         throw new Error(result.error || 'Sync failed');
                     }
@@ -1170,7 +1108,6 @@ class DashboardController {
                 console.log('Backend not available:', fetchError.message);
             }
             
-            // Backend not available - generate local insights instead
             await this.generateLocalInsights(data);
             this.showNotification('Generated local insights (backend offline)', 'info');
             this.loadDashboard();
@@ -1184,17 +1121,14 @@ class DashboardController {
     }
 
     async generateLocalInsights(data) {
-        // Generate insights locally when backend is not available
         const sessions = data.sessions || [];
         const topics = data.topics || [];
         
-        // Calculate basic insights
         const totalTime = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
         const avgEngagement = sessions.length > 0 
             ? Math.round(sessions.reduce((sum, s) => sum + (s.engagement || 0), 0) / sessions.length)
             : 0;
         
-        // Get top categories
         const categoryMap = {};
         sessions.forEach(s => {
             if (s.category) {
@@ -1226,7 +1160,6 @@ class DashboardController {
     }
 
     showNotification(message, type = 'info') {
-        // Create notification element
         const notification = document.createElement('div');
         notification.className = `notification notification-${type}`;
         notification.innerHTML = `
@@ -1234,7 +1167,6 @@ class DashboardController {
             <span class="notification-message">${message}</span>
         `;
         
-        // Add styles if not exists
         if (!document.getElementById('notification-styles')) {
             const style = document.createElement('style');
             style.id = 'notification-styles';
@@ -1267,7 +1199,6 @@ class DashboardController {
         
         document.body.appendChild(notification);
         
-        // Auto remove after 3 seconds
         setTimeout(() => {
             notification.style.animation = 'slideIn 0.3s ease-out reverse';
             setTimeout(() => notification.remove(), 300);
@@ -1289,7 +1220,6 @@ class DashboardController {
 
     async clearData() {
         if (confirm('Are you sure you want to delete all data? This cannot be undone.')) {
-            // Clear IndexedDB
             const databases = await indexedDB.databases();
             for (const db of databases) {
                 if (db.name === 'SupriAI_DB') {
@@ -1297,7 +1227,6 @@ class DashboardController {
                 }
             }
             
-            // Clear chrome storage
             await chrome.storage.local.clear();
             
             alert('All data has been cleared.');
@@ -1310,12 +1239,10 @@ class DashboardController {
         return str.length > length ? str.substring(0, length) + '...' : str;
     }
 
-    // ==================== D3.js Visualizations ====================
     
     renderD3CategoryPie(distribution) {
         if (!distribution || !distribution.byCategory) return;
         
-        // Prepare data for D3 pie chart
         const total = distribution.byCategory.reduce((sum, cat) => sum + cat.totalTime, 0);
         const pieData = distribution.byCategory.map(cat => ({
             category: cat.category,
@@ -1329,7 +1256,6 @@ class DashboardController {
     renderD3Timeline(trends) {
         if (!trends || !trends.daily) return;
         
-        // Prepare data for timeline
         const timelineData = trends.daily.map(d => ({
             date: new Date(d.date).toISOString().split('T')[0],
             time: d.totalTime,
@@ -1339,20 +1265,16 @@ class DashboardController {
         this.d3viz.createTimelineChart(timelineData, 'timelineChart');
     }
 
-    // ==================== Curated Resources ====================
     
     async loadCuratedResources() {
         const container = document.getElementById('resourcesList');
         if (!container) return;
 
-        // Get user's top categories to show relevant resources
         const topics = await this.storage.getTopTopics(3);
         const categories = [...new Set(topics.map(t => t.category || t.name))];
         
-        // Get curated resources from recommendation engine
         const resources = this.recommendations.resourceDatabase;
         
-        // Filter and display resources for user's interests
         let displayResources = [];
         categories.forEach(category => {
             if (resources[category]) {
@@ -1360,7 +1282,6 @@ class DashboardController {
             }
         });
         
-        // If no specific categories, show general programming resources
         if (displayResources.length === 0 && resources['Programming']) {
             displayResources = resources['Programming'].slice(0, 5);
         }
@@ -1418,7 +1339,6 @@ class DashboardController {
     }
 }
 
-// Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
     new DashboardController();
 });

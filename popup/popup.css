@@ -1,9 +1,6 @@
-/**
- * SupriAI - Popup Styles
- * Uses CSS variables from theme.css for dual theme support
- */
 
-/* ===== Base Styles ===== */
+
+
 * {
     margin: 0;
     padding: 0;
@@ -26,7 +23,7 @@ body {
     gap: 16px;
 }
 
-/* ===== Header ===== */
+
 .header {
     display: flex;
     justify-content: space-between;
@@ -100,7 +97,7 @@ body {
     font-size: 16px;
 }
 
-/* Theme toggle icon visibility */
+
 [data-theme="dark"] .theme-toggle .ri-moon-line {
     display: none;
 }
@@ -144,7 +141,7 @@ body {
     50% { opacity: 0.5; }
 }
 
-/* ===== Quick Stats ===== */
+
 .quick-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -199,7 +196,7 @@ body {
     text-align: center;
 }
 
-/* ===== Section Headers ===== */
+
 .current-session h3,
 .top-topics h3,
 .recommendations h3 {
@@ -218,7 +215,7 @@ body {
     color: var(--accent-primary);
 }
 
-/* ===== Current Session ===== */
+
 .session-card {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -340,7 +337,7 @@ body {
     box-shadow: 0 0 6px var(--warning);
 }
 
-/* ===== Top Topics ===== */
+
 .topics-list {
     display: flex;
     flex-direction: column;
@@ -406,7 +403,7 @@ body {
     border-radius: var(--radius-full);
 }
 
-/* ===== Recommendations ===== */
+
 .recommendations-list {
     display: flex;
     flex-direction: column;
@@ -512,7 +509,7 @@ body {
     letter-spacing: 0.3px;
 }
 
-/* ===== Actions ===== */
+
 .actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -562,7 +559,7 @@ body {
     color: var(--accent-primary);
 }
 
-/* ===== Footer ===== */
+
 .footer {
     display: flex;
     justify-content: space-between;
@@ -586,7 +583,7 @@ body {
     color: var(--accent-primary);
 }
 
-/* ===== Skeleton Loading ===== */
+
 .skeleton {
     background: linear-gradient(90deg, 
         var(--bg-secondary) 25%, 

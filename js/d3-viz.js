@@ -1,7 +1,4 @@
-/**
- * SupriAI - D3.js Visualization Helpers
- * Enhanced data visualizations using D3.js
- */
+
 
 export class D3Visualizations {
     constructor() {
@@ -19,14 +16,11 @@ export class D3Visualizations {
         };
     }
 
-    /**
-     * Create interactive pie chart for category distribution
-     */
+    
     createCategoryPieChart(data, containerId) {
         const container = document.getElementById(containerId);
         if (!container || !data || data.length === 0) return;
 
-        // Clear existing
         container.innerHTML = '';
 
         const width = container.offsetWidth || 400;
@@ -40,17 +34,14 @@ export class D3Visualizations {
             .append('g')
             .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
-        // Create color scale
         const color = d3.scaleOrdinal()
             .domain(data.map(d => d.category))
             .range(this.colors.categories);
 
-        // Create pie layout
         const pie = d3.pie()
             .value(d => d.time)
             .sort(null);
 
-        // Create arc generator
         const arc = d3.arc()
             .innerRadius(radius * 0.5)
             .outerRadius(radius);
@@ -59,13 +50,11 @@ export class D3Visualizations {
             .innerRadius(radius * 0.5)
             .outerRadius(radius * 1.05);
 
-        // Create tooltip
         const tooltip = d3.select('body')
             .append('div')
             .attr('class', 'd3-tooltip')
             .style('position', 'absolute');
 
-        // Draw slices
         const slices = svg.selectAll('path')
             .data(pie(data))
             .enter()
@@ -102,7 +91,6 @@ export class D3Visualizations {
                 tooltip.classed('visible', false);
             });
 
-        // Add percentage labels
         svg.selectAll('text')
             .data(pie(data))
             .enter()
@@ -115,7 +103,6 @@ export class D3Visualizations {
             .style('fill', 'white')
             .text(d => d.data.percentage > 5 ? `${Math.round(d.data.percentage)}%` : '');
 
-        // Add legend
         const legend = d3.select(`#${containerId}`)
             .append('div')
             .attr('class', 'chart-legend')
@@ -140,14 +127,11 @@ export class D3Visualizations {
             `);
     }
 
-    /**
-     * Create timeline chart showing learning over time
-     */
+    
     createTimelineChart(data, containerId) {
         const container = document.getElementById(containerId);
         if (!container || !data || data.length === 0) return;
 
-        // Clear existing
         container.innerHTML = '';
 
         const margin = { top: 20, right: 30, bottom: 40, left: 60 };
@@ -161,13 +145,11 @@ export class D3Visualizations {
             .append('g')
             .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-        // Parse dates and prepare data
         const parseDate = d3.timeParse('%Y-%m-%d');
         data.forEach(d => {
             d.date = parseDate(d.date);
         });
 
-        // Create scales
         const x = d3.scaleTime()
             .domain(d3.extent(data, d => d.date))
             .range([0, width]);
@@ -177,34 +159,29 @@ export class D3Visualizations {
             .nice()
             .range([height, 0]);
 
-        // Create area generator
         const area = d3.area()
             .x(d => x(d.date))
             .y0(height)
             .y1(d => y(d.time))
             .curve(d3.curveMonotoneX);
 
-        // Create line generator
         const line = d3.line()
             .x(d => x(d.date))
             .y(d => y(d.time))
             .curve(d3.curveMonotoneX);
 
-        // Add grid lines
         svg.append('g')
             .attr('class', 'grid')
             .call(d3.axisLeft(y)
                 .tickSize(-width)
                 .tickFormat(''));
 
-        // Add area
         svg.append('path')
             .datum(data)
             .attr('class', 'timeline-area')
             .attr('fill', this.colors.primary)
             .attr('d', area);
 
-        // Add line
         svg.append('path')
             .datum(data)
             .attr('class', 'timeline-line')
@@ -212,7 +189,6 @@ export class D3Visualizations {
             .attr('stroke', this.colors.primary)
             .attr('d', line);
 
-        // Add dots
         const tooltip = d3.select('body')
             .append('div')
             .attr('class', 'd3-tooltip')
@@ -255,7 +231,6 @@ export class D3Visualizations {
                     .attr('r', 4);
             });
 
-        // Add X axis
         svg.append('g')
             .attr('class', 'axis')
             .attr('transform', `translate(0, ${height})`)
@@ -263,7 +238,6 @@ export class D3Visualizations {
                 .ticks(7)
                 .tickFormat(d3.timeFormat('%b %d')));
 
-        // Add Y axis
         svg.append('g')
             .attr('class', 'axis')
             .call(d3.axisLeft(y)
@@ -271,9 +245,7 @@ export class D3Visualizations {
                 .tickFormat(d => formatTimeShort(d)));
     }
 
-    /**
-     * Create skill tree visualization
-     */
+    
     createSkillTreeVisualization(data, containerId) {
         const container = document.getElementById(containerId);
         if (!container || !data || data.length === 0) return;
@@ -288,12 +260,10 @@ export class D3Visualizations {
             .attr('width', width)
             .attr('height', height);
 
-        // Create hierarchy
         const root = d3.hierarchy(data);
         const treeLayout = d3.tree().size([width - 100, height - 100]);
         treeLayout(root);
 
-        // Draw links
         svg.selectAll('path.link')
             .data(root.links())
             .enter()
@@ -306,7 +276,6 @@ export class D3Visualizations {
             .attr('stroke', 'var(--border-color)')
             .attr('stroke-width', 2);
 
-        // Draw nodes
         const node = svg.selectAll('g.node')
             .data(root.descendants())
             .enter()
@@ -329,7 +298,6 @@ export class D3Visualizations {
     }
 }
 
-// Helper function for short time formatting
 function formatTime(ms) {
     const seconds = Math.floor(ms / 1000);
     const minutes = Math.floor(seconds / 60);

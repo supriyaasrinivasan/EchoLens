@@ -1,7 +1,4 @@
-/**
- * SupriAI - Recommendation Engine
- * Generates personalized learning recommendations based on user behavior
- */
+
 
 import { StorageManager } from './storage.js';
 import { getCategoryColor, getCategoryIcon } from './utils.js';
@@ -10,53 +7,51 @@ export class RecommendationEngine {
     constructor() {
         this.storage = new StorageManager();
         
-        // Learning resources database (curated)
         this.resourceDatabase = {
             'Programming': [
-                { title: 'JavaScript Fundamentals', url: 'https://javascript.info/', type: 'Tutorial', difficulty: 'beginner' },
-                { title: 'Python Official Tutorial', url: 'https://docs.python.org/3/tutorial/', type: 'Documentation', difficulty: 'beginner' },
-                { title: 'FreeCodeCamp', url: 'https://www.freecodecamp.org/', type: 'Course', difficulty: 'beginner' },
-                { title: 'LeetCode Problems', url: 'https://leetcode.com/', type: 'Practice', difficulty: 'intermediate' },
-                { title: 'Clean Code Principles', url: 'https://www.youtube.com/results?search_query=clean+code', type: 'Video', difficulty: 'intermediate' }
+                { title: 'JavaScript Fundamentals', url: 'https:
+                { title: 'Python Official Tutorial', url: 'https:
+                { title: 'FreeCodeCamp', url: 'https:
+                { title: 'LeetCode Problems', url: 'https:
+                { title: 'Clean Code Principles', url: 'https:
             ],
             'Data Science': [
-                { title: 'Kaggle Learn', url: 'https://www.kaggle.com/learn', type: 'Course', difficulty: 'beginner' },
-                { title: 'Towards Data Science', url: 'https://towardsdatascience.com/', type: 'Articles', difficulty: 'intermediate' },
-                { title: 'StatQuest with Josh Starmer', url: 'https://www.youtube.com/c/joshstarmer', type: 'Video', difficulty: 'beginner' },
-                { title: 'Fast.ai Courses', url: 'https://www.fast.ai/', type: 'Course', difficulty: 'intermediate' },
-                { title: 'Scikit-learn Documentation', url: 'https://scikit-learn.org/stable/tutorial/', type: 'Documentation', difficulty: 'intermediate' }
+                { title: 'Kaggle Learn', url: 'https:
+                { title: 'Towards Data Science', url: 'https:
+                { title: 'StatQuest with Josh Starmer', url: 'https:
+                { title: 'Fast.ai Courses', url: 'https:
+                { title: 'Scikit-learn Documentation', url: 'https:
             ],
             'Web Development': [
-                { title: 'MDN Web Docs', url: 'https://developer.mozilla.org/', type: 'Documentation', difficulty: 'beginner' },
-                { title: 'CSS Tricks', url: 'https://css-tricks.com/', type: 'Articles', difficulty: 'intermediate' },
-                { title: 'The Odin Project', url: 'https://www.theodinproject.com/', type: 'Course', difficulty: 'beginner' },
-                { title: 'React Documentation', url: 'https://react.dev/', type: 'Documentation', difficulty: 'intermediate' },
-                { title: 'Frontend Masters', url: 'https://frontendmasters.com/', type: 'Course', difficulty: 'advanced' }
+                { title: 'MDN Web Docs', url: 'https:
+                { title: 'CSS Tricks', url: 'https:
+                { title: 'The Odin Project', url: 'https:
+                { title: 'React Documentation', url: 'https:
+                { title: 'Frontend Masters', url: 'https:
             ],
             'DevOps': [
-                { title: 'Docker Getting Started', url: 'https://docs.docker.com/get-started/', type: 'Tutorial', difficulty: 'beginner' },
-                { title: 'Kubernetes Basics', url: 'https://kubernetes.io/docs/tutorials/', type: 'Tutorial', difficulty: 'intermediate' },
-                { title: 'AWS Free Tier', url: 'https://aws.amazon.com/free/', type: 'Platform', difficulty: 'intermediate' },
-                { title: 'Linux Journey', url: 'https://linuxjourney.com/', type: 'Course', difficulty: 'beginner' },
-                { title: 'DevOps Roadmap', url: 'https://roadmap.sh/devops', type: 'Roadmap', difficulty: 'beginner' }
+                { title: 'Docker Getting Started', url: 'https:
+                { title: 'Kubernetes Basics', url: 'https:
+                { title: 'AWS Free Tier', url: 'https:
+                { title: 'Linux Journey', url: 'https:
+                { title: 'DevOps Roadmap', url: 'https:
             ],
             'Mathematics': [
-                { title: 'Khan Academy Math', url: 'https://www.khanacademy.org/math', type: 'Course', difficulty: 'beginner' },
-                { title: '3Blue1Brown', url: 'https://www.youtube.com/c/3blue1brown', type: 'Video', difficulty: 'intermediate' },
-                { title: 'Brilliant.org', url: 'https://brilliant.org/', type: 'Interactive', difficulty: 'intermediate' },
-                { title: 'MIT OpenCourseWare', url: 'https://ocw.mit.edu/courses/mathematics/', type: 'Course', difficulty: 'advanced' },
-                { title: 'Paul\'s Online Math Notes', url: 'https://tutorial.math.lamar.edu/', type: 'Tutorial', difficulty: 'intermediate' }
+                { title: 'Khan Academy Math', url: 'https:
+                { title: '3Blue1Brown', url: 'https:
+                { title: 'Brilliant.org', url: 'https:
+                { title: 'MIT OpenCourseWare', url: 'https:
+                { title: 'Paul\'s Online Math Notes', url: 'https:
             ],
             'Machine Learning': [
-                { title: 'Andrew Ng ML Course', url: 'https://www.coursera.org/learn/machine-learning', type: 'Course', difficulty: 'beginner' },
-                { title: 'TensorFlow Tutorials', url: 'https://www.tensorflow.org/tutorials', type: 'Tutorial', difficulty: 'intermediate' },
-                { title: 'PyTorch Tutorials', url: 'https://pytorch.org/tutorials/', type: 'Tutorial', difficulty: 'intermediate' },
-                { title: 'Hugging Face Course', url: 'https://huggingface.co/course', type: 'Course', difficulty: 'intermediate' },
-                { title: 'Papers With Code', url: 'https://paperswithcode.com/', type: 'Research', difficulty: 'advanced' }
+                { title: 'Andrew Ng ML Course', url: 'https:
+                { title: 'TensorFlow Tutorials', url: 'https:
+                { title: 'PyTorch Tutorials', url: 'https:
+                { title: 'Hugging Face Course', url: 'https:
+                { title: 'Papers With Code', url: 'https:
             ]
         };
 
-        // Skill trees for structured learning paths
         this.skillTrees = {
             'Web Development': [
                 { level: 1, skills: ['HTML Basics', 'CSS Fundamentals', 'JavaScript Intro'] },
@@ -86,9 +81,7 @@ export class RecommendationEngine {
         await this.storage.init();
     }
 
-    /**
-     * Generate personalized recommendations
-     */
+    
     async generate() {
         const profile = await this.storage.getUserProfile();
         const topics = await this.storage.getTopTopics(5);
@@ -97,42 +90,32 @@ export class RecommendationEngine {
 
         const recommendations = [];
 
-        // 1. Continue learning recommendations
         const continueRecs = this.generateContinueLearning(topics, recentSessions);
         recommendations.push(...continueRecs);
 
-        // 2. Skill progression recommendations
         const skillRecs = this.generateSkillProgression(skills, topics);
         recommendations.push(...skillRecs);
 
-        // 3. New topic exploration
         const explorationRecs = this.generateExplorationRecs(topics, profile);
         recommendations.push(...explorationRecs);
 
-        // 4. Resource recommendations
         const resourceRecs = this.generateResourceRecs(topics);
         recommendations.push(...resourceRecs);
 
-        // 5. Study pattern recommendations
         const patternRecs = await this.generatePatternRecs(recentSessions);
         recommendations.push(...patternRecs);
 
-        // Deduplicate and prioritize
         const prioritized = this.prioritizeRecommendations(recommendations);
 
-        // Save recommendations
         await this.storage.saveRecommendations(prioritized);
 
         return prioritized;
     }
 
-    /**
-     * Generate "continue learning" recommendations
-     */
+    
     generateContinueLearning(topics, recentSessions) {
         const recommendations = [];
         
-        // Find topics that were recently studied but not completed
         const recentTopics = new Map();
         recentSessions.forEach(session => {
             (session.topics || []).forEach(topic => {
@@ -150,9 +133,8 @@ export class RecommendationEngine {
             });
         });
 
-        // Recommend continuing topics with momentum
         const sortedTopics = Array.from(recentTopics.values())
-            .filter(t => t.sessions >= 2 && t.totalTime < 3600000) // Less than 1 hour total
+            .filter(t => t.sessions >= 2 && t.totalTime < 3600000)
             .sort((a, b) => b.lastStudied - a.lastStudied);
 
         sortedTopics.slice(0, 2).forEach(topicData => {
@@ -169,13 +151,10 @@ export class RecommendationEngine {
         return recommendations;
     }
 
-    /**
-     * Generate skill progression recommendations
-     */
+    
     generateSkillProgression(skills, topics) {
         const recommendations = [];
         
-        // Find the user's primary learning path
         const topCategories = topics.map(t => t.category).filter(Boolean);
         const primaryCategory = this.getMostCommon(topCategories);
 
@@ -183,7 +162,6 @@ export class RecommendationEngine {
             const skillTree = this.skillTrees[primaryCategory];
             const userSkillNames = skills.map(s => s.name.toLowerCase());
             
-            // Find current level
             let currentLevel = 0;
             for (const level of skillTree) {
                 const hasAllSkills = level.skills.every(skill => 
@@ -192,7 +170,6 @@ export class RecommendationEngine {
                 if (hasAllSkills) {
                     currentLevel = level.level;
                 } else {
-                    // Recommend next skill
                     const nextSkill = level.skills.find(skill => 
                         !userSkillNames.some(us => us.includes(skill.toLowerCase()))
                     );
@@ -215,13 +192,10 @@ export class RecommendationEngine {
         return recommendations;
     }
 
-    /**
-     * Generate exploration recommendations for new topics
-     */
+    
     generateExplorationRecs(topics, profile) {
         const recommendations = [];
         
-        // Get categories user hasn't explored much
         const studiedCategories = new Set(topics.map(t => t.category));
         const allCategories = Object.keys(this.resourceDatabase);
         
@@ -249,9 +223,7 @@ export class RecommendationEngine {
         return recommendations;
     }
 
-    /**
-     * Generate specific resource recommendations
-     */
+    
     generateResourceRecs(topics) {
         const recommendations = [];
         
@@ -260,7 +232,6 @@ export class RecommendationEngine {
             const resources = this.resourceDatabase[category];
             
             if (resources && resources.length > 0) {
-                // Determine difficulty based on time spent
                 let difficulty = 'beginner';
                 if (topic.totalTime > 3600000) difficulty = 'intermediate';
                 if (topic.totalTime > 10800000) difficulty = 'advanced';
@@ -291,18 +262,14 @@ export class RecommendationEngine {
         return recommendations;
     }
 
-    /**
-     * Generate study pattern recommendations
-     */
+    
     async generatePatternRecs(recentSessions) {
         const recommendations = [];
         
-        // Analyze recent session patterns
         if (recentSessions.length >= 5) {
             const avgEngagement = recentSessions.reduce((acc, s) => acc + (s.engagementScore || 0), 0) / recentSessions.length;
             const avgDuration = recentSessions.reduce((acc, s) => acc + (s.duration || 0), 0) / recentSessions.length;
             
-            // Low engagement suggestion
             if (avgEngagement < 50) {
                 recommendations.push({
                     type: 'pattern',
@@ -313,8 +280,7 @@ export class RecommendationEngine {
                 });
             }
             
-            // Short sessions suggestion
-            if (avgDuration < 600000) { // Less than 10 minutes
+            if (avgDuration < 600000) {
                 recommendations.push({
                     type: 'pattern',
                     title: 'Extend Study Sessions',
@@ -324,7 +290,6 @@ export class RecommendationEngine {
                 });
             }
             
-            // Consistency check
             const uniqueDays = new Set(recentSessions.map(s => s.date)).size;
             if (uniqueDays < 3 && recentSessions.length >= 5) {
                 recommendations.push({
@@ -340,11 +305,8 @@ export class RecommendationEngine {
         return recommendations;
     }
 
-    /**
-     * Prioritize and deduplicate recommendations
-     */
+    
     prioritizeRecommendations(recommendations) {
-        // Remove duplicates based on title
         const unique = [];
         const seen = new Set();
         
@@ -355,17 +317,13 @@ export class RecommendationEngine {
             }
         }
 
-        // Sort by priority
         const priorityOrder = { 'high': 0, 'medium': 1, 'low': 2 };
         unique.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-        // Return top recommendations
         return unique.slice(0, 10);
     }
 
-    /**
-     * Get icon for resource type
-     */
+    
     getResourceIcon(type) {
         const icons = {
             'Tutorial': '📝',
@@ -382,9 +340,7 @@ export class RecommendationEngine {
         return icons[type] || '📚';
     }
 
-    /**
-     * Get most common element in array
-     */
+    
     getMostCommon(arr) {
         const counts = {};
         arr.forEach(item => {
@@ -404,9 +360,7 @@ export class RecommendationEngine {
         return mostCommon;
     }
 
-    /**
-     * Generate learning path for a category
-     */
+    
     generateLearningPath(category) {
         const skillTree = this.skillTrees[category];
         if (!skillTree) return null;
@@ -416,7 +370,7 @@ export class RecommendationEngine {
             levels: skillTree,
             resources: this.resourceDatabase[category] || [],
             estimatedTime: skillTree.reduce((acc, level) => 
-                acc + level.skills.length * 5, 0) + ' hours' // 5 hours per skill estimate
+                acc + level.skills.length * 5, 0) + ' hours'
         };
     }
 }

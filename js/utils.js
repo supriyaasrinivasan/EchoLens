@@ -1,10 +1,6 @@
-/**
- * SupriAI - Utility Functions
- */
 
-/**
- * Check if Chrome extension context is valid
- */
+
+
 export function isExtensionContextValid() {
     try {
         return !!(chrome && chrome.runtime && chrome.runtime.id);
@@ -13,9 +9,7 @@ export function isExtensionContextValid() {
     }
 }
 
-/**
- * Safe Chrome runtime message sender with timeout and error handling
- */
+
 export function safeSendMessage(message, timeout = 5000) {
     return new Promise((resolve, reject) => {
         if (!isExtensionContextValid()) {
@@ -44,9 +38,7 @@ export function safeSendMessage(message, timeout = 5000) {
     });
 }
 
-/**
- * Format duration in milliseconds to human readable string
- */
+
 export function formatTime(ms) {
     if (ms < 1000) return '0m';
     
@@ -66,9 +58,7 @@ export function formatTime(ms) {
     }
 }
 
-/**
- * Format date to readable string
- */
+
 export function formatDate(date, format = 'short') {
     const d = new Date(date);
     
@@ -91,9 +81,7 @@ export function formatDate(date, format = 'short') {
     return d.toISOString().split('T')[0];
 }
 
-/**
- * Get relative time string (e.g., "2 hours ago")
- */
+
 export function getRelativeTime(date) {
     const now = new Date();
     const diff = now - new Date(date);
@@ -113,25 +101,19 @@ export function getRelativeTime(date) {
     return 'just now';
 }
 
-/**
- * Truncate string with ellipsis
- */
+
 export function truncate(str, length = 50) {
     if (!str) return '';
     if (str.length <= length) return str;
     return str.substring(0, length - 3) + '...';
 }
 
-/**
- * Generate unique ID
- */
+
 export function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-/**
- * Debounce function
- */
+
 export function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -144,9 +126,7 @@ export function debounce(func, wait) {
     };
 }
 
-/**
- * Throttle function
- */
+
 export function throttle(func, limit) {
     let inThrottle;
     return function(...args) {
@@ -158,17 +138,13 @@ export function throttle(func, limit) {
     };
 }
 
-/**
- * Calculate percentage
- */
+
 export function calculatePercentage(value, total) {
     if (total === 0) return 0;
     return Math.round((value / total) * 100);
 }
 
-/**
- * Get color for category
- */
+
 export function getCategoryColor(category) {
     const colors = {
         'Programming': '#6366f1',
@@ -187,9 +163,7 @@ export function getCategoryColor(category) {
     return colors[category] || colors['General Learning'];
 }
 
-/**
- * Get icon for category
- */
+
 export function getCategoryIcon(category) {
     const icons = {
         'Programming': '💻',
@@ -208,9 +182,7 @@ export function getCategoryIcon(category) {
     return icons[category] || icons['General Learning'];
 }
 
-/**
- * Group array by key
- */
+
 export function groupBy(array, key) {
     return array.reduce((groups, item) => {
         const value = typeof key === 'function' ? key(item) : item[key];
@@ -219,9 +191,7 @@ export function groupBy(array, key) {
     }, {});
 }
 
-/**
- * Calculate average
- */
+
 export function average(array, key = null) {
     if (array.length === 0) return 0;
     const sum = array.reduce((acc, item) => {
@@ -231,9 +201,7 @@ export function average(array, key = null) {
     return sum / array.length;
 }
 
-/**
- * Get date range
- */
+
 export function getDateRange(range) {
     const end = new Date();
     const start = new Date();
@@ -262,9 +230,7 @@ export function getDateRange(range) {
     return { start, end };
 }
 
-/**
- * Format number with suffix (K, M, etc.)
- */
+
 export function formatNumber(num) {
     if (num >= 1000000) {
         return (num / 1000000).toFixed(1) + 'M';
@@ -275,9 +241,7 @@ export function formatNumber(num) {
     return num.toString();
 }
 
-/**
- * Calculate skill level from experience
- */
+
 export function calculateSkillLevel(experience) {
     const levels = [
         { name: 'Beginner', min: 0, max: 100 },
@@ -301,9 +265,7 @@ export function calculateSkillLevel(experience) {
     return { name: 'Expert', progress: 100, nextLevel: 'Master' };
 }
 
-/**
- * Deep merge objects
- */
+
 export function deepMerge(target, source) {
     const output = { ...target };
     
