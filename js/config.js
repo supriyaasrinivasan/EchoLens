@@ -114,7 +114,17 @@ export class BackendConnection {
         this.listeners.push(callback);
     }
 
-    
+    addStatusListener(callback) {
+        this.addListener(callback);
+    }
+
+    removeListener(callback) {
+        const index = this.listeners.indexOf(callback);
+        if (index > -1) {
+            this.listeners.splice(index, 1);
+        }
+    }
+
     notifyListeners(status) {
         this.listeners.forEach(callback => {
             try {
@@ -123,6 +133,37 @@ export class BackendConnection {
                 console.error('Error notifying connection listener:', error);
             }
         });
+    }
+
+    async fetchAnalytics(timeRange = 'week') {
+        try {
+            return await this.request(`${CONFIG.API_ENDPOINTS.ANALYTICS}?range=${timeRange}`);
+        } catch (error) {
+            console.error('Failed to fetch analytics from backend:', error);
+            return null;
+        }
+    }
+
+    async fetchRecommendations(limit = 10) {
+        try {
+            return await this.request(`${CONFIG.API_ENDPOINTS.RECOMMENDATIONS}?limit=${limit}`);
+        } catch (error) {
+            console.error('Failed to fetch recommendations from backend:', error);
+            return null;
+        }
+    }
+
+    async syncData(data) {
+        try {
+            return await this.request(CONFIG.API_ENDPOINTS.SYNC, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } catch (error) {
+            console.error('Failed to sync data with backend:', error);
+            return null;
+        }
     }
 
     

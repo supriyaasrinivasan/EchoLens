@@ -414,10 +414,38 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(60));
 });
 
-process.on('SIGTERM', () => {
-    console.log('Shutting down gracefully...');
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\nError: Port ${PORT} is already in use.`);
+        console.error('Please close any other applications using this port, or run:');
+        console.error('  Windows: netstat -ano | findstr :5000');
+        console.error('  Then: taskkill /PID <PID> /F\n');
+        process.exit(1);
+    } else {
+        console.error('Server error:', err);
+        process.exit(1);
+    }
+});
+
+let isShuttingDown = false;
+
+function gracefulShutdown(signal) {
+    if (isShuttingDown) return;
+    isShuttingDown = true;
+    
+    console.log(`\n${signal} received. Shutting down gracefully...`);
     server.close(() => {
         db.close();
+        console.log('Server closed.');
         process.exit(0);
     });
-});
+    
+    // Force exit after 5 seconds if graceful shutdown fails
+    setTimeout(() => {
+        console.error('Forcing shutdown...');
+        process.exit(1);
+    }, 5000);
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

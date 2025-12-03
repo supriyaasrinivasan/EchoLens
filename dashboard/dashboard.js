@@ -183,7 +183,21 @@ class DashboardController {
 
     async loadDashboard() {
         try {
-            const analytics = await this.analytics.getAnalytics(this.currentTimeRange);
+            let analytics;
+            
+            if (this.backend.isConnected && CONFIG.BACKEND_ENABLED) {
+                console.log('Fetching analytics from backend...');
+                const backendData = await this.backend.fetchAnalytics(this.currentTimeRange);
+                if (backendData && backendData.success) {
+                    analytics = this.mergeBackendAndLocalAnalytics(backendData);
+                } else {
+                    console.log('Backend fetch failed, using local storage');
+                    analytics = await this.analytics.getAnalytics(this.currentTimeRange);
+                }
+            } else {
+                console.log('Using local storage for analytics');
+                analytics = await this.analytics.getAnalytics(this.currentTimeRange);
+            }
             
             this.updateOverviewStats(analytics);
             
@@ -215,6 +229,101 @@ class DashboardController {
         } catch (error) {
             console.error('Error loading dashboard:', error);
         }
+    }
+
+    mergeBackendAndLocalAnalytics(backendData) {
+        const { data, summary } = backendData;
+        return {
+            overview: {
+                totalTime: summary.totalTime || 0,
+                totalSessions: summary.totalSessions || 0,
+                avgEngagement: summary.avgEngagement || 0,
+                uniqueTopics: summary.uniqueTopics || 0,
+                uniqueDays: summary.uniqueDays || 0,
+                avgSessionDuration: summary.totalSessions > 0 ? summary.totalTime / summary.totalSessions : 0,
+                dailyAverage: summary.uniqueDays > 0 ? summary.totalTime / summary.uniqueDays : 0
+            },
+            topicDistribution: {
+                byCategory: this.transformCategoryBreakdown(summary.categoryBreakdown),
+                byTopic: data.topics?.slice(0, 10).map(t => ({ name: t.name, time: t.total_time })) || [],
+                totalCategories: Object.keys(summary.categoryBreakdown || {}).length,
+                totalTopics: data.topics?.length || 0
+            },
+            learningTrends: this.transformToLearningTrends(data.sessions),
+            engagementMetrics: this.calculateEngagementMetrics(data.sessions),
+            skillProgress: [],
+            patterns: []
+        };
+    }
+
+    transformCategoryBreakdown(breakdown) {
+        if (!breakdown) return [];
+        return Object.entries(breakdown).map(([category, stats]) => ({
+            category,
+            count: stats.count,
+            totalTime: stats.time,
+            avgEngagement: 0
+        })).sort((a, b) => b.totalTime - a.totalTime);
+    }
+
+    transformToLearningTrends(sessions) {
+        if (!sessions || sessions.length === 0) {
+            return {
+                daily: [],
+                hourlyDistribution: Array(24).fill(0),
+                weeklyPattern: Array(7).fill(0)
+            };
+        }
+
+        const dailyMap = {};
+        const hourlyDist = Array(24).fill(0);
+        const weeklyPattern = Array(7).fill(0);
+
+        sessions.forEach(session => {
+            const date = session.date || new Date(session.created_at).toISOString().split('T')[0];
+            if (!dailyMap[date]) {
+                dailyMap[date] = { date, totalTime: 0, sessionCount: 0, avgEngagement: 0 };
+            }
+            dailyMap[date].totalTime += session.duration || 0;
+            dailyMap[date].sessionCount += 1;
+            dailyMap[date].avgEngagement += session.engagement_score || 0;
+
+            const timestamp = session.timestamp || new Date(session.created_at).getTime();
+            const hour = new Date(timestamp).getHours();
+            hourlyDist[hour] += session.duration || 0;
+
+            const day = new Date(timestamp).getDay();
+            weeklyPattern[day] += session.duration || 0;
+        });
+
+        const daily = Object.values(dailyMap).map(d => ({
+            ...d,
+            avgEngagement: d.sessionCount > 0 ? Math.round(d.avgEngagement / d.sessionCount) : 0
+        }));
+
+        return { daily, hourlyDistribution: hourlyDist, weeklyPattern };
+    }
+
+    calculateEngagementMetrics(sessions) {
+        if (!sessions || sessions.length === 0) {
+            return { overall: 0, byCategory: {}, trend: [] };
+        }
+
+        const overall = sessions.reduce((sum, s) => sum + (s.engagement_score || 0), 0) / sessions.length;
+        const byCategory = {};
+        
+        sessions.forEach(s => {
+            const cat = s.category || 'Other';
+            if (!byCategory[cat]) byCategory[cat] = { total: 0, count: 0 };
+            byCategory[cat].total += s.engagement_score || 0;
+            byCategory[cat].count += 1;
+        });
+
+        Object.keys(byCategory).forEach(cat => {
+            byCategory[cat] = byCategory[cat].total / byCategory[cat].count;
+        });
+
+        return { overall: Math.round(overall), byCategory, trend: [] };
     }
 
     updateOverviewStats(analytics) {
@@ -742,7 +851,35 @@ class DashboardController {
     }
 
     async loadRecommendations() {
-        const recs = await this.recommendations.generate();
+        let recs = [];
+        
+        if (this.backend.isConnected && CONFIG.BACKEND_ENABLED) {
+            try {
+                console.log('Fetching recommendations from backend...');
+                const backendRecs = await this.backend.fetchRecommendations(20);
+                if (backendRecs && backendRecs.success && backendRecs.recommendations) {
+                    recs = backendRecs.recommendations.map(r => ({
+                        title: r.title,
+                        description: r.description,
+                        url: r.url,
+                        type: r.rec_type || r.type,
+                        priority: r.priority,
+                        difficulty: this.inferDifficulty(r.description),
+                        icon: this.getRecommendationIcon(r.rec_type || r.type),
+                        score: r.score
+                    }));
+                    console.log(`Loaded ${recs.length} recommendations from backend`);
+                }
+            } catch (error) {
+                console.error('Failed to fetch backend recommendations:', error);
+            }
+        }
+        
+        if (recs.length === 0) {
+            console.log('Using local recommendations');
+            recs = await this.recommendations.generate();
+        }
+        
         const container = document.getElementById('fullRecommendations');
         
         if (!container) return;
@@ -786,6 +923,28 @@ class DashboardController {
         this.loadWeeklySummary();
         
         this.loadCuratedResources();
+    }
+
+    inferDifficulty(description) {
+        if (!description) return null;
+        const lower = description.toLowerCase();
+        if (lower.includes('beginner') || lower.includes('intro') || lower.includes('basic')) return 'beginner';
+        if (lower.includes('advanced') || lower.includes('expert')) return 'advanced';
+        if (lower.includes('intermediate')) return 'intermediate';
+        return null;
+    }
+
+    getRecommendationIcon(type) {
+        const icons = {
+            'Tutorial': '📚',
+            'Practice': '💪',
+            'Course': '🎓',
+            'Article': '📄',
+            'Documentation': '📖',
+            'Video': '🎥',
+            'Project': '🚀'
+        };
+        return icons[type] || '💡';
     }
 
     async loadWeeklySummary() {
@@ -1055,66 +1214,52 @@ class DashboardController {
         try {
             const data = await this.storage.getDataForSync();
             
-            const settings = await chrome.storage.local.get(['backendUrl']);
-            const url = settings.backendUrl || CONFIG.BACKEND_URL;
+            console.log('Syncing data with backend...', {
+                sessions: data.sessions?.length || 0,
+                topics: data.topics?.length || 0
+            });
             
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), CONFIG.SYNC_TIMEOUT);
-            
-            try {
-                const response = await fetch(`${url}/api/sync`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data),
-                    signal: controller.signal
+            const result = await this.backend.syncData(data);
+
+            if (result && result.success) {
+                if (result.insights && Array.isArray(result.insights)) {
+                    await this.storage.saveAIInsights(result.insights);
+                }
+                        
+                if (result.recommendations && Array.isArray(result.recommendations)) {
+                    await this.storage.saveRecommendations(result.recommendations);
+                }
+                
+                const stats = result.data || {};
+                console.log('Sync complete:', {
+                    sessions: stats.sessions_stored,
+                    insights: stats.insights_generated,
+                    recommendations: stats.recommendations_generated
                 });
                 
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        if (result.insights && Array.isArray(result.insights)) {
-                            await this.storage.saveAIInsights(result.insights);
-                        }
-                        
-                        if (result.recommendations && Array.isArray(result.recommendations)) {
-                            await this.storage.saveRecommendations(result.recommendations);
-                        }
-                        
-                        const stats = result.data || {};
-                        console.log('Sync complete:', {
-                            sessions: stats.sessions_stored,
-                            insights: stats.insights_generated,
-                            recommendations: stats.recommendations_generated
-                        });
-                        
-                        this.showNotification(
-                            `Synced! ${stats.insights_generated || 0} insights, ${stats.recommendations_generated || 0} recommendations`,
-                            'success'
-                        );
-                        this.loadDashboard();
-                        return;
-                    } else {
-                        console.error('Sync returned error:', result.error);
-                        throw new Error(result.error || 'Sync failed');
-                    }
-                } else {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-                console.log('Backend not available:', fetchError.message);
+                this.showNotification(
+                    `Synced! ${stats.insights_generated || 0} insights, ${stats.recommendations_generated || 0} recommendations`,
+                    'success'
+                );
+                await this.loadDashboard();
+                return;
+            } else {
+                console.error('Sync failed, using local insights');
+                await this.generateLocalInsights(data);
+                this.showNotification('Generated local insights (backend unavailable)', 'info');
+                await this.loadDashboard();
             }
-            
-            await this.generateLocalInsights(data);
-            this.showNotification('Generated local insights (backend offline)', 'info');
-            this.loadDashboard();
             
         } catch (error) {
             console.error('Sync error:', error);
-            this.showNotification('Sync failed. Using local data.', 'warning');
+            try {
+                const data = await this.storage.getDataForSync();
+                await this.generateLocalInsights(data);
+                this.showNotification('Sync failed. Using local data.', 'warning');
+            } catch (localError) {
+                console.error('Local insight generation failed:', localError);
+                this.showNotification('Error generating insights', 'warning');
+            }
         } finally {
             syncBtn.classList.remove('syncing');
         }
@@ -1243,26 +1388,34 @@ class DashboardController {
     renderD3CategoryPie(distribution) {
         if (!distribution || !distribution.byCategory) return;
         
-        const total = distribution.byCategory.reduce((sum, cat) => sum + cat.totalTime, 0);
-        const pieData = distribution.byCategory.map(cat => ({
-            category: cat.category,
-            time: cat.totalTime,
-            percentage: (cat.totalTime / total) * 100
-        }));
-        
-        this.d3viz.createCategoryPieChart(pieData, 'categoryPieChart');
+        try {
+            const total = distribution.byCategory.reduce((sum, cat) => sum + cat.totalTime, 0);
+            const pieData = distribution.byCategory.map(cat => ({
+                category: cat.category,
+                time: cat.totalTime,
+                percentage: (cat.totalTime / total) * 100
+            }));
+            
+            this.d3viz.createCategoryPieChart(pieData, 'categoryPieChart');
+        } catch (error) {
+            console.log('D3 visualization skipped (using Chart.js instead)');
+        }
     }
 
     renderD3Timeline(trends) {
         if (!trends || !trends.daily) return;
         
-        const timelineData = trends.daily.map(d => ({
-            date: new Date(d.date).toISOString().split('T')[0],
-            time: d.totalTime,
-            sessions: d.sessions || 1
-        }));
-        
-        this.d3viz.createTimelineChart(timelineData, 'timelineChart');
+        try {
+            const timelineData = trends.daily.map(d => ({
+                date: new Date(d.date).toISOString().split('T')[0],
+                time: d.totalTime,
+                sessions: d.sessions || 1
+            }));
+            
+            this.d3viz.createTimelineChart(timelineData, 'timelineChart');
+        } catch (error) {
+            console.log('D3 visualization skipped (using Chart.js instead)');
+        }
     }
 
     

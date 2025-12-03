@@ -1,5 +1,3 @@
-
-
 import { StorageManager } from './storage.js';
 import { ContentClassifier } from './classifier.js';
 import { AnalyticsEngine } from './analytics.js';
@@ -115,7 +113,7 @@ class BackgroundController {
     }
 
     async startSession(tab) {
-        if (!tab.url || tab.url.startsWith('chrome:
+        if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('about:') || tab.url.startsWith('edge://')) {
             return;
         }
 
@@ -152,7 +150,7 @@ class BackgroundController {
                 type: 'START_TRACKING',
                 sessionId: tab.id
             });
-            console.log(`✓ Session started: ${session.title} [${session.category}]`);
+            console.log('[OK] Session started:', session.title, '[' + session.category + ']');
         } catch (error) {
             console.log('Content script will start tracking when ready');
         }
@@ -267,7 +265,7 @@ class BackgroundController {
                             session.category = classification.category;
                             session.topics = classification.topics;
                             session.confidence = classification.confidence;
-                            console.log(`✓ Page classified: ${session.title} → ${session.category}`);
+                            console.log('[OK] Page classified:', session.title, '->', session.category);
                         }
                     }
                     sendResponse({ success: true });
@@ -276,7 +274,7 @@ class BackgroundController {
                 case 'TOGGLE_TRACKING':
                     this.trackingEnabled = message.enabled;
                     await chrome.storage.local.set({ trackingEnabled: message.enabled });
-                    console.log(`✓ Tracking ${message.enabled ? 'enabled' : 'disabled'}`);
+                    console.log('[OK] Tracking', message.enabled ? 'enabled' : 'disabled');
                     sendResponse({ success: true });
                     break;
 
@@ -476,7 +474,7 @@ class BackgroundController {
         try {
             const data = await this.storage.getDataForSync();
             
-            const response = await fetch('http:
+            const response = await fetch('http://localhost:5000/api/sync', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

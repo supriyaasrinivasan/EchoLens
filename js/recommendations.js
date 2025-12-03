@@ -9,46 +9,46 @@ export class RecommendationEngine {
         
         this.resourceDatabase = {
             'Programming': [
-                { title: 'JavaScript Fundamentals', url: 'https:
-                { title: 'Python Official Tutorial', url: 'https:
-                { title: 'FreeCodeCamp', url: 'https:
-                { title: 'LeetCode Problems', url: 'https:
-                { title: 'Clean Code Principles', url: 'https:
+                { title: 'JavaScript Fundamentals', url: 'https://javascript.info/' },
+                { title: 'Python Official Tutorial', url: 'https://docs.python.org/3/tutorial/' },
+                { title: 'FreeCodeCamp', url: 'https://www.freecodecamp.org/' },
+                { title: 'LeetCode Problems', url: 'https://leetcode.com/problemset/all/' },
+                { title: 'Clean Code Principles', url: 'https://github.com/ryanmcdermott/clean-code-javascript' }
             ],
             'Data Science': [
-                { title: 'Kaggle Learn', url: 'https:
-                { title: 'Towards Data Science', url: 'https:
-                { title: 'StatQuest with Josh Starmer', url: 'https:
-                { title: 'Fast.ai Courses', url: 'https:
-                { title: 'Scikit-learn Documentation', url: 'https:
+                { title: 'Kaggle Learn', url: 'https://www.kaggle.com/learn' },
+                { title: 'Towards Data Science', url: 'https://towardsdatascience.com/' },
+                { title: 'StatQuest with Josh Starmer', url: 'https://www.youtube.com/c/joshstarmer' },
+                { title: 'Fast.ai Courses', url: 'https://www.fast.ai/' },
+                { title: 'Scikit-learn Documentation', url: 'https://scikit-learn.org/stable/tutorial/index.html' }
             ],
             'Web Development': [
-                { title: 'MDN Web Docs', url: 'https:
-                { title: 'CSS Tricks', url: 'https:
-                { title: 'The Odin Project', url: 'https:
-                { title: 'React Documentation', url: 'https:
-                { title: 'Frontend Masters', url: 'https:
+                { title: 'MDN Web Docs', url: 'https://developer.mozilla.org/' },
+                { title: 'CSS Tricks', url: 'https://css-tricks.com/' },
+                { title: 'The Odin Project', url: 'https://www.theodinproject.com/' },
+                { title: 'React Documentation', url: 'https://react.dev/' },
+                { title: 'Frontend Masters', url: 'https://frontendmasters.com/' }
             ],
             'DevOps': [
-                { title: 'Docker Getting Started', url: 'https:
-                { title: 'Kubernetes Basics', url: 'https:
-                { title: 'AWS Free Tier', url: 'https:
-                { title: 'Linux Journey', url: 'https:
-                { title: 'DevOps Roadmap', url: 'https:
+                { title: 'Docker Getting Started', url: 'https://docs.docker.com/get-started/' },
+                { title: 'Kubernetes Basics', url: 'https://kubernetes.io/docs/tutorials/kubernetes-basics/' },
+                { title: 'AWS Free Tier', url: 'https://aws.amazon.com/free/' },
+                { title: 'Linux Journey', url: 'https://linuxjourney.com/' },
+                { title: 'DevOps Roadmap', url: 'https://roadmap.sh/devops' }
             ],
             'Mathematics': [
-                { title: 'Khan Academy Math', url: 'https:
-                { title: '3Blue1Brown', url: 'https:
-                { title: 'Brilliant.org', url: 'https:
-                { title: 'MIT OpenCourseWare', url: 'https:
-                { title: 'Paul\'s Online Math Notes', url: 'https:
+                { title: 'Khan Academy Math', url: 'https://www.khanacademy.org/math' },
+                { title: '3Blue1Brown', url: 'https://www.youtube.com/c/3blue1brown' },
+                { title: 'Brilliant.org', url: 'https://brilliant.org/' },
+                { title: 'MIT OpenCourseWare', url: 'https://ocw.mit.edu/courses/mathematics/' },
+                { title: 'Paul\'s Online Math Notes', url: 'https://tutorial.math.lamar.edu/' }
             ],
             'Machine Learning': [
-                { title: 'Andrew Ng ML Course', url: 'https:
-                { title: 'TensorFlow Tutorials', url: 'https:
-                { title: 'PyTorch Tutorials', url: 'https:
-                { title: 'Hugging Face Course', url: 'https:
-                { title: 'Papers With Code', url: 'https:
+                { title: 'Andrew Ng ML Course', url: 'https://www.coursera.org/learn/machine-learning' },
+                { title: 'TensorFlow Tutorials', url: 'https://www.tensorflow.org/tutorials' },
+                { title: 'PyTorch Tutorials', url: 'https://pytorch.org/tutorials/' },
+                { title: 'Hugging Face Course', url: 'https://huggingface.co/course' },
+                { title: 'Papers With Code', url: 'https://paperswithcode.com/' }
             ]
         };
 
