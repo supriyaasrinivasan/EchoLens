@@ -44,7 +44,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-radius: var(--radius-md);
     color: white;
     font-size: 20px;
@@ -62,7 +62,7 @@ body {
 .logo h1 {
     font-size: 20px;
     font-weight: 700;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -287,7 +287,7 @@ body {
 
 .meter-fill {
     height: 100%;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-radius: var(--radius-full);
     transition: width 0.5s ease;
 }
@@ -370,7 +370,7 @@ body {
     width: 32px;
     height: 32px;
     border-radius: var(--radius-md);
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -431,7 +431,7 @@ body {
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     opacity: 0;
     border-radius: var(--radius-md) 0 0 var(--radius-md);
     transition: opacity var(--transition-fast);
@@ -540,7 +540,7 @@ body {
 }
 
 .btn-primary {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     color: white;
 }
 

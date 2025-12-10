@@ -485,3 +485,135 @@ class MLRecommendationEngine:
                 return 0
             
             return dot_product / (norm1 * norm2)
+
+    def predict_next_topic(self, sessions, topics):
+        """
+        ML-based topic prediction using transition probabilities
+        """
+        if len(sessions) < 3:
+            return None
+        
+        # Build transition matrix
+        transitions = defaultdict(lambda: defaultdict(int))
+        categories = [s.get('category') for s in sessions if s.get('category')]
+        
+        for i in range(len(categories) - 1):
+            current = categories[i]
+            next_cat = categories[i + 1]
+            transitions[current][next_cat] += 1
+        
+        if not transitions:
+            return None
+        
+        # Get most recent category
+        last_category = categories[-1] if categories else None
+        if not last_category or last_category not in transitions:
+            return None
+        
+        # Predict next category based on transition probability
+        next_transitions = transitions[last_category]
+        total = sum(next_transitions.values())
+        
+        if total == 0:
+            return None
+        
+        # Get most likely next category
+        predicted = max(next_transitions, key=next_transitions.get)
+        probability = next_transitions[predicted] / total
+        
+        return {
+            'predicted_category': predicted,
+            'probability': probability,
+            'from_category': last_category
+        }
+
+    def calculate_knowledge_gaps(self, topics, skills):
+        """
+        Identify knowledge gaps based on learning patterns
+        """
+        gaps = []
+        
+        # Get category coverage
+        category_coverage = defaultdict(lambda: {'time': 0, 'topics': 0})
+        for topic in topics:
+            cat = topic.get('category', 'general')
+            category_coverage[cat]['time'] += topic.get('totalTime', 0)
+            category_coverage[cat]['topics'] += 1
+        
+        # Define expected skill areas for each category
+        expected_skills = {
+            'programming': ['Variables', 'Functions', 'OOP', 'Data Structures', 'Algorithms'],
+            'web_development': ['HTML', 'CSS', 'JavaScript', 'React', 'APIs'],
+            'data_science': ['Python', 'Statistics', 'ML', 'Data Viz', 'Deep Learning'],
+            'devops': ['Linux', 'Docker', 'CI/CD', 'Cloud', 'Kubernetes']
+        }
+        
+        for category, expected in expected_skills.items():
+            if category in category_coverage:
+                coverage = category_coverage[category]
+                hours = coverage['time'] / (1000 * 60 * 60)
+                
+                # Estimate which skills might be missing
+                skill_level = min(int(hours / 5), len(expected) - 1)
+                missing_skills = expected[skill_level + 1:] if skill_level < len(expected) - 1 else []
+                
+                if missing_skills:
+                    gaps.append({
+                        'category': category,
+                        'missing_skills': missing_skills[:3],
+                        'current_level': skill_level,
+                        'priority': 'high' if hours > 5 else 'medium'
+                    })
+        
+        return gaps
+
+    def generate_personalized_path(self, sessions, topics, skills):
+        """
+        Generate a personalized learning path
+        """
+        path = []
+        
+        # Determine primary focus area
+        category_time = defaultdict(int)
+        for topic in topics:
+            cat = topic.get('category', 'general')
+            category_time[cat] += topic.get('totalTime', 0)
+        
+        if not category_time:
+            return []
+        
+        primary_category = max(category_time, key=category_time.get)
+        hours_spent = category_time[primary_category] / (1000 * 60 * 60)
+        
+        # Get appropriate skill tree
+        skill_tree = self.skill_trees.get(primary_category, [])
+        
+        if skill_tree:
+            current_level = min(int(hours_spent / 10), len(skill_tree) - 1)
+            
+            # Add current skills
+            for i, level_skills in enumerate(skill_tree[:current_level + 1]):
+                for skill in level_skills:
+                    path.append({
+                        'skill': skill,
+                        'status': 'completed' if i < current_level else 'in_progress',
+                        'level': i + 1
+                    })
+            
+            # Add future skills
+            for i, level_skills in enumerate(skill_tree[current_level + 1:], start=current_level + 1):
+                for skill in level_skills:
+                    path.append({
+                        'skill': skill,
+                        'status': 'upcoming',
+                        'level': i + 1
+                    })
+        
+        return {
+            'category': primary_category,
+            'current_level': current_level + 1 if skill_tree else 1,
+            'total_levels': len(skill_tree),
+            'hours_spent': round(hours_spent, 1),
+            'path': path
+        }
+

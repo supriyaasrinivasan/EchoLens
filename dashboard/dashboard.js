@@ -1573,40 +1573,40 @@ class DashboardController {
                         #pdf-export-container * { margin: 0; padding: 0; box-sizing: border-box; }
                         #pdf-export-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
                         #pdf-export-container .report-container { max-width: 900px; margin: 0 auto; background: white; }
-                        #pdf-export-container .report-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
+                        #pdf-export-container .report-header { background: #20c997; color: white; padding: 40px; text-align: center; }
                         #pdf-export-container .report-logo { font-size: 48px; margin-bottom: 10px; }
                         #pdf-export-container .report-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
                         #pdf-export-container .report-subtitle { font-size: 16px; opacity: 0.9; }
-                        #pdf-export-container .report-date-range { margin-top: 20px; padding: 10px 24px; background: rgba(255,255,255,0.2); border-radius: 30px; display: inline-block; font-size: 14px; }
-                        #pdf-export-container .summary-section { padding: 40px; background: #f8f9fc; }
+                        #pdf-export-container .report-date-range { margin-top: 20px; padding: 10px 24px; background: rgba(255,255,255,0.25); border-radius: 30px; display: inline-block; font-size: 14px; }
+                        #pdf-export-container .summary-section { padding: 40px; background: #f0f4f8; }
                         #pdf-export-container .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-                        #pdf-export-container .summary-card { background: white; padding: 24px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid #667eea; }
-                        #pdf-export-container .summary-card:nth-child(2) { border-top-color: #10b981; }
-                        #pdf-export-container .summary-card:nth-child(3) { border-top-color: #f59e0b; }
-                        #pdf-export-container .summary-card:nth-child(4) { border-top-color: #6366f1; }
+                        #pdf-export-container .summary-card { background: white; padding: 24px; border-radius: 14px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.04); border-top: 4px solid #20c997; }
+                        #pdf-export-container .summary-card:nth-child(2) { border-top-color: #51cf66; }
+                        #pdf-export-container .summary-card:nth-child(3) { border-top-color: #fcc419; }
+                        #pdf-export-container .summary-card:nth-child(4) { border-top-color: #74c0fc; }
                         #pdf-export-container .summary-icon { font-size: 32px; margin-bottom: 12px; }
-                        #pdf-export-container .summary-value { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
-                        #pdf-export-container .summary-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-                        #pdf-export-container .section { padding: 40px; border-bottom: 1px solid #eee; }
-                        #pdf-export-container .section-title { font-size: 22px; font-weight: 600; color: #1a1a2e; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-                        #pdf-export-container .section-title-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+                        #pdf-export-container .summary-value { font-size: 28px; font-weight: 700; color: #2c3e50; margin-bottom: 4px; }
+                        #pdf-export-container .summary-label { font-size: 12px; color: #5a6c7d; text-transform: uppercase; letter-spacing: 1px; }
+                        #pdf-export-container .section { padding: 40px; border-bottom: 1px solid #e8eef4; }
+                        #pdf-export-container .section-title { font-size: 22px; font-weight: 600; color: #2c3e50; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+                        #pdf-export-container .section-title-icon { width: 40px; height: 40px; background: #20c997; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
                         #pdf-export-container .category-list { display: flex; flex-direction: column; gap: 12px; }
-                        #pdf-export-container .category-item { display: flex; align-items: center; padding: 16px 20px; background: #f8f9fc; border-radius: 10px; }
-                        #pdf-export-container .category-rank { width: 32px; height: 32px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; margin-right: 16px; }
+                        #pdf-export-container .category-item { display: flex; align-items: center; padding: 16px 20px; background: #f0f4f8; border-radius: 12px; }
+                        #pdf-export-container .category-rank { width: 32px; height: 32px; background: #20c997; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; margin-right: 16px; }
                         #pdf-export-container .category-info { flex: 1; }
-                        #pdf-export-container .category-name { font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
-                        #pdf-export-container .category-stats { font-size: 13px; color: #666; }
-                        #pdf-export-container .category-progress { width: 120px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
-                        #pdf-export-container .category-progress-bar { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; }
+                        #pdf-export-container .category-name { font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+                        #pdf-export-container .category-stats { font-size: 13px; color: #5a6c7d; }
+                        #pdf-export-container .category-progress { width: 120px; height: 8px; background: #dce4ec; border-radius: 4px; overflow: hidden; }
+                        #pdf-export-container .category-progress-bar { height: 100%; background: #20c997; border-radius: 4px; }
                         #pdf-export-container .sessions-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-                        #pdf-export-container .sessions-table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 16px; text-align: left; font-weight: 600; }
-                        #pdf-export-container .sessions-table td { padding: 12px 16px; border-bottom: 1px solid #eee; }
-                        #pdf-export-container .sessions-table tr:nth-child(even) { background: #f8f9fc; }
-                        #pdf-export-container .session-category-badge { padding: 4px 10px; background: #667eea20; color: #667eea; border-radius: 20px; font-size: 11px; font-weight: 500; }
-                        #pdf-export-container .report-footer { padding: 30px 40px; background: #1a1a2e; color: white; text-align: center; }
+                        #pdf-export-container .sessions-table th { background: #20c997; color: white; padding: 14px 16px; text-align: left; font-weight: 600; }
+                        #pdf-export-container .sessions-table td { padding: 12px 16px; border-bottom: 1px solid #e8eef4; }
+                        #pdf-export-container .sessions-table tr:nth-child(even) { background: #f0f4f8; }
+                        #pdf-export-container .session-category-badge { padding: 4px 10px; background: rgba(32,201,151,0.15); color: #0ca678; border-radius: 20px; font-size: 11px; font-weight: 500; }
+                        #pdf-export-container .report-footer { padding: 30px 40px; background: #2c3e50; color: white; text-align: center; }
                         #pdf-export-container .footer-logo { font-size: 24px; margin-bottom: 8px; }
-                        #pdf-export-container .footer-text { font-size: 13px; opacity: 0.7; }
-                        #pdf-export-container .footer-date { margin-top: 12px; font-size: 12px; opacity: 0.5; }
+                        #pdf-export-container .footer-text { font-size: 13px; opacity: 0.8; }
+                        #pdf-export-container .footer-date { margin-top: 12px; font-size: 12px; opacity: 0.6; }
                     </style>
                 `;
                 
@@ -1755,20 +1755,20 @@ class DashboardController {
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            color: #333;
+            background: #fafbfc;
+            color: #2c3e50;
             line-height: 1.6;
         }
         .report-container {
             max-width: 900px;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         
-        /* Header */
+        /* Header - Friendly mint color */
         .report-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #20c997;
             color: white;
             padding: 40px;
             text-align: center;
@@ -1789,7 +1789,7 @@ class DashboardController {
         .report-date-range {
             margin-top: 20px;
             padding: 10px 24px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.25);
             border-radius: 30px;
             display: inline-block;
             font-size: 14px;
@@ -1798,7 +1798,7 @@ class DashboardController {
         /* Summary Cards */
         .summary-section {
             padding: 40px;
-            background: #f8f9fc;
+            background: #f0f4f8;
         }
         .summary-grid {
             display: grid;
@@ -1808,14 +1808,14 @@ class DashboardController {
         .summary-card {
             background: white;
             padding: 24px;
-            border-radius: 12px;
+            border-radius: 14px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            border-top: 4px solid #667eea;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+            border-top: 4px solid #20c997;
         }
-        .summary-card:nth-child(2) { border-top-color: #10b981; }
-        .summary-card:nth-child(3) { border-top-color: #f59e0b; }
-        .summary-card:nth-child(4) { border-top-color: #6366f1; }
+        .summary-card:nth-child(2) { border-top-color: #51cf66; }
+        .summary-card:nth-child(3) { border-top-color: #fcc419; }
+        .summary-card:nth-child(4) { border-top-color: #74c0fc; }
         .summary-icon {
             font-size: 32px;
             margin-bottom: 12px;
@@ -1823,12 +1823,12 @@ class DashboardController {
         .summary-value {
             font-size: 28px;
             font-weight: 700;
-            color: #1a1a2e;
+            color: #2c3e50;
             margin-bottom: 4px;
         }
         .summary-label {
             font-size: 12px;
-            color: #666;
+            color: #5a6c7d;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -1836,12 +1836,12 @@ class DashboardController {
         /* Section styles */
         .section {
             padding: 40px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e8eef4;
         }
         .section-title {
             font-size: 22px;
             font-weight: 600;
-            color: #1a1a2e;
+            color: #2c3e50;
             margin-bottom: 24px;
             display: flex;
             align-items: center;
@@ -1850,12 +1850,13 @@ class DashboardController {
         .section-title-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #20c997;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            color: white;
         }
         
         /* Category Breakdown */
@@ -1868,14 +1869,14 @@ class DashboardController {
             display: flex;
             align-items: center;
             padding: 16px 20px;
-            background: #f8f9fc;
-            border-radius: 10px;
+            background: #f0f4f8;
+            border-radius: 12px;
             transition: all 0.3s;
         }
         .category-rank {
             width: 32px;
             height: 32px;
-            background: #667eea;
+            background: #20c997;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -1890,23 +1891,23 @@ class DashboardController {
         }
         .category-name {
             font-weight: 600;
-            color: #1a1a2e;
+            color: #2c3e50;
             margin-bottom: 4px;
         }
         .category-stats {
             font-size: 13px;
-            color: #666;
+            color: #5a6c7d;
         }
         .category-progress {
             width: 120px;
             height: 8px;
-            background: #e5e7eb;
+            background: #dce4ec;
             border-radius: 4px;
             overflow: hidden;
         }
         .category-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #20c997;
             border-radius: 4px;
         }
         
@@ -1917,10 +1918,10 @@ class DashboardController {
             gap: 16px;
         }
         .knowledge-card {
-            background: #f8f9fc;
+            background: #f0f4f8;
             padding: 20px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-radius: 12px;
+            border-left: 4px solid #20c997;
         }
         .knowledge-header {
             display: flex;
@@ -1930,7 +1931,7 @@ class DashboardController {
         }
         .knowledge-category {
             font-weight: 600;
-            color: #1a1a2e;
+            color: #2c3e50;
         }
         .knowledge-level {
             padding: 4px 12px;
@@ -1939,26 +1940,26 @@ class DashboardController {
             font-weight: 600;
             text-transform: uppercase;
         }
-        .level-novice { background: #e5e7eb; color: #666; }
-        .level-beginner { background: #dbeafe; color: #2563eb; }
-        .level-intermediate { background: #fef3c7; color: #d97706; }
-        .level-advanced { background: #d1fae5; color: #059669; }
-        .level-expert { background: #ede9fe; color: #7c3aed; }
+        .level-novice { background: #e8eef4; color: #5a6c7d; }
+        .level-beginner { background: #d0ebff; color: #1c7ed6; }
+        .level-intermediate { background: #fff3bf; color: #e67700; }
+        .level-advanced { background: #c3fae8; color: #0ca678; }
+        .level-expert { background: #e5dbff; color: #7048e8; }
         .knowledge-progress-bar {
             height: 6px;
-            background: #e5e7eb;
+            background: #dce4ec;
             border-radius: 3px;
             overflow: hidden;
         }
         .knowledge-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: #20c997;
             border-radius: 3px;
         }
         .knowledge-meta {
             margin-top: 8px;
             font-size: 12px;
-            color: #666;
+            color: #5a6c7d;
         }
         
         /* Sessions Table */
@@ -1968,7 +1969,7 @@ class DashboardController {
             font-size: 13px;
         }
         .sessions-table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #20c997;
             color: white;
             padding: 14px 16px;
             text-align: left;
@@ -1976,18 +1977,18 @@ class DashboardController {
         }
         .sessions-table td {
             padding: 12px 16px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #e8eef4;
         }
         .sessions-table tr:nth-child(even) {
-            background: #f8f9fc;
+            background: #f0f4f8;
         }
         .sessions-table tr:hover {
-            background: #f0f4ff;
+            background: #e8eef4;
         }
         .session-category-badge {
             padding: 4px 10px;
-            background: #667eea20;
-            color: #667eea;
+            background: rgba(32, 201, 151, 0.15);
+            color: #0ca678;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 500;
@@ -1996,7 +1997,7 @@ class DashboardController {
         /* Footer */
         .report-footer {
             padding: 30px 40px;
-            background: #1a1a2e;
+            background: #2c3e50;
             color: white;
             text-align: center;
         }
@@ -2006,12 +2007,12 @@ class DashboardController {
         }
         .footer-text {
             font-size: 13px;
-            opacity: 0.7;
+            opacity: 0.8;
         }
         .footer-date {
             margin-top: 12px;
             font-size: 12px;
-            opacity: 0.5;
+            opacity: 0.6;
         }
         
         /* Print styles */

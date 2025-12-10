@@ -579,6 +579,113 @@ def topic_modeling():
         }), 500
 
 
+@app.route('/api/learning-path', methods=['POST'])
+def get_learning_path():
+    """Generate personalized learning path using ML"""
+    try:
+        data = request.json or {}
+        sessions = data.get('sessions', [])
+        topics = data.get('topics', [])
+        skills = data.get('skills', [])
+        
+        # Generate learning path
+        learning_path = recommendation_engine.generate_personalized_path(sessions, topics, skills)
+        
+        # Predict next topic
+        next_topic = recommendation_engine.predict_next_topic(sessions, topics)
+        
+        return jsonify({
+            'success': True,
+            'learning_path': learning_path,
+            'next_topic_prediction': next_topic,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Learning path error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/knowledge-gaps', methods=['POST'])
+def get_knowledge_gaps():
+    """Identify knowledge gaps using ML analysis"""
+    try:
+        data = request.json or {}
+        topics = data.get('topics', [])
+        skills = data.get('skills', [])
+        
+        # Calculate knowledge gaps
+        gaps = recommendation_engine.calculate_knowledge_gaps(topics, skills)
+        
+        return jsonify({
+            'success': True,
+            'knowledge_gaps': gaps,
+            'total_gaps': len(gaps),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Knowledge gaps error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@app.route('/api/predict-engagement', methods=['POST'])
+def predict_engagement():
+    """Predict engagement score for content using ML"""
+    try:
+        data = request.json or {}
+        url = data.get('url', '')
+        title = data.get('title', '')
+        content = data.get('content', '')
+        
+        if not url and not title:
+            return jsonify({
+                'success': False,
+                'error': 'URL or title required'
+            }), 400
+        
+        # Analyze content
+        analysis = ai_engine.analyze_content(url, title, content)
+        
+        # Calculate predicted engagement based on past similar content
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT AVG(engagement_score) as avg_engagement, COUNT(*) as count
+            FROM sessions 
+            WHERE category = ?
+        ''', (analysis.get('category', 'general'),))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        predicted_engagement = result['avg_engagement'] if result['avg_engagement'] else 50
+        sample_size = result['count'] if result['count'] else 0
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis,
+            'predicted_engagement': round(predicted_engagement, 1),
+            'confidence': min(0.5 + (sample_size / 100), 0.95),
+            'sample_size': sample_size,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Engagement prediction error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
 @app.route('/api/status', methods=['GET'])
 def get_status():
     """Comprehensive status endpoint with AI model information"""

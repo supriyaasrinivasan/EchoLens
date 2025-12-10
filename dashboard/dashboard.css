@@ -66,7 +66,7 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-radius: var(--radius-md);
     color: white;
     font-size: 22px;
@@ -75,10 +75,7 @@ a:hover {
 .logo h1 {
     font-size: 22px;
     font-weight: 700;
-    background: var(--accent-gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--accent-primary);
 }
 
 .nav-menu {
@@ -373,7 +370,7 @@ a:hover {
 }
 
 .range-btn.active {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     color: white;
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
@@ -466,7 +463,7 @@ a:hover {
     left: 0;
     right: 0;
     height: 4px;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     transform: scaleX(0);
     transform-origin: left;
     transition: transform var(--transition-fast);
@@ -482,7 +479,7 @@ a:hover {
 }
 
 .stat-card.primary {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border: none;
     box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
 }
@@ -542,12 +539,12 @@ a:hover {
 }
 
 .stat-card.streak-card .stat-icon {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    background: #ff8a65;
     color: white;
 }
 
 .stat-card.streak-card .stat-value {
-    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    background: #ff8a65;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -873,7 +870,7 @@ a:hover {
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     opacity: 0;
     transition: opacity var(--transition-fast);
 }
@@ -950,7 +947,7 @@ a:hover {
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.1), rgba(var(--warning-rgb), 0.1));
+    background: var(--accent-light);
     border-left: 3px solid var(--accent-primary);
     border-radius: var(--radius-md);
     margin-bottom: 20px;
@@ -1503,7 +1500,7 @@ a:hover {
 
 .progress-fill {
     height: 100%;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-radius: var(--radius-full);
     transition: width 0.5s ease;
 }
@@ -1564,7 +1561,7 @@ a:hover {
     top: 0;
     bottom: 0;
     width: 4px;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     opacity: 0;
     transition: opacity var(--transition-fast);
 }
@@ -1659,7 +1656,7 @@ a:hover {
 
 .skill-progress-fill {
     height: 100%;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-radius: var(--radius-full);
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -1725,7 +1722,7 @@ a:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     color: white;
     border-radius: 50%;
     font-size: 14px;
@@ -1854,7 +1851,7 @@ a:hover {
 }
 
 .toggle input:checked + .toggle-slider {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
 }
 
 .toggle input:checked + .toggle-slider::before {
@@ -1880,7 +1877,7 @@ a:hover {
 }
 
 .btn-primary {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     color: white;
 }
 
@@ -2131,7 +2128,7 @@ a:hover {
 }
 
 .pagination-btn.active {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-color: transparent;
     color: white;
     box-shadow: var(--shadow-sm);
@@ -2188,7 +2185,7 @@ a:hover {
 }
 
 .page-btn.active {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     border-color: transparent;
     color: white;
     box-shadow: var(--shadow-sm);
@@ -2294,7 +2291,7 @@ a:hover {
     top: 0;
     bottom: 0;
     width: 3px;
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     opacity: 0;
     transition: opacity var(--transition-fast);
 }
@@ -3205,7 +3202,7 @@ a:hover {
 .learning-path-progress-fill {
     height: 100%;
     border-radius: var(--radius-full);
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
 }
 
 .learning-path-progress-text {
@@ -3364,7 +3361,7 @@ a:hover {
 }
 
 .btn-primary {
-    background: var(--accent-gradient);
+    background: var(--accent-primary);
     color: white;
     border: none;
     padding: 10px 20px;
