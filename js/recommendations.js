@@ -373,4 +373,238 @@ export class RecommendationEngine {
                 acc + level.skills.length * 5, 0) + ' hours'
         };
     }
+
+    // Enhanced: Get recommendations by type
+    async getRecommendationsByType(type) {
+        const profile = await this.storage.getKnowledgeProfile();
+        const gaps = await this.storage.getLearningGaps();
+        const sessions = await this.storage.getSessions({ limit: 50 });
+        const topics = await this.storage.getTopTopics(10);
+
+        switch (type) {
+            case 'personalized':
+                return this.generatePersonalizedRecs(profile, sessions, topics);
+            case 'trending':
+                return this.generateTrendingRecs(sessions);
+            case 'gaps':
+                return this.generateGapFillerRecs(gaps, profile);
+            case 'advanced':
+                return this.generateAdvancedRecs(profile);
+            default:
+                return this.generate();
+        }
+    }
+
+    // Generate personalized recommendations based on user's strongest areas
+    generatePersonalizedRecs(profile, sessions, topics) {
+        const recommendations = [];
+
+        // Recommend based on strongest areas
+        profile.areas.slice(0, 3).forEach(area => {
+            const resources = this.resourceDatabase[area.category] || [];
+            const levelResources = this.getResourcesForLevel(resources, area.level);
+
+            levelResources.slice(0, 2).forEach(resource => {
+                recommendations.push({
+                    type: 'personalized',
+                    title: resource.title,
+                    description: `Continue your ${area.level} journey in ${area.category}`,
+                    url: resource.url,
+                    category: area.category,
+                    priority: 'high',
+                    icon: '🎯',
+                    reason: `You've shown strong interest with ${area.sessions} sessions`
+                });
+            });
+        });
+
+        // Continue where you left off
+        const recentCategories = new Set();
+        sessions.slice(0, 10).forEach(session => {
+            if (session.category && !recentCategories.has(session.category)) {
+                recentCategories.add(session.category);
+                recommendations.push({
+                    type: 'continue',
+                    title: `Continue: ${session.title || session.category}`,
+                    description: `Pick up where you left off`,
+                    url: session.url,
+                    category: session.category,
+                    priority: 'medium',
+                    icon: '📖',
+                    reason: 'Recently viewed'
+                });
+            }
+        });
+
+        return recommendations.slice(0, 8);
+    }
+
+    // Generate trending recommendations based on recent activity
+    generateTrendingRecs(sessions) {
+        const recommendations = [];
+        
+        // Analyze recent session patterns
+        const categoryFrequency = {};
+        const recentWeek = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        
+        sessions.filter(s => s.timestamp >= recentWeek).forEach(session => {
+            const cat = session.category || 'General';
+            categoryFrequency[cat] = (categoryFrequency[cat] || 0) + 1;
+        });
+
+        // Sort by frequency
+        const trending = Object.entries(categoryFrequency)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+
+        trending.forEach(([category, count]) => {
+            const resources = this.resourceDatabase[category] || [];
+            resources.slice(0, 2).forEach(resource => {
+                recommendations.push({
+                    type: 'trending',
+                    title: resource.title,
+                    description: `Hot topic this week in ${category}`,
+                    url: resource.url,
+                    category: category,
+                    priority: 'medium',
+                    icon: '🔥',
+                    reason: `${count} sessions this week`
+                });
+            });
+        });
+
+        return recommendations.slice(0, 6);
+    }
+
+    // Generate recommendations to fill knowledge gaps
+    generateGapFillerRecs(gaps, profile) {
+        const recommendations = [];
+
+        gaps.forEach(gap => {
+            const resources = this.resourceDatabase[gap.category] || [];
+            
+            recommendations.push({
+                type: 'gap',
+                title: `Strengthen ${gap.category}`,
+                description: gap.recommendation,
+                category: gap.category,
+                priority: 'high',
+                icon: '📈',
+                currentLevel: gap.currentLevel,
+                reason: gap.gap
+            });
+
+            // Add specific resources for the gap
+            resources.slice(0, 2).forEach(resource => {
+                recommendations.push({
+                    type: 'gap_resource',
+                    title: resource.title,
+                    description: `Resource to improve your ${gap.category} skills`,
+                    url: resource.url,
+                    category: gap.category,
+                    priority: 'medium',
+                    icon: '📚',
+                    reason: `Currently at ${gap.currentLevel} level`
+                });
+            });
+        });
+
+        // Add suggestions for unexplored areas
+        const exploredCategories = new Set(profile.areas.map(a => a.category));
+        Object.keys(this.resourceDatabase).forEach(category => {
+            if (!exploredCategories.has(category)) {
+                recommendations.push({
+                    type: 'explore',
+                    title: `Explore ${category}`,
+                    description: `You haven't explored this area yet`,
+                    category: category,
+                    priority: 'low',
+                    icon: '🔍',
+                    reason: 'Unexplored territory'
+                });
+            }
+        });
+
+        return recommendations.slice(0, 8);
+    }
+
+    // Generate advanced recommendations for leveling up
+    generateAdvancedRecs(profile) {
+        const recommendations = [];
+
+        profile.areas.filter(a => a.level !== 'Novice').forEach(area => {
+            const nextLevel = this.getNextLevel(area.level);
+            const skillTree = this.skillTrees[area.category];
+            
+            if (skillTree) {
+                const currentLevelIndex = ['Novice', 'Beginner', 'Intermediate', 'Advanced', 'Expert'].indexOf(area.level);
+                const nextSkills = skillTree[currentLevelIndex + 1]?.skills || [];
+
+                nextSkills.forEach(skill => {
+                    recommendations.push({
+                        type: 'level_up',
+                        title: `Learn ${skill}`,
+                        description: `Advance from ${area.level} to ${nextLevel} in ${area.category}`,
+                        category: area.category,
+                        priority: 'high',
+                        icon: '⬆️',
+                        currentLevel: area.level,
+                        targetLevel: nextLevel,
+                        reason: `Next step in your ${area.category} journey`
+                    });
+                });
+            }
+
+            // Add advanced resources
+            const advancedResources = this.getAdvancedResources(area.category);
+            advancedResources.forEach(resource => {
+                recommendations.push({
+                    type: 'advanced_resource',
+                    title: resource.title,
+                    description: resource.description || `Advanced ${area.category} resource`,
+                    url: resource.url,
+                    category: area.category,
+                    priority: 'medium',
+                    icon: '🚀',
+                    reason: `For ${area.level}+ learners`
+                });
+            });
+        });
+
+        return recommendations.slice(0, 8);
+    }
+
+    getResourcesForLevel(resources, level) {
+        // For now, return all resources - could be enhanced with level metadata
+        return resources;
+    }
+
+    getNextLevel(currentLevel) {
+        const levels = ['Novice', 'Beginner', 'Intermediate', 'Advanced', 'Expert'];
+        const index = levels.indexOf(currentLevel);
+        return levels[Math.min(index + 1, levels.length - 1)];
+    }
+
+    getAdvancedResources(category) {
+        const advancedResources = {
+            'Programming': [
+                { title: 'System Design Primer', url: 'https://github.com/donnemartin/system-design-primer', description: 'Learn large-scale system design' },
+                { title: 'Design Patterns', url: 'https://refactoring.guru/design-patterns', description: 'Master software design patterns' }
+            ],
+            'Data Science': [
+                { title: 'Deep Learning Book', url: 'https://www.deeplearningbook.org/', description: 'Comprehensive deep learning theory' },
+                { title: 'MLOps Guide', url: 'https://ml-ops.org/', description: 'Production ML best practices' }
+            ],
+            'Web Development': [
+                { title: 'Web Performance', url: 'https://web.dev/learn/', description: 'Advanced web performance techniques' },
+                { title: 'Patterns.dev', url: 'https://patterns.dev/', description: 'Modern web development patterns' }
+            ],
+            'Machine Learning': [
+                { title: 'Papers With Code', url: 'https://paperswithcode.com/', description: 'Latest ML research implementations' },
+                { title: 'Distill.pub', url: 'https://distill.pub/', description: 'Clear explanations of ML concepts' }
+            ]
+        };
+
+        return advancedResources[category] || [];
+    }
 }

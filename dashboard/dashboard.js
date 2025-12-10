@@ -25,6 +25,9 @@ class DashboardController {
             page: 1,
             pageSize: 15
         };
+
+        // Export settings
+        this.selectedExportRange = 'all';
         
         this.init();
     }
@@ -201,6 +204,97 @@ class DashboardController {
             this.historyFilters.date = e.target.value;
             this.historyFilters.page = 1;
             this.loadHistory();
+        });
+
+        document.getElementById('clearFilters')?.addEventListener('click', () => {
+            this.clearHistoryFilters();
+        });
+
+        // History PDF download - open modal
+        document.getElementById('downloadHistoryPdf')?.addEventListener('click', () => {
+            this.openExportModal();
+        });
+
+        // Export modal controls
+        document.getElementById('closeExportModal')?.addEventListener('click', () => {
+            this.closeExportModal();
+        });
+
+        document.getElementById('cancelExport')?.addEventListener('click', () => {
+            this.closeExportModal();
+        });
+
+        // Export option buttons
+        document.querySelectorAll('.export-option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.export-option-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.selectedExportRange = btn.dataset.range;
+                // Clear custom dates when preset is selected
+                document.getElementById('exportStartDate').value = '';
+                document.getElementById('exportEndDate').value = '';
+            });
+        });
+
+        // Custom date inputs for export
+        document.getElementById('exportStartDate')?.addEventListener('change', () => {
+            document.querySelectorAll('.export-option-btn').forEach(b => b.classList.remove('active'));
+            this.selectedExportRange = 'custom';
+        });
+
+        document.getElementById('exportEndDate')?.addEventListener('change', () => {
+            document.querySelectorAll('.export-option-btn').forEach(b => b.classList.remove('active'));
+            this.selectedExportRange = 'custom';
+        });
+
+        // Generate PDF button
+        document.getElementById('generatePdf')?.addEventListener('click', () => {
+            this.generatePdfReport();
+        });
+
+        // Delete history modal
+        document.getElementById('deleteHistoryBtn')?.addEventListener('click', () => {
+            this.openDeleteModal();
+        });
+
+        document.getElementById('closeDeleteModal')?.addEventListener('click', () => {
+            this.closeDeleteModal();
+        });
+
+        // Delete by time range
+        document.querySelectorAll('.delete-option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const range = btn.dataset.range;
+                this.deleteHistoryByRange(range);
+            });
+        });
+
+        // Custom date range delete
+        document.getElementById('deleteCustomRange')?.addEventListener('click', () => {
+            const startDate = document.getElementById('deleteStartDate').value;
+            const endDate = document.getElementById('deleteEndDate').value;
+            if (startDate && endDate) {
+                this.deleteHistoryByDateRange(startDate, endDate);
+            }
+        });
+
+        // Select all history items
+        document.getElementById('selectAllHistory')?.addEventListener('change', (e) => {
+            this.toggleSelectAllHistory(e.target.checked);
+        });
+
+        // Delete selected items
+        document.getElementById('deleteSelectedBtn')?.addEventListener('click', () => {
+            this.deleteSelectedHistory();
+        });
+
+        // Recommendation tabs
+        document.querySelectorAll('.rec-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.rec-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.loadRecommendationsByType(tab.dataset.tab);
+            });
         });
     }
 
@@ -951,6 +1045,176 @@ class DashboardController {
         this.loadWeeklySummary();
         
         this.loadCuratedResources();
+
+        // Load knowledge profile and learning paths
+        this.loadKnowledgeProfile();
+        this.loadLearningPaths();
+    }
+
+    async loadRecommendationsByType(type) {
+        const container = document.getElementById('fullRecommendations');
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading-state"><i class="ri-loader-4-line spin"></i> Loading recommendations...</div>';
+
+        try {
+            const recs = await this.recommendations.getRecommendationsByType(type);
+            
+            if (recs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">💡</span>
+                        <p>No ${type} recommendations available yet. Keep learning!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = recs.map(rec => `
+                <a href="${rec.url || '#'}" 
+                   class="recommendation-item ${rec.type}" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   ${!rec.url ? 'style="cursor: default;"' : ''}>
+                    <div class="rec-icon">${rec.icon || '📖'}</div>
+                    <div class="rec-content">
+                        <div class="rec-title">
+                            ${rec.title}
+                            ${rec.url ? '<i class="ri-external-link-line external-link"></i>' : ''}
+                        </div>
+                        <div class="rec-desc">${rec.description}</div>
+                        ${rec.reason ? `<div class="rec-reason"><i class="ri-information-line"></i> ${rec.reason}</div>` : ''}
+                        <div class="rec-meta">
+                            <span class="rec-tag ${rec.type}">${rec.type || 'Suggestion'}</span>
+                            ${rec.category ? `<span class="rec-category">${rec.category}</span>` : ''}
+                            ${rec.currentLevel ? `<span class="rec-level">${rec.currentLevel}</span>` : ''}
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading recommendations by type:', error);
+            container.innerHTML = `
+                <div class="error-state">
+                    <span class="error-icon">⚠️</span>
+                    <p>Failed to load recommendations. Please try again.</p>
+                </div>
+            `;
+        }
+    }
+
+    async loadKnowledgeProfile() {
+        const container = document.getElementById('knowledgeAreas');
+        const levelBadge = document.getElementById('overallKnowledgeLevel');
+        
+        if (!container) return;
+
+        try {
+            const profile = await this.storage.getKnowledgeProfile();
+
+            // Update overall level badge
+            if (levelBadge) {
+                levelBadge.textContent = profile.overallLevel;
+                levelBadge.className = `knowledge-badge ${profile.overallLevel.toLowerCase()}`;
+            }
+
+            if (profile.areas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">📊</span>
+                        <p>Start learning to build your knowledge profile!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = profile.areas.map(area => {
+                const levelColors = {
+                    'Novice': 'var(--text-tertiary)',
+                    'Beginner': 'var(--info)',
+                    'Intermediate': 'var(--warning)',
+                    'Advanced': 'var(--success)',
+                    'Expert': 'var(--accent-primary)'
+                };
+                const color = levelColors[area.level] || 'var(--accent-primary)';
+                
+                return `
+                    <div class="knowledge-area-item">
+                        <div class="knowledge-area-header">
+                            <span class="knowledge-area-name">
+                                ${getCategoryIcon(area.category)} ${area.category}
+                            </span>
+                            <span class="knowledge-area-level" style="background: ${color}20; color: ${color}">
+                                ${area.level}
+                            </span>
+                        </div>
+                        <div class="knowledge-progress">
+                            <div class="knowledge-progress-bar" style="width: ${area.progressScore}%; background: ${color}"></div>
+                        </div>
+                        <div class="knowledge-stats">
+                            <span>${area.sessions} sessions</span>
+                            <span>${this.formatDuration(area.totalTime)}</span>
+                            <span>${area.topics} topics</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading knowledge profile:', error);
+        }
+    }
+
+    async loadLearningPaths() {
+        const container = document.getElementById('learningPathsList');
+        if (!container) return;
+
+        try {
+            const paths = await this.storage.getSuggestedLearningPaths();
+
+            if (paths.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">🛤️</span>
+                        <p>Complete more learning sessions to unlock personalized learning paths!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = paths.map(path => {
+                const iconColors = {
+                    'Programming': 'var(--accent-primary)',
+                    'Data Science': 'var(--success)',
+                    'Web Development': 'var(--info)',
+                    'Machine Learning': 'var(--warning)'
+                };
+                const color = iconColors[path.category] || 'var(--accent-primary)';
+                
+                return `
+                    <div class="learning-path-item">
+                        <div class="learning-path-icon" style="background: ${color}20; color: ${color}">
+                            ${getCategoryIcon(path.category)}
+                        </div>
+                        <div class="learning-path-content">
+                            <div class="learning-path-title">${path.name}</div>
+                            <div class="learning-path-desc">${path.description}</div>
+                            <div class="learning-path-progress">
+                                <div class="learning-path-progress-bar">
+                                    <div class="learning-path-progress-fill" style="width: ${path.progress}%"></div>
+                                </div>
+                                <span class="learning-path-progress-text">${path.progress}%</span>
+                            </div>
+                            <div class="learning-path-meta">
+                                <span>Next: ${path.nextStep}</span>
+                                <span class="path-level">${path.level}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading learning paths:', error);
+        }
     }
 
     inferDifficulty(description) {
@@ -1054,15 +1318,18 @@ class DashboardController {
         const endIndex = startIndex + this.historyFilters.pageSize;
         const paginatedSessions = allSessions.slice(startIndex, endIndex);
 
-        // Render history items
+        // Render history items with checkboxes
         container.innerHTML = paginatedSessions.map(session => `
-            <div class="history-item" data-category="${session.category || 'General'}">
-                <div class="history-time">${formatDate(session.timestamp, 'short')}</div>
-                <div class="history-content">
-                    <div class="history-title">${this.truncate(session.title, 50)}</div>
-                    <div class="history-url">${session.domain} • ${session.category || 'General'}</div>
+            <div class="history-item" data-category="${session.category || 'General'}" data-session-id="${session.id}">
+                <input type="checkbox" class="history-item-checkbox" data-session-id="${session.id}" onchange="window.dashboardController.updateDeleteSelectedButton()">
+                <div class="history-item-content">
+                    <div class="history-time">${formatDate(session.timestamp, 'short')}</div>
+                    <div class="history-content">
+                        <div class="history-title">${this.truncate(session.title, 50)}</div>
+                        <div class="history-url">${session.domain} • ${session.category || 'General'}</div>
+                    </div>
+                    <div class="history-duration">${formatTime(session.duration)}</div>
                 </div>
-                <div class="history-duration">${formatTime(session.duration)}</div>
             </div>
         `).join('');
 
@@ -1073,6 +1340,11 @@ class DashboardController {
         } else if (paginationContainer) {
             paginationContainer.innerHTML = `<div class="pagination-info">Showing ${totalSessions} session${totalSessions !== 1 ? 's' : ''}</div>`;
         }
+
+        // Reset select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAllHistory');
+        if (selectAllCheckbox) selectAllCheckbox.checked = false;
+        this.updateDeleteSelectedButton();
     }
 
     renderHistoryPagination(currentPage, totalPages, totalItems) {
@@ -1135,6 +1407,919 @@ class DashboardController {
         if (categoryFilter) categoryFilter.value = '';
         if (dateFilter) dateFilter.value = '';
         this.loadHistory();
+    }
+
+    // Export PDF Modal
+    openExportModal() {
+        const modal = document.getElementById('exportPdfModal');
+        if (modal) {
+            modal.classList.add('active');
+            // Reset to default
+            this.selectedExportRange = 'all';
+            document.querySelectorAll('.export-option-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.export-option-btn[data-range="all"]')?.classList.add('active');
+        }
+    }
+
+    closeExportModal() {
+        const modal = document.getElementById('exportPdfModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    async generatePdfReport() {
+        const generateBtn = document.getElementById('generatePdf');
+        const originalText = generateBtn?.innerHTML || '<i class="ri-file-pdf-line"></i> Generate PDF';
+        
+        try {
+            // Show loading state
+            if (generateBtn) {
+                generateBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Generating...';
+                generateBtn.disabled = true;
+            }
+
+            // Get date range based on selection
+            const now = Date.now();
+            let startTime = 0;
+            let endTime = now;
+
+            // Check for custom date range first
+            const customStart = document.getElementById('exportStartDate')?.value;
+            const customEnd = document.getElementById('exportEndDate')?.value;
+
+            if (customStart && customEnd) {
+                startTime = new Date(customStart).setHours(0, 0, 0, 0);
+                endTime = new Date(customEnd).setHours(23, 59, 59, 999);
+            } else {
+                switch (this.selectedExportRange) {
+                    case 'week':
+                        startTime = now - (7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'month':
+                        startTime = now - (30 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'quarter':
+                        startTime = now - (90 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'year':
+                        startTime = now - (365 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'all':
+                    default:
+                        startTime = 0;
+                        break;
+                }
+            }
+
+            // Get sessions in range
+            const allSessions = await this.storage.getSessions({});
+            const sessions = allSessions.filter(s => s.timestamp >= startTime && s.timestamp <= endTime);
+
+            if (sessions.length === 0) {
+                alert('No history found for the selected time range.');
+                if (generateBtn) {
+                    generateBtn.innerHTML = originalText;
+                    generateBtn.disabled = false;
+                }
+                return;
+            }
+
+            // Get export options
+            const options = {
+                includeSummary: document.getElementById('includeSummary')?.checked ?? true,
+                includeCategories: document.getElementById('includeCategories')?.checked ?? true,
+                includeKnowledge: document.getElementById('includeKnowledge')?.checked ?? true,
+                includeSessions: document.getElementById('includeSessions')?.checked ?? true,
+                includeCharts: document.getElementById('includeCharts')?.checked ?? true
+            };
+
+            // Get knowledge profile if needed
+            let knowledgeProfile = null;
+            if (options.includeKnowledge) {
+                knowledgeProfile = await this.storage.getKnowledgeProfile();
+            }
+
+            // Generate filename with date
+            const dateStr = new Date().toISOString().split('T')[0];
+            const rangeText = this.selectedExportRange || 'all';
+            const filename = `SupriAI_Learning_Report_${rangeText}_${dateStr}`;
+
+            // Generate decorated PDF content
+            const pdfContent = this.generateDecoratedPdfContent(sessions, options, knowledgeProfile, startTime, endTime);
+
+            // Try html2pdf first, fallback to HTML download
+            if (typeof html2pdf !== 'undefined') {
+                await this.generateWithHtml2Pdf(pdfContent, filename);
+            } else {
+                // Fallback: Download as HTML file that can be printed to PDF
+                this.downloadAsHtml(pdfContent, filename);
+            }
+
+            // Reset button state
+            if (generateBtn) {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }
+
+            this.closeExportModal();
+            this.showNotification('Report downloaded successfully!', 'success');
+
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            
+            // Try fallback method
+            try {
+                const allSessions = await this.storage.getSessions({});
+                const pdfContent = this.generateDecoratedPdfContent(allSessions, {
+                    includeSummary: true,
+                    includeCategories: true,
+                    includeKnowledge: false,
+                    includeSessions: true,
+                    includeCharts: false
+                }, null, 0, Date.now());
+                
+                const dateStr = new Date().toISOString().split('T')[0];
+                this.downloadAsHtml(pdfContent, `SupriAI_Report_${dateStr}`);
+                
+                if (generateBtn) {
+                    generateBtn.innerHTML = originalText;
+                    generateBtn.disabled = false;
+                }
+                this.closeExportModal();
+                this.showNotification('Report downloaded as HTML (open and print as PDF)', 'info');
+            } catch (fallbackError) {
+                console.error('Fallback also failed:', fallbackError);
+                alert('Failed to generate report. Please try again.');
+                if (generateBtn) {
+                    generateBtn.innerHTML = originalText;
+                    generateBtn.disabled = false;
+                }
+            }
+        }
+    }
+
+    async generateWithHtml2Pdf(htmlContent, filename) {
+        return new Promise((resolve, reject) => {
+            try {
+                // Create a temporary container directly in the body
+                const container = document.createElement('div');
+                container.id = 'pdf-export-container';
+                container.style.cssText = 'position: absolute; left: 0; top: 0; width: 900px; background: white; z-index: 99999; visibility: hidden;';
+                
+                // Add styles and content directly
+                container.innerHTML = `
+                    <style>
+                        #pdf-export-container * { margin: 0; padding: 0; box-sizing: border-box; }
+                        #pdf-export-container { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+                        #pdf-export-container .report-container { max-width: 900px; margin: 0 auto; background: white; }
+                        #pdf-export-container .report-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; }
+                        #pdf-export-container .report-logo { font-size: 48px; margin-bottom: 10px; }
+                        #pdf-export-container .report-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+                        #pdf-export-container .report-subtitle { font-size: 16px; opacity: 0.9; }
+                        #pdf-export-container .report-date-range { margin-top: 20px; padding: 10px 24px; background: rgba(255,255,255,0.2); border-radius: 30px; display: inline-block; font-size: 14px; }
+                        #pdf-export-container .summary-section { padding: 40px; background: #f8f9fc; }
+                        #pdf-export-container .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+                        #pdf-export-container .summary-card { background: white; padding: 24px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 4px solid #667eea; }
+                        #pdf-export-container .summary-card:nth-child(2) { border-top-color: #10b981; }
+                        #pdf-export-container .summary-card:nth-child(3) { border-top-color: #f59e0b; }
+                        #pdf-export-container .summary-card:nth-child(4) { border-top-color: #6366f1; }
+                        #pdf-export-container .summary-icon { font-size: 32px; margin-bottom: 12px; }
+                        #pdf-export-container .summary-value { font-size: 28px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+                        #pdf-export-container .summary-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+                        #pdf-export-container .section { padding: 40px; border-bottom: 1px solid #eee; }
+                        #pdf-export-container .section-title { font-size: 22px; font-weight: 600; color: #1a1a2e; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+                        #pdf-export-container .section-title-icon { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+                        #pdf-export-container .category-list { display: flex; flex-direction: column; gap: 12px; }
+                        #pdf-export-container .category-item { display: flex; align-items: center; padding: 16px 20px; background: #f8f9fc; border-radius: 10px; }
+                        #pdf-export-container .category-rank { width: 32px; height: 32px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; margin-right: 16px; }
+                        #pdf-export-container .category-info { flex: 1; }
+                        #pdf-export-container .category-name { font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+                        #pdf-export-container .category-stats { font-size: 13px; color: #666; }
+                        #pdf-export-container .category-progress { width: 120px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+                        #pdf-export-container .category-progress-bar { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; }
+                        #pdf-export-container .sessions-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+                        #pdf-export-container .sessions-table th { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 16px; text-align: left; font-weight: 600; }
+                        #pdf-export-container .sessions-table td { padding: 12px 16px; border-bottom: 1px solid #eee; }
+                        #pdf-export-container .sessions-table tr:nth-child(even) { background: #f8f9fc; }
+                        #pdf-export-container .session-category-badge { padding: 4px 10px; background: #667eea20; color: #667eea; border-radius: 20px; font-size: 11px; font-weight: 500; }
+                        #pdf-export-container .report-footer { padding: 30px 40px; background: #1a1a2e; color: white; text-align: center; }
+                        #pdf-export-container .footer-logo { font-size: 24px; margin-bottom: 8px; }
+                        #pdf-export-container .footer-text { font-size: 13px; opacity: 0.7; }
+                        #pdf-export-container .footer-date { margin-top: 12px; font-size: 12px; opacity: 0.5; }
+                    </style>
+                `;
+                
+                // Parse and append body content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const reportContainer = doc.querySelector('.report-container');
+                
+                if (reportContainer) {
+                    container.appendChild(reportContainer.cloneNode(true));
+                } else {
+                    // Fallback - use entire body
+                    const bodyContent = doc.body.innerHTML;
+                    const div = document.createElement('div');
+                    div.innerHTML = bodyContent;
+                    container.appendChild(div);
+                }
+                
+                document.body.appendChild(container);
+
+                // Make visible for rendering
+                setTimeout(() => {
+                    container.style.visibility = 'visible';
+                }, 100);
+
+                // Wait for DOM to fully render
+                setTimeout(async () => {
+                    try {
+                        const element = container.querySelector('.report-container') || container;
+                        
+                        console.log('PDF Element found:', !!element);
+                        console.log('PDF Element innerHTML length:', element.innerHTML.length);
+                        
+                        if (!element || element.innerHTML.trim().length < 100) {
+                            throw new Error('Report content is empty or too short');
+                        }
+
+                        const pdfOptions = {
+                            margin: [10, 10, 10, 10],
+                            filename: `${filename}.pdf`,
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { 
+                                scale: 2,
+                                useCORS: true,
+                                logging: false,
+                                backgroundColor: '#ffffff',
+                                width: 900,
+                                windowWidth: 900
+                            },
+                            jsPDF: { 
+                                unit: 'mm', 
+                                format: 'a4', 
+                                orientation: 'portrait' 
+                            },
+                            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+                        };
+
+                        await html2pdf().set(pdfOptions).from(element).save();
+                        
+                        // Cleanup
+                        document.body.removeChild(container);
+                        resolve();
+                    } catch (err) {
+                        console.error('html2pdf generation error:', err);
+                        // Cleanup on error
+                        if (container.parentNode) document.body.removeChild(container);
+                        reject(err);
+                    }
+                }, 1000);
+            } catch (err) {
+                console.error('html2pdf setup error:', err);
+                reject(err);
+            }
+        });
+    }
+
+    downloadAsHtml(htmlContent, filename) {
+        // Create a complete HTML document with print-ready styling
+        const fullHtml = htmlContent.replace('</head>', `
+            <style>
+                @media print {
+                    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                }
+            </style>
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                };
+            </script>
+        </head>`);
+
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    generateDecoratedPdfContent(sessions, options, knowledgeProfile, startTime, endTime) {
+        // Calculate stats
+        const totalTime = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
+        const categories = [...new Set(sessions.map(s => s.category).filter(Boolean))];
+        const domains = [...new Set(sessions.map(s => s.domain).filter(Boolean))];
+        const avgEngagement = sessions.length > 0 
+            ? Math.round(sessions.reduce((sum, s) => sum + (s.engagementScore || 0), 0) / sessions.length) 
+            : 0;
+
+        // Date range text
+        const dateRangeText = startTime === 0 
+            ? 'All Time' 
+            : `${new Date(startTime).toLocaleDateString()} - ${new Date(endTime).toLocaleDateString()}`;
+
+        // Category stats
+        const categoryStats = {};
+        sessions.forEach(s => {
+            const cat = s.category || 'General';
+            if (!categoryStats[cat]) {
+                categoryStats[cat] = { sessions: 0, time: 0, engagement: 0 };
+            }
+            categoryStats[cat].sessions++;
+            categoryStats[cat].time += s.duration || 0;
+            categoryStats[cat].engagement += s.engagementScore || 0;
+        });
+
+        // Sort categories by time
+        const sortedCategories = Object.entries(categoryStats)
+            .map(([name, stats]) => ({ 
+                name, 
+                ...stats, 
+                avgEngagement: stats.sessions > 0 ? Math.round(stats.engagement / stats.sessions) : 0 
+            }))
+            .sort((a, b) => b.time - a.time);
+
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SupriAI Learning Report - ${dateRangeText}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .report-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+        }
+        
+        /* Header */
+        .report-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .report-logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .report-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .report-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .report-date-range {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 30px;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        /* Summary Cards */
+        .summary-section {
+            padding: 40px;
+            background: #f8f9fc;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .summary-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-top: 4px solid #667eea;
+        }
+        .summary-card:nth-child(2) { border-top-color: #10b981; }
+        .summary-card:nth-child(3) { border-top-color: #f59e0b; }
+        .summary-card:nth-child(4) { border-top-color: #6366f1; }
+        .summary-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        .summary-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .summary-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Section styles */
+        .section {
+            padding: 40px;
+            border-bottom: 1px solid #eee;
+        }
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-title-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        /* Category Breakdown */
+        .category-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .category-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: #f8f9fc;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .category-rank {
+            width: 32px;
+            height: 32px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            margin-right: 16px;
+        }
+        .category-info {
+            flex: 1;
+        }
+        .category-name {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+        .category-stats {
+            font-size: 13px;
+            color: #666;
+        }
+        .category-progress {
+            width: 120px;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .category-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        
+        /* Knowledge Profile */
+        .knowledge-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .knowledge-card {
+            background: #f8f9fc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .knowledge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .knowledge-category {
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+        .knowledge-level {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .level-novice { background: #e5e7eb; color: #666; }
+        .level-beginner { background: #dbeafe; color: #2563eb; }
+        .level-intermediate { background: #fef3c7; color: #d97706; }
+        .level-advanced { background: #d1fae5; color: #059669; }
+        .level-expert { background: #ede9fe; color: #7c3aed; }
+        .knowledge-progress-bar {
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .knowledge-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+        }
+        .knowledge-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Sessions Table */
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .sessions-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 16px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .sessions-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+        }
+        .sessions-table tr:nth-child(even) {
+            background: #f8f9fc;
+        }
+        .sessions-table tr:hover {
+            background: #f0f4ff;
+        }
+        .session-category-badge {
+            padding: 4px 10px;
+            background: #667eea20;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        /* Footer */
+        .report-footer {
+            padding: 30px 40px;
+            background: #1a1a2e;
+            color: white;
+            text-align: center;
+        }
+        .footer-logo {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .footer-text {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+        .footer-date {
+            margin-top: 12px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+        
+        /* Print styles */
+        @media print {
+            body { background: white; }
+            .report-container { box-shadow: none; }
+            .section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="report-logo">🧠</div>
+            <div class="report-title">Learning Analytics Report</div>
+            <div class="report-subtitle">Powered by SupriAI - Your Intelligent Learning Companion</div>
+            <div class="report-date-range">📅 ${dateRangeText}</div>
+        </div>
+        
+        ${options.includeSummary ? `
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-icon">📚</div>
+                    <div class="summary-value">${sessions.length}</div>
+                    <div class="summary-label">Learning Sessions</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">⏱️</div>
+                    <div class="summary-value">${this.formatDuration(totalTime)}</div>
+                    <div class="summary-label">Total Learning Time</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">🏷️</div>
+                    <div class="summary-value">${categories.length}</div>
+                    <div class="summary-label">Categories Explored</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-icon">🎯</div>
+                    <div class="summary-value">${avgEngagement}%</div>
+                    <div class="summary-label">Avg Engagement</div>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+        
+        ${options.includeCategories ? `
+        <!-- Category Breakdown -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">📊</div>
+                Category Breakdown
+            </div>
+            <div class="category-list">
+                ${sortedCategories.slice(0, 8).map((cat, i) => {
+                    const maxTime = sortedCategories[0]?.time || 1;
+                    const percentage = Math.round((cat.time / maxTime) * 100);
+                    return `
+                    <div class="category-item">
+                        <div class="category-rank">${i + 1}</div>
+                        <div class="category-info">
+                            <div class="category-name">${cat.name}</div>
+                            <div class="category-stats">${cat.sessions} sessions • ${this.formatDuration(cat.time)} • ${cat.avgEngagement}% engagement</div>
+                        </div>
+                        <div class="category-progress">
+                            <div class="category-progress-bar" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${options.includeKnowledge && knowledgeProfile ? `
+        <!-- Knowledge Profile -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">🎓</div>
+                Knowledge Profile (Overall: ${knowledgeProfile.overallLevel})
+            </div>
+            <div class="knowledge-grid">
+                ${knowledgeProfile.areas.slice(0, 6).map(area => `
+                    <div class="knowledge-card">
+                        <div class="knowledge-header">
+                            <span class="knowledge-category">${area.category}</span>
+                            <span class="knowledge-level level-${area.level.toLowerCase()}">${area.level}</span>
+                        </div>
+                        <div class="knowledge-progress-bar">
+                            <div class="knowledge-progress-fill" style="width: ${area.progressScore}%"></div>
+                        </div>
+                        <div class="knowledge-meta">
+                            ${area.sessions} sessions • ${area.topics} topics • ${this.formatDuration(area.totalTime)}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${options.includeSessions ? `
+        <!-- Session History -->
+        <div class="section">
+            <div class="section-title">
+                <div class="section-title-icon">📋</div>
+                Recent Sessions ${sessions.length > 50 ? '(Top 50)' : ''}
+            </div>
+            <table class="sessions-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sessions.slice(0, 50).map(s => `
+                        <tr>
+                            <td>${new Date(s.timestamp).toLocaleDateString()}</td>
+                            <td>${this.truncate(s.title || 'Untitled', 45)}</td>
+                            <td><span class="session-category-badge">${s.category || 'General'}</span></td>
+                            <td>${this.formatDuration(s.duration || 0)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ${sessions.length > 50 ? `<p style="padding: 16px; color: #666; font-size: 13px;">Showing 50 of ${sessions.length} sessions</p>` : ''}
+        </div>
+        ` : ''}
+        
+        <!-- Footer -->
+        <div class="report-footer">
+            <div class="footer-logo">🧠 SupriAI</div>
+            <div class="footer-text">AI-Powered Learning Recommendation & Analytics System</div>
+            <div class="footer-date">Report generated on ${new Date().toLocaleString()}</div>
+        </div>
+    </div>
+</body>
+</html>
+        `;
+    }
+
+    formatDuration(ms) {
+        const seconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        
+        if (hours > 0) {
+            return `${hours}h ${minutes % 60}m`;
+        } else if (minutes > 0) {
+            return `${minutes}m`;
+        } else {
+            return `${seconds}s`;
+        }
+    }
+
+    // Delete History Modal
+    openDeleteModal() {
+        const modal = document.getElementById('deleteHistoryModal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    }
+
+    closeDeleteModal() {
+        const modal = document.getElementById('deleteHistoryModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    async deleteHistoryByRange(range) {
+        const now = Date.now();
+        let cutoffTime;
+
+        switch (range) {
+            case 'hour':
+                cutoffTime = now - (60 * 60 * 1000);
+                break;
+            case 'day':
+                cutoffTime = now - (24 * 60 * 60 * 1000);
+                break;
+            case 'week':
+                cutoffTime = now - (7 * 24 * 60 * 60 * 1000);
+                break;
+            case 'month':
+                cutoffTime = now - (30 * 24 * 60 * 60 * 1000);
+                break;
+            case 'year':
+                cutoffTime = now - (365 * 24 * 60 * 60 * 1000);
+                break;
+            case 'all':
+                if (!confirm('Are you sure you want to delete ALL history? This cannot be undone.')) {
+                    return;
+                }
+                cutoffTime = 0;
+                break;
+            default:
+                return;
+        }
+
+        try {
+            const sessions = await this.storage.getSessions({});
+            const toDelete = sessions.filter(s => s.timestamp >= cutoffTime);
+            
+            if (toDelete.length === 0) {
+                alert('No sessions found in this time range.');
+                return;
+            }
+
+            if (!confirm(`Delete ${toDelete.length} session(s) from the ${range === 'all' ? 'entire history' : 'last ' + range}?`)) {
+                return;
+            }
+
+            for (const session of toDelete) {
+                await this.storage.delete('sessions', session.id);
+            }
+
+            this.closeDeleteModal();
+            await this.loadHistory();
+            await this.loadDashboard();
+            
+            alert(`Successfully deleted ${toDelete.length} session(s).`);
+        } catch (error) {
+            console.error('Error deleting history:', error);
+            alert('Failed to delete history. Please try again.');
+        }
+    }
+
+    async deleteHistoryByDateRange(startDate, endDate) {
+        try {
+            const startTime = new Date(startDate).setHours(0, 0, 0, 0);
+            const endTime = new Date(endDate).setHours(23, 59, 59, 999);
+
+            const sessions = await this.storage.getSessions({});
+            const toDelete = sessions.filter(s => s.timestamp >= startTime && s.timestamp <= endTime);
+
+            if (toDelete.length === 0) {
+                alert('No sessions found in this date range.');
+                return;
+            }
+
+            if (!confirm(`Delete ${toDelete.length} session(s) from ${startDate} to ${endDate}?`)) {
+                return;
+            }
+
+            for (const session of toDelete) {
+                await this.storage.delete('sessions', session.id);
+            }
+
+            this.closeDeleteModal();
+            await this.loadHistory();
+            await this.loadDashboard();
+
+            alert(`Successfully deleted ${toDelete.length} session(s).`);
+        } catch (error) {
+            console.error('Error deleting history:', error);
+            alert('Failed to delete history. Please try again.');
+        }
+    }
+
+    toggleSelectAllHistory(selected) {
+        const checkboxes = document.querySelectorAll('.history-item-checkbox');
+        checkboxes.forEach(cb => cb.checked = selected);
+        this.updateDeleteSelectedButton();
+    }
+
+    updateDeleteSelectedButton() {
+        const checkboxes = document.querySelectorAll('.history-item-checkbox:checked');
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+        if (deleteBtn) {
+            deleteBtn.disabled = checkboxes.length === 0;
+            deleteBtn.innerHTML = checkboxes.length > 0 
+                ? `<i class="ri-delete-bin-line"></i> Delete Selected (${checkboxes.length})`
+                : `<i class="ri-delete-bin-line"></i> Delete Selected`;
+        }
+    }
+
+    async deleteSelectedHistory() {
+        const checkboxes = document.querySelectorAll('.history-item-checkbox:checked');
+        const sessionIds = Array.from(checkboxes).map(cb => cb.dataset.sessionId);
+
+        if (sessionIds.length === 0) {
+            alert('No sessions selected.');
+            return;
+        }
+
+        if (!confirm(`Delete ${sessionIds.length} selected session(s)?`)) {
+            return;
+        }
+
+        try {
+            for (const id of sessionIds) {
+                await this.storage.delete('sessions', id);
+            }
+
+            document.getElementById('selectAllHistory').checked = false;
+            await this.loadHistory();
+            await this.loadDashboard();
+
+            alert(`Successfully deleted ${sessionIds.length} session(s).`);
+        } catch (error) {
+            console.error('Error deleting sessions:', error);
+            alert('Failed to delete selected sessions.');
+        }
     }
 
     async loadProductivityInsights() {

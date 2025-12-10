@@ -681,4 +681,177 @@ export class StorageManager {
             request.onerror = () => reject(request.error);
         });
     }
+
+    // Knowledge Level Tracking
+    async getKnowledgeProfile() {
+        const sessions = await this.getAll('sessions');
+        const topics = await this.getTopTopics(50);
+        
+        // Calculate knowledge areas based on time spent and engagement
+        const knowledgeAreas = {};
+        
+        sessions.forEach(session => {
+            const category = session.category || 'General';
+            if (!knowledgeAreas[category]) {
+                knowledgeAreas[category] = {
+                    category,
+                    totalTime: 0,
+                    sessions: 0,
+                    avgEngagement: 0,
+                    topics: new Set(),
+                    firstSeen: session.timestamp,
+                    lastSeen: session.timestamp,
+                    progressScore: 0
+                };
+            }
+            
+            const area = knowledgeAreas[category];
+            area.totalTime += session.duration || 0;
+            area.sessions++;
+            area.avgEngagement += session.engagementScore || 0;
+            if (session.topics) {
+                session.topics.forEach(t => area.topics.add(t));
+            }
+            if (session.timestamp < area.firstSeen) area.firstSeen = session.timestamp;
+            if (session.timestamp > area.lastSeen) area.lastSeen = session.timestamp;
+        });
+
+        // Calculate progress scores and levels
+        const results = Object.values(knowledgeAreas).map(area => {
+            area.avgEngagement = area.sessions > 0 ? area.avgEngagement / area.sessions : 0;
+            area.topics = area.topics.size;
+            
+            // Calculate progress score (0-100)
+            // Based on: time spent (40%), topics covered (30%), engagement (20%), consistency (10%)
+            const timeScore = Math.min(100, (area.totalTime / 3600000) * 10); // 10 hours = 100%
+            const topicsScore = Math.min(100, area.topics * 10); // 10 topics = 100%
+            const engagementScore = area.avgEngagement;
+            const daysActive = Math.ceil((area.lastSeen - area.firstSeen) / (24 * 60 * 60 * 1000)) || 1;
+            const consistencyScore = Math.min(100, (area.sessions / daysActive) * 50);
+            
+            area.progressScore = Math.round(
+                (timeScore * 0.4) + 
+                (topicsScore * 0.3) + 
+                (engagementScore * 0.2) + 
+                (consistencyScore * 0.1)
+            );
+            
+            // Determine level
+            if (area.progressScore >= 80) {
+                area.level = 'Expert';
+            } else if (area.progressScore >= 60) {
+                area.level = 'Advanced';
+            } else if (area.progressScore >= 40) {
+                area.level = 'Intermediate';
+            } else if (area.progressScore >= 20) {
+                area.level = 'Beginner';
+            } else {
+                area.level = 'Novice';
+            }
+            
+            return area;
+        }).sort((a, b) => b.progressScore - a.progressScore);
+
+        // Calculate overall level
+        const totalProgress = results.reduce((sum, a) => sum + a.progressScore, 0);
+        const avgProgress = results.length > 0 ? totalProgress / results.length : 0;
+        
+        let overallLevel;
+        if (avgProgress >= 70) overallLevel = 'Expert';
+        else if (avgProgress >= 50) overallLevel = 'Advanced';
+        else if (avgProgress >= 30) overallLevel = 'Intermediate';
+        else overallLevel = 'Beginner';
+
+        return {
+            overallLevel,
+            averageProgress: Math.round(avgProgress),
+            areas: results,
+            totalCategories: results.length,
+            strongestArea: results[0] || null,
+            weakestArea: results[results.length - 1] || null
+        };
+    }
+
+    // Get learning gaps for recommendations
+    async getLearningGaps() {
+        const profile = await this.getKnowledgeProfile();
+        const gaps = [];
+
+        // Identify categories with low progress but high interest (many sessions)
+        profile.areas.forEach(area => {
+            if (area.progressScore < 50 && area.sessions > 5) {
+                gaps.push({
+                    category: area.category,
+                    currentLevel: area.level,
+                    progressScore: area.progressScore,
+                    gap: 'Need more depth - time spent vs sessions ratio is low',
+                    recommendation: `Focus on longer, more focused ${area.category} sessions`
+                });
+            }
+        });
+
+        // Identify stale knowledge (not studied recently)
+        const monthAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+        profile.areas.forEach(area => {
+            if (area.lastSeen < monthAgo && area.progressScore > 20) {
+                gaps.push({
+                    category: area.category,
+                    currentLevel: area.level,
+                    progressScore: area.progressScore,
+                    gap: 'Knowledge may be getting stale',
+                    recommendation: `Review ${area.category} to maintain your ${area.level} level`
+                });
+            }
+        });
+
+        return gaps;
+    }
+
+    // Get suggested learning paths based on history
+    async getSuggestedLearningPaths() {
+        const profile = await this.getKnowledgeProfile();
+        const paths = [];
+
+        const categoryPaths = {
+            'Programming': {
+                name: 'Full Stack Developer Path',
+                description: 'Master programming from basics to advanced concepts',
+                steps: ['Fundamentals', 'Data Structures', 'Web Development', 'Backend', 'Databases']
+            },
+            'Data Science': {
+                name: 'Data Science Mastery Path',
+                description: 'From statistics to machine learning and beyond',
+                steps: ['Statistics', 'Python/R', 'Data Analysis', 'Machine Learning', 'Deep Learning']
+            },
+            'Web Development': {
+                name: 'Modern Web Developer Path',
+                description: 'Build beautiful and functional web applications',
+                steps: ['HTML/CSS', 'JavaScript', 'React/Vue', 'Node.js', 'Full Stack']
+            },
+            'Machine Learning': {
+                name: 'AI/ML Engineer Path',
+                description: 'Become an AI/ML expert',
+                steps: ['Math Foundations', 'ML Basics', 'Deep Learning', 'NLP/CV', 'MLOps']
+            }
+        };
+
+        profile.areas.slice(0, 3).forEach(area => {
+            const pathConfig = categoryPaths[area.category];
+            if (pathConfig) {
+                const progressPercent = Math.min(100, area.progressScore);
+                const currentStep = Math.floor((progressPercent / 100) * pathConfig.steps.length);
+                
+                paths.push({
+                    ...pathConfig,
+                    category: area.category,
+                    progress: progressPercent,
+                    currentStep: currentStep,
+                    nextStep: pathConfig.steps[currentStep] || pathConfig.steps[pathConfig.steps.length - 1],
+                    level: area.level
+                });
+            }
+        });
+
+        return paths;
+    }
 }

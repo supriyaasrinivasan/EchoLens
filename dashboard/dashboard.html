@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/theme.css">
     <link rel="stylesheet" href="dashboard.css">
     <script src="../js/chart.min.js"></script>
+    <script src="../js/html2pdf.min.js"></script>
 </head>
 <body>
     <div class="dashboard-container">
@@ -349,14 +350,32 @@
                 <section id="recommendations" class="section">
                     <div class="recommendations-grid">
                         
+                        <!-- Knowledge Level Overview -->
+                        <div class="card knowledge-overview">
+                            <div class="card-header">
+                                <h3><i class="ri-bar-chart-grouped-line"></i> Your Knowledge Profile</h3>
+                                <span class="knowledge-badge" id="overallKnowledgeLevel">Beginner</span>
+                            </div>
+                            <div class="knowledge-areas" id="knowledgeAreas">
+                                <!-- Dynamically populated -->
+                            </div>
+                        </div>
+
+                        <!-- AI-Powered Recommendations -->
                         <div class="card">
                             <div class="card-header">
-                                <h3><i class="ri-focus-3-line"></i> Personalized For You</h3>
+                                <h3><i class="ri-robot-line"></i> AI-Powered Recommendations</h3>
                                 <button class="refresh-btn" id="refreshRecs"><i class="ri-refresh-line"></i> Refresh</button>
                             </div>
                             <div class="rec-info-banner">
-                                <i class="ri-information-line"></i>
-                                <span>Click any recommendation to open the official learning resource</span>
+                                <i class="ri-magic-line"></i>
+                                <span>Personalized based on your learning history and knowledge gaps</span>
+                            </div>
+                            <div class="recommendation-tabs">
+                                <button class="rec-tab active" data-tab="personalized">For You</button>
+                                <button class="rec-tab" data-tab="trending">Trending</button>
+                                <button class="rec-tab" data-tab="gaps">Fill Gaps</button>
+                                <button class="rec-tab" data-tab="advanced">Level Up</button>
                             </div>
                             <div class="full-recommendations-list" id="fullRecommendations">
                                 
@@ -370,6 +389,16 @@
                             </div>
                             <div class="resources-list" id="resourcesList">
                                 
+                            </div>
+                        </div>
+
+                        <!-- Learning Path Suggestions -->
+                        <div class="card learning-paths">
+                            <div class="card-header">
+                                <h3><i class="ri-road-map-line"></i> Suggested Learning Paths</h3>
+                            </div>
+                            <div class="learning-paths-list" id="learningPathsList">
+                                <!-- Dynamically populated -->
                             </div>
                         </div>
 
@@ -391,11 +420,31 @@
                         <div class="card">
                             <div class="card-header">
                                 <h3><i class="ri-history-line"></i> Learning History</h3>
+                                <div class="history-actions">
+                                    <button class="btn btn-secondary" id="downloadHistoryPdf" title="Download as PDF">
+                                        <i class="ri-file-pdf-line"></i> Export PDF
+                                    </button>
+                                    <button class="btn btn-danger" id="deleteHistoryBtn" title="Delete history">
+                                        <i class="ri-delete-bin-line"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="history-toolbar">
                                 <div class="history-filters">
                                     <select id="categoryFilter">
                                         <option value="">All Categories</option>
                                     </select>
                                     <input type="date" id="dateFilter">
+                                    <button class="btn btn-sm" id="clearFilters">Clear</button>
+                                </div>
+                                <div class="history-selection">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="selectAllHistory">
+                                        <span>Select All</span>
+                                    </label>
+                                    <button class="btn btn-sm btn-danger" id="deleteSelectedBtn" disabled>
+                                        <i class="ri-delete-bin-line"></i> Delete Selected
+                                    </button>
                                 </div>
                             </div>
                             <div class="history-list" id="historyList">
@@ -403,6 +452,128 @@
                             </div>
                             <div class="pagination" id="historyPagination">
                                 
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delete History Modal -->
+                    <div class="modal" id="deleteHistoryModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3><i class="ri-delete-bin-line"></i> Delete History</h3>
+                                <button class="modal-close" id="closeDeleteModal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Select the time range to delete:</p>
+                                <div class="delete-options">
+                                    <button class="delete-option-btn" data-range="hour">
+                                        <i class="ri-time-line"></i>
+                                        <span>Last Hour</span>
+                                    </button>
+                                    <button class="delete-option-btn" data-range="day">
+                                        <i class="ri-calendar-line"></i>
+                                        <span>Last 24 Hours</span>
+                                    </button>
+                                    <button class="delete-option-btn" data-range="week">
+                                        <i class="ri-calendar-check-line"></i>
+                                        <span>Last Week</span>
+                                    </button>
+                                    <button class="delete-option-btn" data-range="month">
+                                        <i class="ri-calendar-2-line"></i>
+                                        <span>Last Month</span>
+                                    </button>
+                                    <button class="delete-option-btn" data-range="year">
+                                        <i class="ri-calendar-todo-line"></i>
+                                        <span>Last Year</span>
+                                    </button>
+                                    <button class="delete-option-btn danger" data-range="all">
+                                        <i class="ri-delete-bin-7-line"></i>
+                                        <span>All History</span>
+                                    </button>
+                                </div>
+                                <div class="delete-custom-range">
+                                    <h4>Or select custom range:</h4>
+                                    <div class="date-range-inputs">
+                                        <input type="date" id="deleteStartDate" placeholder="Start Date">
+                                        <span>to</span>
+                                        <input type="date" id="deleteEndDate" placeholder="End Date">
+                                        <button class="btn btn-danger" id="deleteCustomRange">Delete Range</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Export PDF Modal -->
+                    <div class="modal" id="exportPdfModal">
+                        <div class="modal-content export-modal">
+                            <div class="modal-header">
+                                <h3><i class="ri-file-pdf-line"></i> Export Learning History</h3>
+                                <button class="modal-close" id="closeExportModal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <p>Select the time range for your PDF report:</p>
+                                <div class="export-options">
+                                    <button class="export-option-btn" data-range="week">
+                                        <i class="ri-calendar-check-line"></i>
+                                        <span>Last Week</span>
+                                    </button>
+                                    <button class="export-option-btn" data-range="month">
+                                        <i class="ri-calendar-2-line"></i>
+                                        <span>Last Month</span>
+                                    </button>
+                                    <button class="export-option-btn" data-range="quarter">
+                                        <i class="ri-calendar-event-line"></i>
+                                        <span>Last 3 Months</span>
+                                    </button>
+                                    <button class="export-option-btn" data-range="year">
+                                        <i class="ri-calendar-todo-line"></i>
+                                        <span>Last Year</span>
+                                    </button>
+                                    <button class="export-option-btn active" data-range="all">
+                                        <i class="ri-history-line"></i>
+                                        <span>All Time</span>
+                                    </button>
+                                </div>
+                                <div class="export-custom-range">
+                                    <h4>Or select custom date range:</h4>
+                                    <div class="date-range-inputs">
+                                        <input type="date" id="exportStartDate">
+                                        <span>to</span>
+                                        <input type="date" id="exportEndDate">
+                                    </div>
+                                </div>
+                                <div class="export-options-section">
+                                    <h4>Include in report:</h4>
+                                    <div class="export-checkboxes">
+                                        <label class="export-checkbox">
+                                            <input type="checkbox" id="includeSummary" checked>
+                                            <span>Summary Statistics</span>
+                                        </label>
+                                        <label class="export-checkbox">
+                                            <input type="checkbox" id="includeCategories" checked>
+                                            <span>Category Breakdown</span>
+                                        </label>
+                                        <label class="export-checkbox">
+                                            <input type="checkbox" id="includeKnowledge" checked>
+                                            <span>Knowledge Profile</span>
+                                        </label>
+                                        <label class="export-checkbox">
+                                            <input type="checkbox" id="includeSessions" checked>
+                                            <span>Session Details</span>
+                                        </label>
+                                        <label class="export-checkbox">
+                                            <input type="checkbox" id="includeCharts" checked>
+                                            <span>Charts & Graphs</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="export-actions">
+                                    <button class="btn btn-secondary" id="cancelExport">Cancel</button>
+                                    <button class="btn btn-primary" id="generatePdf">
+                                        <i class="ri-file-pdf-line"></i> Generate PDF
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
