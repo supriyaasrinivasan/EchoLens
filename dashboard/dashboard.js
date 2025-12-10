@@ -18,6 +18,14 @@ class DashboardController {
         this.currentTimeRange = 'week';
         this.charts = {};
         
+        // History filters state
+        this.historyFilters = {
+            category: '',
+            date: '',
+            page: 1,
+            pageSize: 15
+        };
+        
         this.init();
     }
 
@@ -122,8 +130,10 @@ class DashboardController {
         };
         
         const headerInfo = titles[sectionId] || { title: 'Dashboard', subtitle: '' };
-        document.getElementById('sectionTitle').textContent = headerInfo.title;
-        document.getElementById('headerSubtitle').textContent = headerInfo.subtitle;
+        const sectionTitleEl = document.getElementById('sectionTitle');
+        const headerSubtitleEl = document.getElementById('headerSubtitle');
+        if (sectionTitleEl) sectionTitleEl.textContent = headerInfo.title;
+        if (headerSubtitleEl) headerSubtitleEl.textContent = headerInfo.subtitle;
     }
 
     setupEventListeners() {
@@ -179,6 +189,19 @@ class DashboardController {
         document.getElementById('topicSearch')?.addEventListener('input', (e) => {
             this.filterTopics(e.target.value);
         });
+
+        // History filter event listeners
+        document.getElementById('categoryFilter')?.addEventListener('change', (e) => {
+            this.historyFilters.category = e.target.value;
+            this.historyFilters.page = 1;
+            this.loadHistory();
+        });
+
+        document.getElementById('dateFilter')?.addEventListener('change', (e) => {
+            this.historyFilters.date = e.target.value;
+            this.historyFilters.page = 1;
+            this.loadHistory();
+        });
     }
 
     async loadDashboard() {
@@ -223,8 +246,8 @@ class DashboardController {
             
             await this.loadHistory();
             
-            const stats = await this.storage.getTodayStats();
-            document.getElementById('sidebarStreak').textContent = stats.streak || 0;
+            // Load productivity insights (includes streak)
+            await this.loadProductivityInsights();
             
         } catch (error) {
             console.error('Error loading dashboard:', error);
@@ -329,10 +352,15 @@ class DashboardController {
     updateOverviewStats(analytics) {
         const { overview } = analytics;
         
-        document.getElementById('totalTime').textContent = formatTime(overview.totalTime);
-        document.getElementById('totalTopics').textContent = overview.uniqueTopics;
-        document.getElementById('avgEngagement').textContent = `${overview.avgEngagement}%`;
-        document.getElementById('activeDays').textContent = overview.uniqueDays;
+        const totalTimeEl = document.getElementById('totalTime');
+        const totalTopicsEl = document.getElementById('totalTopics');
+        const avgEngagementEl = document.getElementById('avgEngagement');
+        const currentStreakEl = document.getElementById('currentStreak');
+        
+        if (totalTimeEl) totalTimeEl.textContent = formatTime(overview.totalTime);
+        if (totalTopicsEl) totalTopicsEl.textContent = overview.uniqueTopics;
+        if (avgEngagementEl) avgEngagementEl.textContent = `${overview.avgEngagement}%`;
+        // currentStreak will be updated by loadProductivityInsights
     }
 
     renderTrendChart(trends) {
@@ -976,23 +1004,59 @@ class DashboardController {
     }
 
     async loadHistory() {
-        const sessions = await this.storage.getSessions({ limit: 50 });
         const container = document.getElementById('historyList');
+        const paginationContainer = document.getElementById('historyPagination');
         
         if (!container) return;
 
-        if (sessions.length === 0) {
+        // Build filter options
+        const filterOptions = {};
+        
+        if (this.historyFilters.category) {
+            filterOptions.category = this.historyFilters.category;
+        }
+        
+        if (this.historyFilters.date) {
+            filterOptions.startDate = this.historyFilters.date;
+            filterOptions.endDate = this.historyFilters.date;
+        }
+
+        // Get all sessions for filtering
+        const allSessions = await this.storage.getSessions(filterOptions);
+        
+        // Populate category filter (only on initial load)
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter && !this.historyFilters.category && !this.historyFilters.date) {
+            const allSessionsForCategories = await this.storage.getSessions({});
+            const categories = [...new Set(allSessionsForCategories.map(s => s.category).filter(Boolean))].sort();
+            const currentValue = categoryFilter.value;
+            categoryFilter.innerHTML = '<option value="">All Categories</option>' +
+                categories.map(c => `<option value="${c}"${c === currentValue ? ' selected' : ''}>${c}</option>`).join('');
+        }
+
+        // Handle empty state
+        if (allSessions.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
                     <span class="empty-icon">📜</span>
-                    <p>No learning history yet</p>
+                    <p>${this.historyFilters.category || this.historyFilters.date ? 'No matching history found' : 'No learning history yet'}</p>
+                    ${this.historyFilters.category || this.historyFilters.date ? '<button class="clear-filters-btn" onclick="window.dashboardController.clearHistoryFilters()">Clear Filters</button>' : ''}
                 </div>
             `;
+            if (paginationContainer) paginationContainer.innerHTML = '';
             return;
         }
 
-        container.innerHTML = sessions.map(session => `
-            <div class="history-item">
+        // Calculate pagination
+        const totalSessions = allSessions.length;
+        const totalPages = Math.ceil(totalSessions / this.historyFilters.pageSize);
+        const startIndex = (this.historyFilters.page - 1) * this.historyFilters.pageSize;
+        const endIndex = startIndex + this.historyFilters.pageSize;
+        const paginatedSessions = allSessions.slice(startIndex, endIndex);
+
+        // Render history items
+        container.innerHTML = paginatedSessions.map(session => `
+            <div class="history-item" data-category="${session.category || 'General'}">
                 <div class="history-time">${formatDate(session.timestamp, 'short')}</div>
                 <div class="history-content">
                     <div class="history-title">${this.truncate(session.title, 50)}</div>
@@ -1002,11 +1066,133 @@ class DashboardController {
             </div>
         `).join('');
 
-        const categories = [...new Set(sessions.map(s => s.category).filter(Boolean))];
+        // Render pagination
+        if (paginationContainer && totalPages > 1) {
+            paginationContainer.innerHTML = this.renderHistoryPagination(this.historyFilters.page, totalPages, totalSessions);
+            this.setupPaginationListeners();
+        } else if (paginationContainer) {
+            paginationContainer.innerHTML = `<div class="pagination-info">Showing ${totalSessions} session${totalSessions !== 1 ? 's' : ''}</div>`;
+        }
+    }
+
+    renderHistoryPagination(currentPage, totalPages, totalItems) {
+        let html = '<div class="pagination-controls">';
+        
+        html += `<button class="pagination-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+            <i class="ri-arrow-left-s-line"></i> Prev
+        </button>`;
+
+        html += '<div class="pagination-pages">';
+        const maxVisible = 5;
+        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let end = Math.min(totalPages, start + maxVisible - 1);
+        
+        if (end - start + 1 < maxVisible) {
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        if (start > 1) {
+            html += `<button class="pagination-btn" data-page="1">1</button>`;
+            if (start > 2) html += '<span class="pagination-ellipsis">...</span>';
+        }
+
+        for (let i = start; i <= end; i++) {
+            html += `<button class="pagination-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+
+        if (end < totalPages) {
+            if (end < totalPages - 1) html += '<span class="pagination-ellipsis">...</span>';
+            html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
+        }
+
+        html += '</div>';
+        html += `<button class="pagination-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+            Next <i class="ri-arrow-right-s-line"></i>
+        </button>`;
+        html += '</div>';
+        html += `<div class="pagination-info">Page ${currentPage} of ${totalPages} (${totalItems} total)</div>`;
+
+        return html;
+    }
+
+    setupPaginationListeners() {
+        document.querySelectorAll('#historyPagination .pagination-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const page = parseInt(e.currentTarget.dataset.page);
+                if (page && !e.currentTarget.disabled) {
+                    this.historyFilters.page = page;
+                    this.loadHistory();
+                    document.getElementById('historyList')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    }
+
+    clearHistoryFilters() {
+        this.historyFilters = { category: '', date: '', page: 1, pageSize: 15 };
         const categoryFilter = document.getElementById('categoryFilter');
-        if (categoryFilter) {
-            categoryFilter.innerHTML = '<option value="">All Categories</option>' +
-                categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        const dateFilter = document.getElementById('dateFilter');
+        if (categoryFilter) categoryFilter.value = '';
+        if (dateFilter) dateFilter.value = '';
+        this.loadHistory();
+    }
+
+    async loadProductivityInsights() {
+        try {
+            const insights = await this.storage.getProductivityInsights();
+            
+            // Update best learning time
+            const bestLearningTimeEl = document.getElementById('bestLearningTime');
+            if (bestLearningTimeEl) {
+                bestLearningTimeEl.textContent = insights.bestHourFormatted || 'Not enough data';
+            }
+            
+            // Update top category
+            const topCategoryEl = document.getElementById('topCategoryInsight');
+            if (topCategoryEl) {
+                topCategoryEl.textContent = insights.topCategory || 'Learning';
+            }
+            
+            // Update daily average
+            const dailyAverageEl = document.getElementById('dailyAverageInsight');
+            if (dailyAverageEl) {
+                const avgMinutes = Math.round(insights.dailyAverage / 60);
+                if (avgMinutes >= 60) {
+                    dailyAverageEl.textContent = `${Math.floor(avgMinutes / 60)}h ${avgMinutes % 60}m`;
+                } else {
+                    dailyAverageEl.textContent = `${avgMinutes} min`;
+                }
+            }
+            
+            // Update consistency (streak info)
+            const consistencyEl = document.getElementById('consistencyInsight');
+            if (consistencyEl) {
+                const streak = insights.streak || 0;
+                if (streak >= 7) {
+                    consistencyEl.textContent = `🔥 ${streak} day streak!`;
+                } else if (streak >= 3) {
+                    consistencyEl.textContent = `${streak} days in a row`;
+                } else if (streak > 0) {
+                    consistencyEl.textContent = `${streak} day streak`;
+                } else {
+                    consistencyEl.textContent = 'Start learning today!';
+                }
+            }
+            
+            // Update sidebar streak
+            const sidebarStreak = document.getElementById('sidebarStreak');
+            if (sidebarStreak) {
+                sidebarStreak.textContent = insights.streak || 0;
+            }
+            
+            // Update main streak card
+            const currentStreakEl = document.getElementById('currentStreak');
+            if (currentStreakEl) {
+                currentStreakEl.textContent = insights.streak || 0;
+            }
+            
+        } catch (error) {
+            console.error('Error loading productivity insights:', error);
         }
     }
 
@@ -1398,7 +1584,7 @@ class DashboardController {
             
             this.d3viz.createCategoryPieChart(pieData, 'categoryPieChart');
         } catch (error) {
-            console.log('D3 visualization skipped (using Chart.js instead)');
+            // D3 not available - Chart.js handles this visualization
         }
     }
 
@@ -1414,7 +1600,7 @@ class DashboardController {
             
             this.d3viz.createTimelineChart(timelineData, 'timelineChart');
         } catch (error) {
-            console.log('D3 visualization skipped (using Chart.js instead)');
+            // D3 not available - Chart.js handles this visualization
         }
     }
 
@@ -1492,6 +1678,10 @@ class DashboardController {
     }
 }
 
+// Global reference for inline event handlers
+let dashboardControllerInstance = null;
+
 document.addEventListener('DOMContentLoaded', () => {
-    new DashboardController();
+    dashboardControllerInstance = new DashboardController();
+    window.dashboardController = dashboardControllerInstance;
 });

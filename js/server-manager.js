@@ -2,6 +2,23 @@ const LOCAL_SERVER = 'http://localhost:5000';
 let serverProcess = null;
 let isServerRunning = false;
 
+// Safe notification helper - notifications may not be available in all contexts
+function safeNotify(title, message, priority = 1) {
+    try {
+        if (typeof chrome !== 'undefined' && chrome.notifications && chrome.notifications.create) {
+            chrome.notifications.create({
+                type: 'basic',
+                iconUrl: 'icons/icon128.png',
+                title: title,
+                message: message,
+                priority: priority
+            });
+        }
+    } catch (e) {
+        // Silent fail - notifications not available
+    }
+}
+
 async function checkServer() {
     try {
         const response = await fetch(`${LOCAL_SERVER}/api/health`, {
@@ -25,19 +42,10 @@ async function startLocalServer() {
     }
 
     try {
-        const isWindows = navigator.userAgent.indexOf('Windows') !== -1;
-        const scriptPath = isWindows ? 'start-backend.bat' : 'start-backend.sh';
-        
         console.log('SupriAI: Attempting to start backend server...');
         console.log('Please run start-backend.bat manually if auto-start fails');
         
-        chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icons/icon128.png',
-            title: 'SupriAI Backend',
-            message: 'Starting backend server... Please wait.',
-            priority: 1
-        });
+        safeNotify('SupriAI Backend', 'Starting backend server... Please wait.');
 
         await new Promise(resolve => setTimeout(resolve, 3000));
         
@@ -47,24 +55,12 @@ async function startLocalServer() {
             if (running) {
                 isServerRunning = true;
                 console.log('SupriAI: Backend server started successfully');
-                chrome.notifications.create({
-                    type: 'basic',
-                    iconUrl: 'icons/icon128.png',
-                    title: 'SupriAI Backend',
-                    message: 'Backend server is ready!',
-                    priority: 1
-                });
+                safeNotify('SupriAI Backend', 'Backend server is ready!');
                 return true;
             }
         }
 
-        chrome.notifications.create({
-            type: 'basic',
-            iconUrl: 'icons/icon128.png',
-            title: 'SupriAI Backend',
-            message: 'Please run start-backend.bat manually to start the server.',
-            priority: 2
-        });
+        safeNotify('SupriAI Backend', 'Please run start-backend.bat manually to start the server.', 2);
         
         return false;
     } catch (error) {
@@ -73,25 +69,31 @@ async function startLocalServer() {
     }
 }
 
-chrome.runtime.onInstalled.addListener(async () => {
-    console.log('SupriAI: Extension installed/updated');
-    await startLocalServer();
-});
+function checkRuntimeAvailable() {
+    return typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onInstalled;
+}
 
-chrome.runtime.onStartup.addListener(async () => {
-    console.log('SupriAI: Browser started');
-    await startLocalServer();
-});
+if (checkRuntimeAvailable()) {
+    chrome.runtime.onInstalled.addListener(async () => {
+        console.log('SupriAI: Extension installed/updated');
+        await startLocalServer();
+    });
 
-setInterval(async () => {
-    const running = await checkServer();
-    if (!running && isServerRunning) {
-        isServerRunning = false;
-        console.log('SupriAI: Backend server stopped');
-    } else if (running && !isServerRunning) {
-        isServerRunning = true;
-        console.log('SupriAI: Backend server detected');
-    }
-}, 30000);
+    chrome.runtime.onStartup.addListener(async () => {
+        console.log('SupriAI: Browser started');
+        await startLocalServer();
+    });
+
+    setInterval(async () => {
+        const running = await checkServer();
+        if (!running && isServerRunning) {
+            isServerRunning = false;
+            console.log('SupriAI: Backend server stopped');
+        } else if (running && !isServerRunning) {
+            isServerRunning = true;
+            console.log('SupriAI: Backend server detected');
+        }
+    }, 30000);
+}
 
 export { checkServer, startLocalServer, LOCAL_SERVER };

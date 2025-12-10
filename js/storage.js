@@ -167,33 +167,65 @@ export class StorageManager {
     }
 
     async calculateStreak() {
-        const summaries = await this.getAll('dailySummaries');
-        summaries.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        let streak = 0;
+        // Get all sessions to build a map of active days
+        const sessions = await this.getAll('sessions');
+        const dailySummaries = await this.getAll('dailySummaries');
+        
+        // Build a set of all dates with learning activity
+        const activeDays = new Set();
+        
+        // Add dates from sessions
+        sessions.forEach(session => {
+            if (session.date && session.duration > 0) {
+                activeDays.add(session.date);
+            }
+        });
+        
+        // Add dates from daily summaries
+        dailySummaries.forEach(summary => {
+            if (summary.date && summary.totalTime > 0) {
+                activeDays.add(summary.date);
+            }
+        });
+        
+        if (activeDays.size === 0) {
+            return 0;
+        }
+        
+        // Get today and yesterday in YYYY-MM-DD format
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-
-        for (let i = 0; i < summaries.length; i++) {
-            const summaryDate = new Date(summaries[i].date);
-            summaryDate.setHours(0, 0, 0, 0);
+        const todayStr = today.toISOString().split('T')[0];
+        
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        // Check if streak should start from today or yesterday
+        let streak = 0;
+        let currentDate = new Date(today);
+        
+        // If today has no activity, check if yesterday has activity
+        if (!activeDays.has(todayStr)) {
+            if (!activeDays.has(yesterdayStr)) {
+                return 0;
+            }
+            // Start counting from yesterday
+            currentDate = new Date(yesterday);
+        }
+        
+        // Count consecutive days going backwards
+        while (streak < 365) {
+            const dateStr = currentDate.toISOString().split('T')[0];
             
-            const expectedDate = new Date(today);
-            expectedDate.setDate(expectedDate.getDate() - i);
-            
-            if (summaryDate.getTime() === expectedDate.getTime() && summaries[i].totalTime > 0) {
+            if (activeDays.has(dateStr)) {
                 streak++;
-            } else if (i === 0 && summaryDate.getTime() < expectedDate.getTime()) {
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                if (summaryDate.getTime() === yesterday.getTime()) {
-                    streak++;
-                }
+                currentDate.setDate(currentDate.getDate() - 1);
             } else {
                 break;
             }
         }
-
+        
         return streak;
     }
 
@@ -252,6 +284,95 @@ export class StorageManager {
         return summaries
             .filter(s => new Date(s.date) >= cutoff)
             .sort((a, b) => new Date(a.date) - new Date(b.date));
+    }
+
+    async getProductivityInsights() {
+        const sessions = await this.getAll('sessions');
+        const today = new Date();
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        
+        const recentSessions = sessions.filter(s => new Date(s.timestamp) >= weekAgo);
+        
+        // Calculate best learning hours
+        const hourlyStats = {};
+        recentSessions.forEach(s => {
+            const hour = new Date(s.timestamp).getHours();
+            if (!hourlyStats[hour]) {
+                hourlyStats[hour] = { totalTime: 0, sessions: 0, avgEngagement: 0 };
+            }
+            hourlyStats[hour].totalTime += s.duration || 0;
+            hourlyStats[hour].sessions++;
+            hourlyStats[hour].avgEngagement += s.engagementScore || 0;
+        });
+        
+        // Find best hour
+        let bestHour = null;
+        let maxTime = 0;
+        Object.entries(hourlyStats).forEach(([hour, stats]) => {
+            stats.avgEngagement = stats.sessions > 0 ? stats.avgEngagement / stats.sessions : 0;
+            if (stats.totalTime > maxTime) {
+                maxTime = stats.totalTime;
+                bestHour = parseInt(hour);
+            }
+        });
+        
+        // Calculate category breakdown
+        const categoryStats = {};
+        recentSessions.forEach(s => {
+            const cat = s.category || 'General';
+            if (!categoryStats[cat]) {
+                categoryStats[cat] = { totalTime: 0, sessions: 0 };
+            }
+            categoryStats[cat].totalTime += s.duration || 0;
+            categoryStats[cat].sessions++;
+        });
+        
+        // Get top category
+        const topCategory = Object.entries(categoryStats)
+            .sort((a, b) => b[1].totalTime - a[1].totalTime)[0];
+        
+        // Calculate daily average
+        const dailyTotals = {};
+        recentSessions.forEach(s => {
+            if (!dailyTotals[s.date]) dailyTotals[s.date] = 0;
+            dailyTotals[s.date] += s.duration || 0;
+        });
+        const daysWithActivity = Object.keys(dailyTotals).length;
+        const totalTime = Object.values(dailyTotals).reduce((a, b) => a + b, 0);
+        const dailyAverage = daysWithActivity > 0 ? totalTime / daysWithActivity : 0;
+        
+        // Calculate consistency score (days active / 7)
+        const consistencyScore = Math.round((daysWithActivity / 7) * 100);
+        
+        // Get streak
+        const streak = await this.calculateStreak();
+        
+        // Get total learning days
+        const allSessions = sessions;
+        const allDays = new Set();
+        allSessions.forEach(s => {
+            if (s.date) allDays.add(s.date);
+        });
+        const totalDays = allDays.size;
+        
+        return {
+            bestHour: bestHour,
+            bestLearningHour: bestHour,
+            bestHourFormatted: bestHour !== null ? 
+                `${bestHour % 12 || 12}${bestHour < 12 ? 'AM' : 'PM'} - ${(bestHour + 1) % 12 || 12}${(bestHour + 1) < 12 ? 'AM' : 'PM'}` : 
+                'Not enough data',
+            topCategory: topCategory ? topCategory[0] : 'None',
+            topCategoryTime: topCategory ? topCategory[1].totalTime : 0,
+            dailyAverage,
+            weeklyTotal: totalTime,
+            sessionsThisWeek: recentSessions.length,
+            consistencyScore,
+            streak,
+            totalDays,
+            categoryBreakdown: categoryStats,
+            hourlyDistribution: hourlyStats
+        };
     }
 
     async recordNavigation(navData) {

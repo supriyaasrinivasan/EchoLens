@@ -1,5 +1,10 @@
 
 
+/**
+ * D3 Visualizations Stub
+ * This is a placeholder class - the project uses Chart.js for visualizations.
+ * This class provides empty implementations to prevent errors if D3 methods are called.
+ */
 export class D3Visualizations {
     constructor() {
         this.colors = {
@@ -16,46 +21,46 @@ export class D3Visualizations {
         };
         
         this.d3Available = false;
-        console.warn('D3.js visualizations disabled - using Chart.js instead');
+        // Silent initialization - Chart.js is the primary visualization library
     }
 
     createCategoryPieChart(data, containerId) {
-        console.log('D3 pie chart skipped - using Chart.js alternative');
+        // Handled by Chart.js in dashboard
         return null;
     }
 
     createTimelineChart(data, containerId) {
-        console.log('D3 timeline chart skipped - using Chart.js alternative');
+        // Handled by Chart.js in dashboard
         return null;
     }
 
     createNetworkGraph(data, containerId) {
-        console.log('D3 network graph skipped');
+        // Not implemented - using Chart.js alternatives
         return null;
     }
 
     createHeatmap(data, containerId) {
-        console.log('D3 heatmap skipped');
+        // Not implemented - using Chart.js alternatives
         return null;
     }
 
     createSankeyDiagram(data, containerId) {
-        console.log('D3 sankey diagram skipped');
+        // Not implemented - using Chart.js alternatives
         return null;
     }
 
     createForceDirectedGraph(data, containerId) {
-        console.log('D3 force directed graph skipped');
+        // Not implemented - using Chart.js alternatives
         return null;
     }
 
     updateTheme(isDark) {
-        // Theme update placeholder - D3 not loaded
+        // Theme handled by CSS variables
         return null;
     }
 
     destroy() {
-        // Cleanup placeholder - D3 not loaded
+        // No cleanup needed
         return null;
     }
 }

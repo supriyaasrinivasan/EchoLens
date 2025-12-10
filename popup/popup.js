@@ -97,38 +97,71 @@ class PopupController {
 
     async loadCurrentPage() {
         try {
-            if (!isExtensionContextValid()) {
-                throw new Error('Extension context invalidated');
-            }
-
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
-            if (tab && tab.url) {
-                const response = await safeSendMessage({ 
-                    type: 'GET_CURRENT_SESSION',
-                    tabId: tab.id 
-                });
+            if (!tab || !tab.url) {
+                this.showCurrentPageFallback('No active tab', 'Open a webpage to track');
+                return;
+            }
 
-                if (response && response.session) {
-                    const session = response.session;
-                    document.getElementById('currentPageTitle').textContent = session.title || tab.title || 'Unknown Page';
-                    document.getElementById('currentPageCategory').textContent = session.category || 'Analyzing...';
-                    
-                    const engagement = session.engagementScore || 0;
-                    document.getElementById('engagementMeter').style.width = `${engagement}%`;
-                    document.getElementById('engagementValue').textContent = `${Math.round(engagement)}%`;
-                    
-                    this.updateFocusDots(session.focusLevel || 0);
-                } else {
-                    document.getElementById('currentPageTitle').textContent = tab.title || 'Unknown Page';
-                    document.getElementById('currentPageCategory').textContent = 'Not tracked';
+            // Check if this is a trackable page
+            const isTrackable = tab.url.startsWith('http://') || tab.url.startsWith('https://');
+            
+            if (!isTrackable) {
+                this.showCurrentPageFallback(tab.title || 'Browser Page', 'Not trackable');
+                return;
+            }
+
+            // Try to get session info from background script
+            if (isExtensionContextValid()) {
+                try {
+                    const response = await safeSendMessage({ 
+                        type: 'GET_CURRENT_SESSION',
+                        tabId: tab.id 
+                    });
+
+                    if (response && response.session) {
+                        const session = response.session;
+                        document.getElementById('currentPageTitle').textContent = session.title || tab.title || 'Unknown Page';
+                        document.getElementById('currentPageCategory').textContent = session.category || 'Analyzing...';
+                        
+                        const engagement = session.engagementScore || 0;
+                        document.getElementById('engagementMeter').style.width = `${engagement}%`;
+                        document.getElementById('engagementValue').textContent = `${Math.round(engagement)}%`;
+                        
+                        this.updateFocusDots(session.focusLevel || 0);
+                        return;
+                    }
+                } catch (msgError) {
+                    // Background script not responding - show basic info
                 }
             }
+
+            // Fallback: Show basic tab info
+            const domain = new URL(tab.url).hostname.replace('www.', '');
+            document.getElementById('currentPageTitle').textContent = this.truncateText(tab.title || domain, 40);
+            document.getElementById('currentPageCategory').textContent = this.isTracking ? 'Tracking...' : 'Paused';
+            document.getElementById('engagementMeter').style.width = '0%';
+            document.getElementById('engagementValue').textContent = '0%';
+            this.updateFocusDots(0);
+            
         } catch (error) {
             console.error('Error loading current page:', error);
-            document.getElementById('currentPageTitle').textContent = 'Extension Reloaded';
-            document.getElementById('currentPageCategory').textContent = 'Refresh page to track';
+            this.showCurrentPageFallback('Unable to load', 'Try refreshing');
         }
+    }
+
+    showCurrentPageFallback(title, category) {
+        document.getElementById('currentPageTitle').textContent = title;
+        document.getElementById('currentPageCategory').textContent = category;
+        document.getElementById('engagementMeter').style.width = '0%';
+        document.getElementById('engagementValue').textContent = '0%';
+        this.updateFocusDots(0);
+    }
+
+    truncateText(text, maxLength) {
+        if (!text) return '';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     }
 
     updateFocusDots(level) {

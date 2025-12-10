@@ -302,11 +302,11 @@ export class ContentClassifier {
 
     
     async classifyContent(pageData) {
-        return this.classifyWithContent(pageData.url, pageData.title, pageData);
+        return await this.classifyWithContent(pageData.url, pageData.title, pageData);
     }
 
-    classifyWithContent(url, title, pageData) {
-        const baseClassification = this.classifyUrl(url, title);
+    async classifyWithContent(url, title, pageData) {
+        const baseClassification = await this.classifyUrl(url, title);
 
         let contentBoost = 0;
 

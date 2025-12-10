@@ -121,11 +121,51 @@
                                 <span class="stat-label">Avg Engagement</span>
                             </div>
                         </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="ri-calendar-check-line"></i></div>
+                        <div class="stat-card streak-card">
+                            <div class="stat-icon"><i class="ri-fire-line"></i></div>
                             <div class="stat-content">
-                                <span class="stat-value" id="activeDays">0</span>
-                                <span class="stat-label">Active Days</span>
+                                <span class="stat-value" id="currentStreak">0</span>
+                                <span class="stat-label">Day Streak 🔥</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Productivity Insights -->
+                    <div class="insights-row">
+                        <div class="card insights-card">
+                            <div class="card-header">
+                                <h3><i class="ri-brain-line"></i> Productivity Insights</h3>
+                                <span class="insights-badge">This Week</span>
+                            </div>
+                            <div class="insights-grid" id="productivityInsights">
+                                <div class="insight-item">
+                                    <div class="insight-icon"><i class="ri-time-line"></i></div>
+                                    <div class="insight-content">
+                                        <span class="insight-label">Best Learning Time</span>
+                                        <span class="insight-value" id="bestLearningTime">--</span>
+                                    </div>
+                                </div>
+                                <div class="insight-item">
+                                    <div class="insight-icon"><i class="ri-star-line"></i></div>
+                                    <div class="insight-content">
+                                        <span class="insight-label">Top Category</span>
+                                        <span class="insight-value" id="topCategoryInsight">--</span>
+                                    </div>
+                                </div>
+                                <div class="insight-item">
+                                    <div class="insight-icon"><i class="ri-bar-chart-line"></i></div>
+                                    <div class="insight-content">
+                                        <span class="insight-label">Daily Average</span>
+                                        <span class="insight-value" id="dailyAverageInsight">--</span>
+                                    </div>
+                                </div>
+                                <div class="insight-item">
+                                    <div class="insight-icon"><i class="ri-checkbox-circle-line"></i></div>
+                                    <div class="insight-content">
+                                        <span class="insight-label">Consistency</span>
+                                        <span class="insight-value" id="consistencyInsight">--</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -141,14 +181,14 @@
                                 <canvas id="trendChart"></canvas>
                             </div>
                         </div>
-                        <div class="chart-card">
+                        <!-- <div class="chart-card">
                             <div class="chart-header">
                                 <h3><i class="ri-pie-chart-line"></i> Topic Distribution</h3>
                             </div>
                             <div class="chart-container">
                                 <canvas id="topicChart"></canvas>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     
