@@ -473,3 +473,417 @@ class AIAnalysisEngine:
             'is_educational': edu_score >= 0.2,
             'category_scores': category_scores
         }
+
+    # =====================================================
+    # Enhanced AI Functionalities for History Analysis
+    # =====================================================
+    
+    def analyze_history_advanced(self, sessions):
+        """
+        Advanced history analysis with ML-powered insights.
+        Returns comprehensive learning insights from browsing history.
+        """
+        if not sessions:
+            return {
+                'focusArea': 'No data',
+                'peakHours': 'Not determined',
+                'learningPattern': 'Unknown',
+                'recommendedTopic': 'Start learning',
+                'insights': []
+            }
+        
+        insights = {}
+        
+        # 1. Determine Focus Area
+        category_time = defaultdict(int)
+        for session in sessions:
+            category = session.get('category', 'General')
+            duration = session.get('duration', 0)
+            category_time[category] += duration
+        
+        if category_time:
+            focus_area = max(category_time, key=category_time.get)
+            total_time = sum(category_time.values())
+            focus_percentage = (category_time[focus_area] / total_time * 100) if total_time > 0 else 0
+            
+            insights['focusArea'] = focus_area
+            insights['focusAreaChange'] = {
+                'type': 'positive' if focus_percentage >= 50 else 'neutral',
+                'text': f'{focus_percentage:.0f}% of learning time'
+            }
+        
+        # 2. Determine Peak Learning Hours
+        hour_activity = defaultdict(int)
+        for session in sessions:
+            ts = session.get('timestamp')
+            if ts:
+                hour = datetime.fromtimestamp(ts / 1000).hour
+                hour_activity[hour] += 1
+        
+        if hour_activity:
+            peak_hour = max(hour_activity, key=hour_activity.get)
+            if 6 <= peak_hour < 12:
+                peak_time = 'Morning (6AM-12PM)'
+            elif 12 <= peak_hour < 18:
+                peak_time = 'Afternoon (12PM-6PM)'
+            elif 18 <= peak_hour < 22:
+                peak_time = 'Evening (6PM-10PM)'
+            else:
+                peak_time = 'Night (10PM-6AM)'
+            insights['peakHours'] = peak_time
+        
+        # 3. Analyze Learning Pattern
+        pattern = self._analyze_learning_consistency(sessions)
+        insights['learningPattern'] = pattern['pattern_type']
+        insights['patternTrend'] = {
+            'type': pattern['trend'],
+            'text': pattern['description']
+        }
+        
+        # 4. Recommend Next Topic
+        recommended = self._recommend_next_topic(sessions, category_time)
+        insights['recommendedTopic'] = recommended
+        
+        # 5. Generate Additional Insights
+        insights['additionalInsights'] = self._generate_additional_insights(sessions)
+        
+        return insights
+    
+    def _analyze_learning_consistency(self, sessions):
+        """Analyze the consistency of learning patterns."""
+        daily_counts = defaultdict(int)
+        
+        for session in sessions:
+            ts = session.get('timestamp')
+            if ts:
+                date = datetime.fromtimestamp(ts / 1000).strftime('%Y-%m-%d')
+                daily_counts[date] += 1
+        
+        if not daily_counts:
+            return {
+                'pattern_type': 'Unknown',
+                'trend': 'neutral',
+                'description': 'Insufficient data'
+            }
+        
+        counts = list(daily_counts.values())
+        avg_sessions = sum(counts) / len(counts)
+        active_days = len(counts)
+        
+        # Calculate variance
+        variance = sum((c - avg_sessions) ** 2 for c in counts) / len(counts)
+        std_dev = math.sqrt(variance)
+        
+        # Determine pattern type
+        if std_dev < 2 and avg_sessions >= 3:
+            pattern_type = 'Very Consistent'
+            trend = 'positive'
+            description = f'Avg {avg_sessions:.1f} sessions/day'
+        elif std_dev < 4:
+            pattern_type = 'Consistent'
+            trend = 'positive'
+            description = f'{active_days} active days'
+        elif avg_sessions >= 5:
+            pattern_type = 'Intensive Bursts'
+            trend = 'neutral'
+            description = 'High activity with gaps'
+        else:
+            pattern_type = 'Sporadic'
+            trend = 'neutral'
+            description = 'Irregular learning pattern'
+        
+        return {
+            'pattern_type': pattern_type,
+            'trend': trend,
+            'description': description
+        }
+    
+    def _recommend_next_topic(self, sessions, category_time):
+        """Recommend the next topic based on learning patterns."""
+        if not category_time:
+            return 'Start with Web Development'
+        
+        # Find related topics that haven't been explored much
+        topic_relationships = {
+            'programming': ['data_science', 'web_development', 'devops'],
+            'web_development': ['programming', 'devops', 'database'],
+            'data_science': ['programming', 'database', 'security'],
+            'devops': ['programming', 'security', 'database'],
+            'database': ['programming', 'web_development', 'data_science'],
+            'security': ['devops', 'programming', 'database']
+        }
+        
+        # Get current focus
+        focus = max(category_time, key=category_time.get).lower().replace(' ', '_')
+        
+        if focus in topic_relationships:
+            related = topic_relationships[focus]
+            # Find least explored related topic
+            related_times = {t: category_time.get(t, 0) for t in related}
+            recommended = min(related_times, key=related_times.get)
+            return recommended.replace('_', ' ').title()
+        
+        return 'Advanced ' + max(category_time, key=category_time.get)
+    
+    def _generate_additional_insights(self, sessions):
+        """Generate additional learning insights."""
+        insights = []
+        
+        # Total learning time
+        total_duration = sum(s.get('duration', 0) for s in sessions)
+        total_hours = total_duration / 3600
+        insights.append({
+            'label': 'Total Learning Time',
+            'value': f'{total_hours:.1f} hours'
+        })
+        
+        # Unique domains visited
+        domains = set(s.get('domain') for s in sessions if s.get('domain'))
+        insights.append({
+            'label': 'Learning Sources',
+            'value': f'{len(domains)} unique sites'
+        })
+        
+        # Most productive day
+        day_activity = defaultdict(int)
+        for session in sessions:
+            ts = session.get('timestamp')
+            if ts:
+                day = datetime.fromtimestamp(ts / 1000).strftime('%A')
+                day_activity[day] += session.get('duration', 0)
+        
+        if day_activity:
+            best_day = max(day_activity, key=day_activity.get)
+            insights.append({
+                'label': 'Most Productive Day',
+                'value': best_day
+            })
+        
+        return insights
+    
+    def cluster_sessions(self, sessions, n_clusters=5):
+        """
+        Cluster sessions by content similarity using ML.
+        Falls back to category-based clustering if sklearn unavailable.
+        """
+        if not sessions:
+            return {'clusters': [], 'summary': 'No data to cluster'}
+        
+        if SKLEARN_AVAILABLE and len(sessions) >= n_clusters:
+            return self._cluster_sessions_ml(sessions, n_clusters)
+        else:
+            return self._cluster_sessions_basic(sessions)
+    
+    def _cluster_sessions_ml(self, sessions, n_clusters):
+        """ML-powered session clustering using TF-IDF and KMeans."""
+        try:
+            # Prepare text for vectorization
+            texts = []
+            for s in sessions:
+                text_parts = [
+                    s.get('title', ''),
+                    s.get('domain', ''),
+                    s.get('category', ''),
+                    ' '.join(s.get('topics', []) if isinstance(s.get('topics'), list) else [])
+                ]
+                texts.append(' '.join(text_parts))
+            
+            # Vectorize
+            vectorizer = TfidfVectorizer(max_features=200, stop_words='english')
+            tfidf_matrix = vectorizer.fit_transform(texts)
+            
+            # Cluster
+            n_clusters = min(n_clusters, len(sessions))
+            kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+            labels = kmeans.fit_predict(tfidf_matrix)
+            
+            # Organize results
+            clusters = defaultdict(list)
+            for i, label in enumerate(labels):
+                clusters[int(label)].append({
+                    'id': sessions[i].get('id'),
+                    'title': sessions[i].get('title'),
+                    'category': sessions[i].get('category')
+                })
+            
+            # Get cluster keywords
+            feature_names = vectorizer.get_feature_names_out()
+            cluster_keywords = {}
+            for i, center in enumerate(kmeans.cluster_centers_):
+                top_indices = center.argsort()[-5:][::-1]
+                cluster_keywords[i] = [feature_names[idx] for idx in top_indices]
+            
+            return {
+                'clusters': [
+                    {
+                        'id': k,
+                        'sessions': v,
+                        'keywords': cluster_keywords.get(k, []),
+                        'count': len(v)
+                    }
+                    for k, v in clusters.items()
+                ],
+                'method': 'ML (KMeans + TF-IDF)',
+                'summary': f'Found {n_clusters} learning clusters'
+            }
+            
+        except Exception as e:
+            print(f"ML clustering failed: {e}")
+            return self._cluster_sessions_basic(sessions)
+    
+    def _cluster_sessions_basic(self, sessions):
+        """Basic category-based clustering fallback."""
+        clusters = defaultdict(list)
+        
+        for session in sessions:
+            category = session.get('category', 'General')
+            clusters[category].append({
+                'id': session.get('id'),
+                'title': session.get('title'),
+                'category': category
+            })
+        
+        return {
+            'clusters': [
+                {
+                    'id': i,
+                    'name': k,
+                    'sessions': v,
+                    'count': len(v)
+                }
+                for i, (k, v) in enumerate(clusters.items())
+            ],
+            'method': 'Category-based',
+            'summary': f'Grouped into {len(clusters)} categories'
+        }
+    
+    def predict_learning_interests(self, sessions, profile=None):
+        """
+        Predict future learning interests based on patterns.
+        Uses time series analysis and topic co-occurrence.
+        """
+        if not sessions or len(sessions) < 5:
+            return {
+                'predictions': [],
+                'confidence': 'low',
+                'reason': 'Insufficient data for prediction'
+            }
+        
+        # Analyze recent vs older interests
+        mid = len(sessions) // 2
+        recent_sessions = sessions[:mid]
+        older_sessions = sessions[mid:]
+        
+        # Count categories
+        recent_cats = Counter(s.get('category', 'General') for s in recent_sessions)
+        older_cats = Counter(s.get('category', 'General') for s in older_sessions)
+        
+        # Find trending up categories
+        predictions = []
+        all_cats = set(recent_cats.keys()) | set(older_cats.keys())
+        
+        for cat in all_cats:
+            recent_count = recent_cats.get(cat, 0)
+            older_count = older_cats.get(cat, 0)
+            
+            if older_count > 0:
+                growth = (recent_count - older_count) / older_count * 100
+            elif recent_count > 0:
+                growth = 100
+            else:
+                growth = 0
+            
+            if growth > 20:
+                predictions.append({
+                    'topic': cat,
+                    'trend': 'rising',
+                    'growth': f'+{growth:.0f}%',
+                    'confidence': min(0.9, 0.5 + (recent_count / 10))
+                })
+            elif growth < -20 and recent_count > 0:
+                predictions.append({
+                    'topic': cat,
+                    'trend': 'declining',
+                    'growth': f'{growth:.0f}%',
+                    'confidence': min(0.8, 0.4 + (older_count / 10))
+                })
+        
+        # Sort by absolute growth
+        predictions.sort(key=lambda x: abs(float(x['growth'].replace('+', '').replace('%', ''))), reverse=True)
+        
+        return {
+            'predictions': predictions[:5],
+            'confidence': 'high' if len(sessions) > 20 else 'medium',
+            'method': 'Trend analysis',
+            'total_sessions_analyzed': len(sessions)
+        }
+    
+    def generate_learning_summary(self, sessions, period='week'):
+        """
+        Generate a comprehensive learning summary for a time period.
+        """
+        if not sessions:
+            return {
+                'summary': 'No learning activity recorded',
+                'stats': {},
+                'recommendations': []
+            }
+        
+        total_time = sum(s.get('duration', 0) for s in sessions)
+        total_hours = total_time / 3600
+        
+        # Category breakdown
+        category_time = defaultdict(int)
+        for s in sessions:
+            category_time[s.get('category', 'General')] += s.get('duration', 0)
+        
+        top_categories = sorted(category_time.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        # Unique domains
+        domains = list(set(s.get('domain') for s in sessions if s.get('domain')))
+        
+        # Calculate engagement
+        engagements = [s.get('engagement', 0) for s in sessions if s.get('engagement')]
+        avg_engagement = sum(engagements) / len(engagements) if engagements else 0
+        
+        # Generate summary text
+        summary_text = f"This {period}, you spent {total_hours:.1f} hours learning across {len(sessions)} sessions. "
+        if top_categories:
+            summary_text += f"Your primary focus was {top_categories[0][0]}. "
+        if avg_engagement >= 70:
+            summary_text += "Your engagement level was excellent!"
+        elif avg_engagement >= 40:
+            summary_text += "Your engagement level was good."
+        else:
+            summary_text += "Consider focusing more during learning sessions."
+        
+        # Generate recommendations
+        recommendations = []
+        if total_hours < 5:
+            recommendations.append({
+                'type': 'time',
+                'text': 'Try to increase your weekly learning time to at least 5 hours'
+            })
+        if len(top_categories) == 1:
+            recommendations.append({
+                'type': 'diversity',
+                'text': f'Explore topics related to {top_categories[0][0]} for broader knowledge'
+            })
+        if avg_engagement < 50:
+            recommendations.append({
+                'type': 'engagement',
+                'text': 'Try shorter, more focused learning sessions'
+            })
+        
+        return {
+            'summary': summary_text,
+            'stats': {
+                'totalHours': round(total_hours, 1),
+                'sessionsCount': len(sessions),
+                'topCategories': [{'name': c, 'hours': round(t/3600, 1)} for c, t in top_categories],
+                'uniqueSources': len(domains),
+                'avgEngagement': round(avg_engagement, 0)
+            },
+            'recommendations': recommendations,
+            'period': period
+        }

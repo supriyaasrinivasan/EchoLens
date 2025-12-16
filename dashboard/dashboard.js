@@ -23,8 +23,15 @@ class DashboardController {
             category: '',
             date: '',
             page: 1,
-            pageSize: 15
+            pageSize: 15,
+            sortBy: 'timestamp',
+            sortOrder: 'desc',
+            searchQuery: ''
         };
+
+        // AI Analysis state
+        this.aiAnalysisLoading = false;
+        this.aiInsights = null;
 
         // Export settings
         this.selectedExportRange = 'all';
@@ -208,6 +215,52 @@ class DashboardController {
 
         document.getElementById('clearFilters')?.addEventListener('click', () => {
             this.clearHistoryFilters();
+        });
+
+        // DataTable search listener
+        document.getElementById('historySearch')?.addEventListener('input', this.debounce((e) => {
+            this.historyFilters.searchQuery = e.target.value;
+            this.historyFilters.page = 1;
+            this.loadHistory();
+        }, 300));
+
+        // DataTable sort listeners
+        document.querySelectorAll('.datatable th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                const sortBy = th.dataset.sort;
+                if (this.historyFilters.sortBy === sortBy) {
+                    this.historyFilters.sortOrder = this.historyFilters.sortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.historyFilters.sortBy = sortBy;
+                    this.historyFilters.sortOrder = 'desc';
+                }
+                this.loadHistory();
+            });
+        });
+
+        // Page size selector
+        document.getElementById('pageSizeSelect')?.addEventListener('change', (e) => {
+            this.historyFilters.pageSize = parseInt(e.target.value);
+            this.historyFilters.page = 1;
+            this.loadHistory();
+        });
+
+        // Pagination navigation buttons
+        document.getElementById('prevPage')?.addEventListener('click', () => {
+            if (this.historyFilters.page > 1) {
+                this.historyFilters.page--;
+                this.loadHistory();
+            }
+        });
+
+        document.getElementById('nextPage')?.addEventListener('click', () => {
+            this.historyFilters.page++;
+            this.loadHistory();
+        });
+
+        // AI Analyze button
+        document.getElementById('analyzeHistoryBtn')?.addEventListener('click', () => {
+            this.analyzeHistoryWithAI();
         });
 
         // History PDF download - open modal
@@ -1268,10 +1321,12 @@ class DashboardController {
     }
 
     async loadHistory() {
-        const container = document.getElementById('historyList');
+        const tableBody = document.getElementById('historyTableBody');
         const paginationContainer = document.getElementById('historyPagination');
+        const pageNumbers = document.getElementById('pageNumbers');
+        const datatableInfo = document.querySelector('.datatable-info');
         
-        if (!container) return;
+        if (!tableBody) return;
 
         // Build filter options
         const filterOptions = {};
@@ -1286,7 +1341,21 @@ class DashboardController {
         }
 
         // Get all sessions for filtering
-        const allSessions = await this.storage.getSessions(filterOptions);
+        let allSessions = await this.storage.getSessions(filterOptions);
+        
+        // Apply search filter
+        if (this.historyFilters.searchQuery) {
+            const query = this.historyFilters.searchQuery.toLowerCase();
+            allSessions = allSessions.filter(s => 
+                s.title?.toLowerCase().includes(query) ||
+                s.domain?.toLowerCase().includes(query) ||
+                s.category?.toLowerCase().includes(query) ||
+                (s.topics && s.topics.some(t => t.toLowerCase().includes(query)))
+            );
+        }
+        
+        // Sort sessions
+        allSessions = this.sortSessions(allSessions);
         
         // Populate category filter (only on initial load)
         const categoryFilter = document.getElementById('categoryFilter');
@@ -1300,14 +1369,18 @@ class DashboardController {
 
         // Handle empty state
         if (allSessions.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <span class="empty-icon">📜</span>
-                    <p>${this.historyFilters.category || this.historyFilters.date ? 'No matching history found' : 'No learning history yet'}</p>
-                    ${this.historyFilters.category || this.historyFilters.date ? '<button class="clear-filters-btn" onclick="window.dashboardController.clearHistoryFilters()">Clear Filters</button>' : ''}
-                </div>
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="datatable-empty">
+                        <i class="ri-search-line"></i>
+                        <h4>${this.historyFilters.category || this.historyFilters.date || this.historyFilters.searchQuery ? 'No matching history found' : 'No learning history yet'}</h4>
+                        <p>Start browsing to track your learning journey</p>
+                        ${this.historyFilters.category || this.historyFilters.date || this.historyFilters.searchQuery ? '<button class="clear-filters-btn" onclick="window.dashboardController.clearHistoryFilters()">Clear Filters</button>' : ''}
+                    </td>
+                </tr>
             `;
-            if (paginationContainer) paginationContainer.innerHTML = '';
+            if (datatableInfo) datatableInfo.innerHTML = 'Showing 0 entries';
+            if (pageNumbers) pageNumbers.innerHTML = '';
             return;
         }
 
@@ -1315,46 +1388,111 @@ class DashboardController {
         const totalSessions = allSessions.length;
         const totalPages = Math.ceil(totalSessions / this.historyFilters.pageSize);
         const startIndex = (this.historyFilters.page - 1) * this.historyFilters.pageSize;
-        const endIndex = startIndex + this.historyFilters.pageSize;
+        const endIndex = Math.min(startIndex + this.historyFilters.pageSize, totalSessions);
         const paginatedSessions = allSessions.slice(startIndex, endIndex);
 
-        // Render history items with checkboxes
-        container.innerHTML = paginatedSessions.map(session => `
-            <div class="history-item" data-category="${session.category || 'General'}" data-session-id="${session.id}">
-                <input type="checkbox" class="history-item-checkbox" data-session-id="${session.id}" onchange="window.dashboardController.updateDeleteSelectedButton()">
-                <div class="history-item-content">
-                    <div class="history-time">${formatDate(session.timestamp, 'short')}</div>
-                    <div class="history-content">
-                        <div class="history-title">${this.truncate(session.title, 50)}</div>
-                        <div class="history-url">${session.domain} • ${session.category || 'General'}</div>
-                    </div>
-                    <div class="history-duration">${formatTime(session.duration)}</div>
-                </div>
-            </div>
-        `).join('');
+        // Render DataTable rows
+        tableBody.innerHTML = paginatedSessions.map(session => this.renderHistoryTableRow(session)).join('');
 
-        // Render pagination
-        if (paginationContainer && totalPages > 1) {
-            paginationContainer.innerHTML = this.renderHistoryPagination(this.historyFilters.page, totalPages, totalSessions);
-            this.setupPaginationListeners();
-        } else if (paginationContainer) {
-            paginationContainer.innerHTML = `<div class="pagination-info">Showing ${totalSessions} session${totalSessions !== 1 ? 's' : ''}</div>`;
+        // Update pagination info
+        if (datatableInfo) {
+            datatableInfo.innerHTML = `Showing <strong>${startIndex + 1}</strong> to <strong>${endIndex}</strong> of <strong>${totalSessions}</strong> entries`;
         }
 
+        // Render pagination numbers
+        if (pageNumbers) {
+            pageNumbers.innerHTML = this.renderPageNumbers(this.historyFilters.page, totalPages);
+            this.setupPaginationListeners();
+        }
+
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        if (prevBtn) prevBtn.disabled = this.historyFilters.page === 1;
+        if (nextBtn) nextBtn.disabled = this.historyFilters.page === totalPages;
+
+        // Update sort indicators
+        this.updateSortIndicators();
+        
+        // Setup row event listeners
+        this.setupTableRowListeners();
+        
         // Reset select all checkbox
-        const selectAllCheckbox = document.getElementById('selectAllHistory');
+        const selectAllCheckbox = document.getElementById('selectAllRows');
         if (selectAllCheckbox) selectAllCheckbox.checked = false;
-        this.updateDeleteSelectedButton();
     }
 
-    renderHistoryPagination(currentPage, totalPages, totalItems) {
-        let html = '<div class="pagination-controls">';
+    renderHistoryTableRow(session) {
+        const engagement = session.engagement || Math.min(100, Math.round((session.duration / 300) * 100));
+        const engagementClass = engagement >= 70 ? 'high' : engagement >= 40 ? 'medium' : 'low';
+        const topics = session.topics || [];
+        const displayTopics = topics.slice(0, 2);
+        const moreTopics = topics.length > 2 ? topics.length - 2 : 0;
         
-        html += `<button class="pagination-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
-            <i class="ri-arrow-left-s-line"></i> Prev
-        </button>`;
+        const dateObj = new Date(session.timestamp);
+        const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        
+        return `
+            <tr data-session-id="${session.id}">
+                <td class="col-checkbox">
+                    <input type="checkbox" class="row-checkbox" data-session-id="${session.id}">
+                </td>
+                <td class="col-title">
+                    <div class="title-cell">
+                        <span class="title" title="${session.title || 'Untitled'}">${this.truncate(session.title || 'Untitled', 40)}</span>
+                        <span class="url" title="${session.url || ''}">${session.domain || 'Unknown'}</span>
+                    </div>
+                </td>
+                <td class="col-category">
+                    <span class="category-badge ${(session.category || 'other').toLowerCase().replace(/\s+/g, '-')}">
+                        <i class="${getCategoryIcon(session.category)}"></i>
+                        ${session.category || 'Other'}
+                    </span>
+                </td>
+                <td class="col-topics">
+                    <div class="topics-cell">
+                        ${displayTopics.map(t => `<span class="topic-pill">${t}</span>`).join('')}
+                        ${moreTopics > 0 ? `<span class="topics-more" title="${topics.slice(2).join(', ')}">+${moreTopics}</span>` : ''}
+                        ${topics.length === 0 ? '<span class="topic-pill">No topics</span>' : ''}
+                    </div>
+                </td>
+                <td class="col-duration">
+                    <div class="duration-cell">
+                        <i class="ri-time-line"></i>
+                        <span>${formatTime(session.duration)}</span>
+                    </div>
+                </td>
+                <td class="col-engagement">
+                    <div class="engagement-cell">
+                        <div class="engagement-bar">
+                            <div class="engagement-fill ${engagementClass}" style="width: ${engagement}%"></div>
+                        </div>
+                        <span class="engagement-value">${engagement}%</span>
+                    </div>
+                </td>
+                <td class="col-date">
+                    <div class="date-cell">
+                        <span class="date">${dateStr}</span>
+                        <span class="time">${timeStr}</span>
+                    </div>
+                </td>
+                <td class="col-actions">
+                    <div class="actions-cell">
+                        <button class="action-btn view-btn" title="View Details" data-session-id="${session.id}">
+                            <i class="ri-eye-line"></i>
+                        </button>
+                        <button class="action-btn delete" title="Delete" data-session-id="${session.id}">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
 
-        html += '<div class="pagination-pages">';
+    renderPageNumbers(currentPage, totalPages) {
+        let html = '';
         const maxVisible = 5;
         let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
         let end = Math.min(totalPages, start + maxVisible - 1);
@@ -1377,14 +1515,109 @@ class DashboardController {
             html += `<button class="pagination-btn" data-page="${totalPages}">${totalPages}</button>`;
         }
 
-        html += '</div>';
-        html += `<button class="pagination-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
-            Next <i class="ri-arrow-right-s-line"></i>
-        </button>`;
-        html += '</div>';
-        html += `<div class="pagination-info">Page ${currentPage} of ${totalPages} (${totalItems} total)</div>`;
-
         return html;
+    }
+
+    sortSessions(sessions) {
+        const { sortBy, sortOrder } = this.historyFilters;
+        
+        return sessions.sort((a, b) => {
+            let valueA, valueB;
+            
+            switch (sortBy) {
+                case 'title':
+                    valueA = (a.title || '').toLowerCase();
+                    valueB = (b.title || '').toLowerCase();
+                    break;
+                case 'category':
+                    valueA = (a.category || '').toLowerCase();
+                    valueB = (b.category || '').toLowerCase();
+                    break;
+                case 'duration':
+                    valueA = a.duration || 0;
+                    valueB = b.duration || 0;
+                    break;
+                case 'engagement':
+                    valueA = a.engagement || Math.min(100, Math.round((a.duration / 300) * 100));
+                    valueB = b.engagement || Math.min(100, Math.round((b.duration / 300) * 100));
+                    break;
+                case 'timestamp':
+                default:
+                    valueA = a.timestamp || 0;
+                    valueB = b.timestamp || 0;
+                    break;
+            }
+            
+            if (typeof valueA === 'string') {
+                return sortOrder === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+            }
+            return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+        });
+    }
+
+    updateSortIndicators() {
+        document.querySelectorAll('.datatable th.sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+            if (th.dataset.sort === this.historyFilters.sortBy) {
+                th.classList.add(`sort-${this.historyFilters.sortOrder}`);
+            }
+        });
+    }
+
+    setupTableRowListeners() {
+        // Row checkbox listeners
+        document.querySelectorAll('.datatable .row-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const row = checkbox.closest('tr');
+                if (checkbox.checked) {
+                    row.classList.add('selected');
+                } else {
+                    row.classList.remove('selected');
+                }
+                this.updateDeleteSelectedButton();
+            });
+        });
+        
+        // Select all checkbox
+        const selectAll = document.getElementById('selectAllRows');
+        if (selectAll) {
+            selectAll.addEventListener('change', (e) => {
+                document.querySelectorAll('.datatable .row-checkbox').forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                    const row = checkbox.closest('tr');
+                    if (e.target.checked) {
+                        row.classList.add('selected');
+                    } else {
+                        row.classList.remove('selected');
+                    }
+                });
+                this.updateDeleteSelectedButton();
+            });
+        }
+        
+        // Delete buttons
+        document.querySelectorAll('.datatable .action-btn.delete').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const sessionId = e.currentTarget.dataset.sessionId;
+                if (confirm('Are you sure you want to delete this session?')) {
+                    await this.storage.deleteSession(sessionId);
+                    this.loadHistory();
+                }
+            });
+        });
+        
+        // View buttons
+        document.querySelectorAll('.datatable .action-btn.view-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const sessionId = e.currentTarget.dataset.sessionId;
+                this.viewSessionDetails(sessionId);
+            });
+        });
+    }
+
+    viewSessionDetails(sessionId) {
+        // TODO: Implement session details modal
+        console.log('View session:', sessionId);
     }
 
     setupPaginationListeners() {
@@ -1401,12 +1634,116 @@ class DashboardController {
     }
 
     clearHistoryFilters() {
-        this.historyFilters = { category: '', date: '', page: 1, pageSize: 15 };
+        this.historyFilters = { 
+            category: '', 
+            date: '', 
+            page: 1, 
+            pageSize: 15,
+            sortBy: 'timestamp',
+            sortOrder: 'desc',
+            searchQuery: ''
+        };
         const categoryFilter = document.getElementById('categoryFilter');
         const dateFilter = document.getElementById('dateFilter');
+        const searchInput = document.getElementById('historySearch');
         if (categoryFilter) categoryFilter.value = '';
         if (dateFilter) dateFilter.value = '';
+        if (searchInput) searchInput.value = '';
         this.loadHistory();
+    }
+
+    // Debounce utility
+    debounce(func, wait) {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // AI Analysis Methods
+    async analyzeHistoryWithAI() {
+        const analyzeBtn = document.getElementById('analyzeHistoryBtn');
+        const insightsPanel = document.getElementById('historyInsightsPanel');
+        
+        if (!analyzeBtn || this.aiAnalysisLoading) return;
+        
+        try {
+            // Show loading state
+            this.aiAnalysisLoading = true;
+            analyzeBtn.classList.add('loading');
+            analyzeBtn.innerHTML = '<i class="ri-loader-4-line"></i> Analyzing...';
+            
+            // Get all sessions for analysis
+            const sessions = await this.storage.getSessions({});
+            
+            if (sessions.length === 0) {
+                alert('No history data to analyze. Start browsing to collect learning data.');
+                return;
+            }
+            
+            // Call AI backend for analysis
+            const insights = await this.backend.analyzeHistory(sessions);
+            
+            if (insights && insightsPanel) {
+                this.aiInsights = insights;
+                this.renderAIInsights(insights);
+                insightsPanel.classList.add('active');
+            }
+            
+        } catch (error) {
+            console.error('AI Analysis failed:', error);
+            alert('Failed to analyze history. Please ensure the backend server is running.');
+        } finally {
+            this.aiAnalysisLoading = false;
+            if (analyzeBtn) {
+                analyzeBtn.classList.remove('loading');
+                analyzeBtn.innerHTML = '<i class="ri-brain-line"></i> AI Analyze';
+            }
+        }
+    }
+
+    renderAIInsights(insights) {
+        const insightsGrid = document.querySelector('#historyInsightsPanel .ai-insights-grid');
+        if (!insightsGrid) return;
+        
+        const cards = [
+            {
+                icon: 'ri-focus-3-line',
+                label: 'Focus Area',
+                value: insights.focusArea || 'General Learning',
+                change: insights.focusAreaChange || null
+            },
+            {
+                icon: 'ri-time-line',
+                label: 'Peak Hours',
+                value: insights.peakHours || 'Not determined',
+                change: null
+            },
+            {
+                icon: 'ri-bar-chart-line',
+                label: 'Learning Pattern',
+                value: insights.learningPattern || 'Consistent',
+                change: insights.patternTrend || null
+            },
+            {
+                icon: 'ri-lightbulb-line',
+                label: 'Recommended Next',
+                value: insights.recommendedTopic || 'Keep exploring',
+                change: null
+            }
+        ];
+        
+        insightsGrid.innerHTML = cards.map(card => `
+            <div class="ai-insight-card">
+                <div class="insight-icon">
+                    <i class="${card.icon}"></i>
+                </div>
+                <div class="insight-label">${card.label}</div>
+                <div class="insight-value">${card.value}</div>
+                ${card.change ? `<div class="insight-change ${card.change.type}">${card.change.text}</div>` : ''}
+            </div>
+        `).join('');
     }
 
     // Export PDF Modal

@@ -421,6 +421,9 @@
                             <div class="card-header">
                                 <h3><i class="ri-history-line"></i> Learning History</h3>
                                 <div class="history-actions">
+                                    <button class="btn btn-ai" id="analyzeHistoryBtn" title="AI Analysis">
+                                        <i class="ri-brain-line"></i> AI Analyze
+                                    </button>
                                     <button class="btn btn-secondary" id="downloadHistoryPdf" title="Download as PDF">
                                         <i class="ri-file-pdf-line"></i> Export PDF
                                     </button>
@@ -429,13 +432,32 @@
                                     </button>
                                 </div>
                             </div>
+                            
+                            <!-- AI Insights Panel -->
+                            <div class="ai-insights-panel" id="historyInsightsPanel" style="display: none;">
+                                <div class="ai-panel-header">
+                                    <h4><i class="ri-sparkling-line"></i> AI Learning Insights</h4>
+                                    <button class="btn btn-sm" id="closeInsightsPanel"><i class="ri-close-line"></i></button>
+                                </div>
+                                <div class="ai-insights-content" id="historyInsightsContent">
+                                    <div class="ai-loading">
+                                        <div class="spinner"></div>
+                                        <span>Analyzing your learning patterns...</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="history-toolbar">
                                 <div class="history-filters">
+                                    <div class="search-box">
+                                        <i class="ri-search-line"></i>
+                                        <input type="text" id="historySearch" placeholder="Search history...">
+                                    </div>
                                     <select id="categoryFilter">
                                         <option value="">All Categories</option>
                                     </select>
                                     <input type="date" id="dateFilter">
-                                    <button class="btn btn-sm" id="clearFilters">Clear</button>
+                                    <button class="btn btn-sm" id="clearFilters"><i class="ri-filter-off-line"></i> Clear</button>
                                 </div>
                                 <div class="history-selection">
                                     <label class="checkbox-label">
@@ -447,11 +469,68 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="history-list" id="historyList">
+
+                            <!-- DataTable History View -->
+                            <div class="datatable-container">
+                                <table class="datatable" id="historyTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-checkbox"><input type="checkbox" id="selectAllRows"></th>
+                                            <th class="col-title sortable" data-sort="title">
+                                                <span>Title</span>
+                                                <i class="ri-arrow-up-down-line sort-icon"></i>
+                                            </th>
+                                            <th class="col-category sortable" data-sort="category">
+                                                <span>Category</span>
+                                                <i class="ri-arrow-up-down-line sort-icon"></i>
+                                            </th>
+                                            <th class="col-topics">Topics</th>
+                                            <th class="col-duration sortable" data-sort="duration">
+                                                <span>Duration</span>
+                                                <i class="ri-arrow-up-down-line sort-icon"></i>
+                                            </th>
+                                            <th class="col-engagement sortable" data-sort="engagement">
+                                                <span>Engagement</span>
+                                                <i class="ri-arrow-up-down-line sort-icon"></i>
+                                            </th>
+                                            <th class="col-date sortable" data-sort="timestamp">
+                                                <span>Date</span>
+                                                <i class="ri-arrow-up-down-line sort-icon"></i>
+                                            </th>
+                                            <th class="col-actions">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="historyTableBody">
+                                        <!-- Data rows will be inserted here -->
+                                    </tbody>
+                                </table>
                                 
+                                <div class="datatable-empty" id="historyEmpty" style="display: none;">
+                                    <i class="ri-inbox-line"></i>
+                                    <p>No learning history found</p>
+                                    <span>Start browsing educational content to build your history</span>
+                                </div>
                             </div>
-                            <div class="pagination" id="historyPagination">
-                                
+
+                            <div class="datatable-footer">
+                                <div class="datatable-info">
+                                    <span id="historyInfo">Showing 0 entries</span>
+                                </div>
+                                <div class="datatable-pagination" id="historyPagination">
+                                    <button class="page-btn" id="prevPage" disabled><i class="ri-arrow-left-s-line"></i></button>
+                                    <div class="page-numbers" id="pageNumbers"></div>
+                                    <button class="page-btn" id="nextPage"><i class="ri-arrow-right-s-line"></i></button>
+                                </div>
+                                <div class="datatable-page-size">
+                                    <span>Show</span>
+                                    <select id="pageSizeSelect">
+                                        <option value="10">10</option>
+                                        <option value="25" selected>25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span>entries</span>
+                                </div>
                             </div>
                         </div>
                     </div>

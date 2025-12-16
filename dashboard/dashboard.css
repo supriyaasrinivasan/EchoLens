@@ -2385,6 +2385,621 @@ a:hover {
     box-shadow: 0 0 0 3px var(--accent-light);
 }
 
+/* DataTable Styles */
+.datatable-wrapper {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
+
+.datatable-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.datatable-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.datatable-wrapper::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: var(--radius-sm);
+}
+
+.datatable {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.datatable thead {
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(99, 102, 241, 0.1) 100%);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.datatable thead tr {
+    border-bottom: 2px solid var(--accent-primary);
+}
+
+.datatable th {
+    padding: 14px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: var(--bg-card);
+}
+
+.datatable th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.datatable th.sortable:hover {
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--bg-secondary) 100%);
+    color: var(--accent-primary);
+}
+
+.datatable th.sortable .sort-icon {
+    margin-left: 6px;
+    font-size: 10px;
+    opacity: 0.4;
+    transition: all var(--transition-fast);
+}
+
+.datatable th.sortable:hover .sort-icon {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+.datatable th.sortable.sort-asc .sort-icon,
+.datatable th.sortable.sort-desc .sort-icon {
+    opacity: 1;
+    color: var(--accent-primary);
+}
+
+.datatable th.sortable.sort-asc .sort-icon::before {
+    content: "\eb3b";
+}
+
+.datatable th.sortable.sort-desc .sort-icon::before {
+    content: "\eb2c";
+}
+
+.datatable tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+}
+
+.datatable tbody tr:hover {
+    background: linear-gradient(90deg, var(--accent-light) 0%, var(--bg-hover) 50%, transparent 100%);
+    transform: scale(1.001);
+}
+
+.datatable tbody tr.selected {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%);
+    border-left: 3px solid var(--accent-primary);
+}
+
+.datatable td {
+    padding: 12px;
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+/* Column Widths */
+.datatable .col-checkbox {
+    width: 40px;
+    text-align: center;
+}
+
+.datatable .col-title {
+    min-width: 200px;
+    max-width: 300px;
+}
+
+.datatable .col-category {
+    width: 120px;
+}
+
+.datatable .col-topics {
+    width: 180px;
+}
+
+.datatable .col-duration {
+    width: 100px;
+}
+
+.datatable .col-engagement {
+    width: 120px;
+}
+
+.datatable .col-date {
+    width: 140px;
+}
+
+.datatable .col-actions {
+    width: 100px;
+    text-align: center;
+}
+
+/* Checkbox Styling */
+.datatable input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+}
+
+/* Title Cell */
+.datatable .title-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.datatable .title-cell .title {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+}
+
+.datatable .title-cell .url {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+}
+
+.datatable .title-cell .favicon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: middle;
+    border-radius: var(--radius-sm);
+}
+
+/* Category Badge */
+.datatable .category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.datatable .category-badge.programming {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1));
+    color: #6366f1;
+}
+
+.datatable .category-badge.web-development {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+    color: #10b981;
+}
+
+.datatable .category-badge.data-science {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+    color: #f59e0b;
+}
+
+.datatable .category-badge.devops {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+    color: #ef4444;
+}
+
+.datatable .category-badge.security {
+    background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(236, 72, 153, 0.1));
+    color: #ec4899;
+}
+
+.datatable .category-badge.other {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.1));
+    color: #6b7280;
+}
+
+/* Topics Pills */
+.datatable .topics-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.datatable .topic-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.datatable .topic-pill:hover {
+    background: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.datatable .topics-more {
+    padding: 2px 6px;
+    background: var(--accent-light);
+    border-radius: var(--radius-full);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent-primary);
+    cursor: pointer;
+}
+
+/* Duration Cell */
+.datatable .duration-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.datatable .duration-cell i {
+    color: var(--accent-primary);
+    font-size: 14px;
+}
+
+/* Engagement Cell */
+.datatable .engagement-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.datatable .engagement-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.datatable .engagement-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+}
+
+.datatable .engagement-fill.high {
+    background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.datatable .engagement-fill.medium {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.datatable .engagement-fill.low {
+    background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.datatable .engagement-value {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+}
+
+/* Date Cell */
+.datatable .date-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.datatable .date-cell .date {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.datatable .date-cell .time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+}
+
+/* Actions Cell */
+.datatable .actions-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.datatable .action-btn {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.datatable .action-btn:hover {
+    background: var(--accent-light);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    transform: translateY(-2px);
+}
+
+.datatable .action-btn.delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+/* DataTable Footer */
+.datatable-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.datatable-info {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+.datatable-info strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.page-size-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-size-selector label {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.page-size-selector select {
+    padding: 6px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* AI Insights Panel */
+.ai-insights-panel {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(168, 85, 247, 0.05) 100%);
+    border-bottom: 1px solid var(--border-color);
+    display: none;
+}
+
+.ai-insights-panel.active {
+    display: block;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ai-insights-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.ai-insights-header h4 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ai-insights-header h4 i {
+    color: var(--accent-primary);
+}
+
+.ai-insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.ai-insight-card {
+    padding: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+}
+
+.ai-insight-card:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.ai-insight-card .insight-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-light);
+    border-radius: var(--radius-md);
+    color: var(--accent-primary);
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.ai-insight-card .insight-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    margin-bottom: 4px;
+}
+
+.ai-insight-card .insight-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.ai-insight-card .insight-change {
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.ai-insight-card .insight-change.positive {
+    color: var(--success);
+}
+
+.ai-insight-card .insight-change.negative {
+    color: var(--danger);
+}
+
+/* History Search Box */
+.history-search-box {
+    position: relative;
+    flex: 1;
+    max-width: 300px;
+}
+
+.history-search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 13px;
+    transition: all var(--transition-fast);
+}
+
+.history-search-box input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.history-search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    font-size: 14px;
+}
+
+/* Analyze Button */
+.analyze-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border: none;
+    border-radius: var(--radius-md);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.analyze-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.analyze-btn i {
+    font-size: 16px;
+}
+
+.analyze-btn.loading {
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.analyze-btn.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.datatable-empty {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.datatable-empty i {
+    font-size: 48px;
+    color: var(--text-tertiary);
+    margin-bottom: 16px;
+}
+
+.datatable-empty h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.datatable-empty p {
+    font-size: 13px;
+    color: var(--text-tertiary);
+}
+
+/* Legacy support - keep for backwards compatibility */
 .history-list {
     display: flex;
     flex-direction: column;

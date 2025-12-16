@@ -406,6 +406,270 @@ app.get('/api/status', async (req, res) => {
     }
 });
 
+// =====================================================
+// AI-Powered Endpoints
+// =====================================================
+
+// AI History Analysis - Deep analysis of browsing history
+app.post('/api/ai/history-analyze', async (req, res) => {
+    try {
+        const { sessions } = req.body;
+        
+        if (!sessions || !Array.isArray(sessions)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Sessions array is required'
+            });
+        }
+        
+        // Call Python AI for advanced analysis
+        const insights = await callPythonAI('analyze_history', { sessions });
+        
+        // Store insights in database
+        await new Promise((resolve) => {
+            db.run(`INSERT INTO ai_insights (insight_type, content, confidence)
+                    VALUES (?, ?, ?)`,
+                ['history_analysis', JSON.stringify(insights), 0.85],
+                () => resolve()
+            );
+        });
+        
+        res.json({
+            success: true,
+            ...insights,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('History analysis error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            // Fallback response if Python AI fails
+            focusArea: 'Unable to determine',
+            peakHours: 'Analysis failed',
+            learningPattern: 'Unknown',
+            recommendedTopic: 'Try again later'
+        });
+    }
+});
+
+// AI Insights - Get learning insights based on data
+app.post('/api/ai/insights', async (req, res) => {
+    try {
+        const data = req.body;
+        
+        // Get latest sessions from DB if not provided
+        let sessions = data.sessions;
+        if (!sessions) {
+            sessions = await new Promise((resolve, reject) => {
+                db.all('SELECT * FROM sessions ORDER BY timestamp DESC LIMIT 100', [], (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                });
+            });
+        }
+        
+        // Get topics
+        const topics = await new Promise((resolve, reject) => {
+            db.all('SELECT * FROM topics ORDER BY total_time DESC', [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Analyze with Python AI
+        const insights = await callPythonAI('analyze', { sessions, topics });
+        
+        res.json({
+            success: true,
+            insights: insights.insights || insights,
+            generated_at: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Insights generation error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// AI Predict - Predict learning interests
+app.post('/api/ai/predict', async (req, res) => {
+    try {
+        const { profile } = req.body;
+        
+        // Get user's recent sessions
+        const sessions = await new Promise((resolve, reject) => {
+            db.all('SELECT * FROM sessions ORDER BY timestamp DESC LIMIT 100', [], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Call Python AI for predictions
+        const predictions = await callPythonAI('predict', { sessions, profile });
+        
+        res.json({
+            success: true,
+            ...predictions,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Prediction error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            predictions: []
+        });
+    }
+});
+
+// AI Cluster - Cluster topics by similarity
+app.post('/api/ai/cluster', async (req, res) => {
+    try {
+        const { sessions } = req.body;
+        
+        let sessionData = sessions;
+        if (!sessionData || !Array.isArray(sessionData)) {
+            // Get from database
+            sessionData = await new Promise((resolve, reject) => {
+                db.all('SELECT * FROM sessions ORDER BY timestamp DESC LIMIT 200', [], (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows || []);
+                });
+            });
+        }
+        
+        // Call Python AI for clustering
+        const clusters = await callPythonAI('cluster', { sessions: sessionData });
+        
+        res.json({
+            success: true,
+            ...clusters,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Clustering error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            clusters: []
+        });
+    }
+});
+
+// AI Learning Summary - Generate comprehensive summary
+app.post('/api/ai/summary', async (req, res) => {
+    try {
+        const { period = 'week' } = req.body;
+        
+        // Calculate date range
+        const daysAgo = period === 'day' ? 1 : period === 'week' ? 7 : period === 'month' ? 30 : 365;
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - daysAgo);
+        const startStr = startDate.toISOString().split('T')[0];
+        
+        // Get sessions in range
+        const sessions = await new Promise((resolve, reject) => {
+            db.all('SELECT * FROM sessions WHERE date >= ? ORDER BY timestamp DESC', [startStr], (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Call Python AI for summary
+        const summary = await callPythonAI('summary', { sessions, period });
+        
+        res.json({
+            success: true,
+            ...summary,
+            timestamp: new Date().toISOString()
+        });
+        
+    } catch (error) {
+        console.error('Summary generation error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Bulk history export with AI annotations
+app.get('/api/history/export', async (req, res) => {
+    try {
+        const { format = 'json', startDate, endDate } = req.query;
+        
+        let query = 'SELECT * FROM sessions';
+        const params = [];
+        
+        if (startDate || endDate) {
+            query += ' WHERE';
+            if (startDate) {
+                query += ' date >= ?';
+                params.push(startDate);
+            }
+            if (endDate) {
+                query += (startDate ? ' AND' : '') + ' date <= ?';
+                params.push(endDate);
+            }
+        }
+        
+        query += ' ORDER BY timestamp DESC';
+        
+        const sessions = await new Promise((resolve, reject) => {
+            db.all(query, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+        
+        // Add AI analysis to export
+        let aiAnalysis = null;
+        if (sessions.length > 0) {
+            try {
+                aiAnalysis = await callPythonAI('analyze_history', { sessions });
+            } catch (e) {
+                console.log('AI analysis skipped for export');
+            }
+        }
+        
+        const exportData = {
+            exportedAt: new Date().toISOString(),
+            sessionCount: sessions.length,
+            sessions,
+            aiAnalysis
+        };
+        
+        if (format === 'csv') {
+            // Convert to CSV
+            const headers = ['id', 'url', 'domain', 'title', 'category', 'duration', 'engagement_score', 'date', 'timestamp'];
+            let csv = headers.join(',') + '\n';
+            sessions.forEach(s => {
+                csv += headers.map(h => `"${(s[h] || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
+            });
+            
+            res.setHeader('Content-Type', 'text/csv');
+            res.setHeader('Content-Disposition', 'attachment; filename="supriai-history.csv"');
+            res.send(csv);
+        } else {
+            res.json(exportData);
+        }
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(60));
     console.log('SupriAI Backend Server (Node.js + Python AI)');

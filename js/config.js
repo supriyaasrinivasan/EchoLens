@@ -19,7 +19,11 @@ const CONFIG = {
         PROFILE: '/api/profile',
         PATTERNS: '/api/patterns',
         ANALYZE: '/api/analyze',
-        TOPIC_MODELING: '/api/topic-modeling'
+        TOPIC_MODELING: '/api/topic-modeling',
+        AI_INSIGHTS: '/api/ai/insights',
+        AI_HISTORY_ANALYZE: '/api/ai/history-analyze',
+        AI_PREDICT: '/api/ai/predict',
+        AI_CLUSTER: '/api/ai/cluster'
     },
     
     RETRY_CONFIG: {
@@ -162,6 +166,59 @@ export class BackendConnection {
             });
         } catch (error) {
             console.error('Failed to sync data with backend:', error);
+            return null;
+        }
+    }
+
+    // AI Analysis Methods
+    async analyzeHistory(sessions) {
+        try {
+            return await this.request(CONFIG.API_ENDPOINTS.AI_HISTORY_ANALYZE, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessions })
+            });
+        } catch (error) {
+            console.error('Failed to analyze history:', error);
+            return null;
+        }
+    }
+
+    async getAIInsights(data) {
+        try {
+            return await this.request(CONFIG.API_ENDPOINTS.AI_INSIGHTS, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } catch (error) {
+            console.error('Failed to get AI insights:', error);
+            return null;
+        }
+    }
+
+    async predictLearningPath(profile) {
+        try {
+            return await this.request(CONFIG.API_ENDPOINTS.AI_PREDICT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(profile)
+            });
+        } catch (error) {
+            console.error('Failed to predict learning path:', error);
+            return null;
+        }
+    }
+
+    async clusterTopics(sessions) {
+        try {
+            return await this.request(CONFIG.API_ENDPOINTS.AI_CLUSTER, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessions })
+            });
+        } catch (error) {
+            console.error('Failed to cluster topics:', error);
             return null;
         }
     }
