@@ -1,15 +1,44 @@
 # SupriAI - AI-Powered Learning Recommendation System
 
-A Chrome browser extension that tracks your learning activities, analyzes your patterns, and provides AI-powered recommendations to enhance your learning journey.
+> Your intelligent browser-integrated learning companion with advanced analytics, predictions, and personalized recommendations.
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/supriai)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ## 🚀 Features
 
-- **Smart Learning Tracking**: Automatically detects and categorizes educational content
-- **Engagement Analysis**: Monitors your focus, scroll depth, and interaction patterns
-- **AI-Powered Insights**: Generates personalized learning insights using machine learning
-- **Recommendations Engine**: Suggests resources based on your learning patterns
-- **Beautiful Dashboard**: Visualize your learning progress with charts and analytics
-- **Skill Progression**: Track your skill development across different topics
+### 📊 **Advanced Analytics**
+- **Real-time Learning Tracking** - Monitor your learning sessions automatically
+- **Engagement Metrics** - Track focus levels, scroll depth, and interaction quality
+- **Learning Velocity** - Measure your pace of learning and topic acquisition
+- **Topic Mastery Analysis** - See your progression from novice to expert
+- **Productivity Insights** - Identify peak learning times and optimize your schedule
+- **Behavior Pattern Detection** - Understand your learning style and habits
+
+### 🤖 **AI-Powered Predictions**
+- **Learning Time Forecasts** - Predict future study hours with exponential smoothing
+- **Topic Progression** - Estimate time to mastery for each subject
+- **Engagement Trends** - Forecast engagement using linear regression
+- **Skill Mastery Timeline** - Exponential growth modeling for skill development
+- **Burnout Risk Analysis** - Multi-factor burnout prevention system
+- **Optimal Schedule Prediction** - AI-suggested best times for learning
+- **Next Topic Recommendations** - Smart learning path suggestions
+
+### 💡 **Smart Recommendations**
+- **Continue Learning** - Pick up where you left off seamlessly
+- **Skill Progression** - Level-based skill tree navigation
+- **Resource Suggestions** - Curated learning resources matched to your level
+- **Pattern-based Insights** - Recommendations based on your behavior
+- **Exploration Recommendations** - Discover new related topics
+- **Gap Analysis** - Identify and fill knowledge gaps
+
+### 🎨 **Beautiful Design**
+- **Modern UI/UX** - Clean, professional interface without gradients
+- **Dark/Light Themes** - Comfortable viewing in any environment
+- **Responsive Layout** - Works perfectly on all screen sizes
+- **Smooth Animations** - Subtle transitions and interactions
+- **Accessibility** - WCAG compliant design
+- **Icon Library** - RemixIcon integration for consistent visuals
 
 ## 📁 Project Structure
 
