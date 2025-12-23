@@ -60,6 +60,7 @@ SupriAI/
 3. Click "Load unpacked"
 4. Select the `SupriAI` folder
 
+
 ### 2. Start the Backend Server
 
 The backend provides enhanced AI analysis and recommendations.
