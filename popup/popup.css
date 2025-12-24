@@ -1,10 +1,19 @@
 /* SupriAI Popup Styles */
 
+.body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-sizing:content-box;
+}
 .popup-container {
-    width: 400px;
-    max-height: 600px;
+    width: 25rem;
+    max-height: 37.5rem;
     overflow-y: auto;
     background: var(--bg-primary);
+    border-radius: 1rem;
+    /* overflow: hidden; */
 }
 
 /* Header */
@@ -24,8 +33,8 @@
 }
 
 .logo-icon {
-    width: 28px;
-    height: 28px;
+    width: 1.75rem;
+    height: 1.75rem;
     background: var(--primary-600);
     border-radius: var(--radius-md);
     display: flex;
@@ -51,8 +60,8 @@
 }
 
 .theme-toggle {
-    width: 32px;
-    height: 32px;
+    width: 2rem;
+    height: 2rem;
 }
 
 .status-indicator {
@@ -86,13 +95,13 @@
 
 .stat-card:hover {
     border-color: var(--primary-300);
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem);
     box-shadow: var(--shadow-md);
 }
 
 .stat-icon {
-    width: 36px;
-    height: 36px;
+    width: 2.25rem;
+    height: 2.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -186,7 +195,7 @@
 }
 
 .meter-bar {
-    height: 5px;
+    height: 0.3125rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-full);
     overflow: hidden;
@@ -228,8 +237,8 @@
 }
 
 .focus-dot {
-    width: 8px;
-    height: 8px;
+    width: 0.5rem;
+    height: 0.5rem;
     background: var(--neutral-300);
     border-radius: var(--radius-full);
     transition: all var(--transition-base);
@@ -237,7 +246,7 @@
 
 .focus-dot.active {
     background: var(--accent-500);
-    box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+    box-shadow: 0 0 0.5rem rgba(168, 85, 247, 0.4);
 }
 
 /* Top Topics */
@@ -276,7 +285,7 @@
 
 .topic-item:hover {
     border-color: var(--primary-300);
-    transform: translateX(4px);
+    transform: translateX(0.25rem);
 }
 
 .topic-info {
@@ -302,8 +311,8 @@
 }
 
 .topic-bar {
-    width: 60px;
-    height: 4px;
+    width: 3.75rem;
+    height: 0.25rem;
     background: var(--bg-tertiary);
     border-radius: var(--radius-full);
     overflow: hidden;
@@ -342,14 +351,14 @@
     padding: var(--space-md);
     background: var(--bg-secondary);
     border: 1px solid var(--border-light);
-    border-left: 3px solid var(--accent-500);
+    border-left: 0.1875rem solid var(--accent-500);
     border-radius: var(--radius-md);
     transition: all var(--transition-base);
 }
 
 .recommendation-card:hover {
     border-left-color: var(--accent-600);
-    transform: translateX(2px);
+    transform: translateX(0.125rem);
     box-shadow: var(--shadow-md);
 }
 
@@ -424,16 +433,17 @@
 
 /* Skeleton States */
 .skeleton.topic-item {
-    height: 50px;
+    height: 3.125rem;
 }
 
 .skeleton.recommendation-card {
-    height: 80px;
+    height: 5rem;
+    border-radius: 100px;
 }
 
 /* Scrollbar for popup */
 .popup-container::-webkit-scrollbar {
-    width: 6px;
+    width: 0px;
 }
 
 .popup-container::-webkit-scrollbar-track {

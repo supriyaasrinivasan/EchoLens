@@ -87,12 +87,61 @@ class PopupController {
         try {
             const stats = await this.storage.getTodayStats();
             
-            document.getElementById('todayTopics').textContent = stats.topicsCount || 0;
-            document.getElementById('todayTime').textContent = formatTime(stats.totalTime || 0);
-            document.getElementById('streakDays').textContent = stats.streak || 0;
+            this.animateStatValue('todayTopics', stats.topicsCount || 0);
+            this.animateStatValue('streakDays', stats.streak || 0);
+            
+            const timeEl = document.getElementById('todayTime');
+            const formattedTime = formatTime(stats.totalTime || 0);
+            if (timeEl.textContent !== formattedTime) {
+                timeEl.style.transform = 'scale(1.1)';
+                timeEl.textContent = formattedTime;
+                setTimeout(() => {
+                    timeEl.style.transform = 'scale(1)';
+                }, 200);
+            }
+            
+            // Add visual feedback for active tracking
+            if (this.isTracking && stats.totalTime > 0) {
+                this.pulseActiveStats();
+            }
         } catch (error) {
             console.error('Error loading quick stats:', error);
         }
+    }
+
+    animateStatValue(elementId, newValue) {
+        const el = document.getElementById(elementId);
+        const currentValue = parseInt(el.textContent) || 0;
+        
+        if (currentValue !== newValue) {
+            const increment = newValue > currentValue ? 1 : -1;
+            let current = currentValue;
+            
+            const interval = setInterval(() => {
+                current += increment;
+                el.textContent = current;
+                
+                if (current === newValue) {
+                    clearInterval(interval);
+                    el.parentElement.parentElement.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        el.parentElement.parentElement.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            }, 50);
+        }
+    }
+
+    pulseActiveStats() {
+        const statsCards = document.querySelectorAll('.stat-card');
+        statsCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.borderColor = 'var(--primary-400)';
+                setTimeout(() => {
+                    card.style.borderColor = '';
+                }, 500);
+            }, index * 100);
+        });
     }
 
     async loadCurrentPage() {
@@ -122,25 +171,23 @@ class PopupController {
 
                     if (response && response.session) {
                         const session = response.session;
-                        document.getElementById('currentPageTitle').textContent = session.title || tab.title || 'Unknown Page';
-                        document.getElementById('currentPageCategory').textContent = session.category || 'Analyzing...';
-                        
-                        const engagement = session.engagementScore || 0;
-                        document.getElementById('engagementMeter').style.width = `${engagement}%`;
-                        document.getElementById('engagementValue').textContent = `${Math.round(engagement)}%`;
-                        
-                        this.updateFocusDots(session.focusLevel || 0);
+                        this.updatePageInfo(session, tab);
+                        this.updateEngagementMeter(session);
+                        this.updateFocusLevel(session);
+                        this.highlightActiveSession();
                         return;
                     }
                 } catch (msgError) {
-                    // Background script not responding - show basic info
+                    console.log('Background script not responding:', msgError);
                 }
             }
 
             // Fallback: Show basic tab info
             const domain = new URL(tab.url).hostname.replace('www.', '');
             document.getElementById('currentPageTitle').textContent = this.truncateText(tab.title || domain, 40);
-            document.getElementById('currentPageCategory').textContent = this.isTracking ? 'Tracking...' : 'Paused';
+            document.getElementById('currentPageCategory').innerHTML = `
+                <i class="ri-time-line"></i> ${this.isTracking ? 'Tracking...' : 'Paused'}
+            `;
             document.getElementById('engagementMeter').style.width = '0%';
             document.getElementById('engagementValue').textContent = '0%';
             this.updateFocusDots(0);
@@ -149,6 +196,76 @@ class PopupController {
             console.error('Error loading current page:', error);
             this.showCurrentPageFallback('Unable to load', 'Try refreshing');
         }
+    }
+
+    updatePageInfo(session, tab) {
+        const titleEl = document.getElementById('currentPageTitle');
+        const categoryEl = document.getElementById('currentPageCategory');
+        
+        titleEl.textContent = session.title || tab.title || 'Unknown Page';
+        
+        const category = session.category || 'General';
+        const icon = this.getCategoryIcon(category);
+        categoryEl.innerHTML = `<i class="${icon}"></i> ${category}`;
+    }
+
+    updateEngagementMeter(session) {
+        const engagement = Math.min(100, Math.max(0, session.engagementScore || 0));
+        const meterFill = document.getElementById('engagementMeter');
+        const meterValue = document.getElementById('engagementValue');
+        
+        // Smooth animation
+        meterFill.style.width = `${engagement}%`;
+        meterValue.textContent = `${Math.round(engagement)}%`;
+        
+        // Update color based on engagement level
+        if (engagement >= 70) {
+            meterFill.style.background = 'linear-gradient(90deg, var(--success-500) 0%, var(--success-600) 100%)';
+        } else if (engagement >= 40) {
+            meterFill.style.background = 'linear-gradient(90deg, var(--primary-500) 0%, var(--accent-500) 100%)';
+        } else {
+            meterFill.style.background = 'linear-gradient(90deg, var(--warning-500) 0%, var(--warning-600) 100%)';
+        }
+    }
+
+    updateFocusLevel(session) {
+        const focusLevel = Math.min(100, Math.max(0, session.focusLevel || 0));
+        this.updateFocusDots(focusLevel);
+        
+        // Update focus label with live status
+        const focusLabel = document.querySelector('.focus-label');
+        if (focusLabel) {
+            const status = focusLevel >= 80 ? '🔥 High Focus' : 
+                          focusLevel >= 50 ? '✨ Good Focus' : 
+                          focusLevel >= 20 ? '💭 Fair Focus' : '😴 Low Focus';
+            focusLabel.innerHTML = `<i class="ri-focus-3-line"></i> ${status}`;
+        }
+    }
+
+    highlightActiveSession() {
+        const sessionCard = document.querySelector('.session-card');
+        if (sessionCard) {
+            sessionCard.style.animation = 'pulse 2s ease-in-out';
+            setTimeout(() => {
+                sessionCard.style.animation = '';
+            }, 2000);
+        }
+    }
+
+    getCategoryIcon(category) {
+        const icons = {
+            'Technology': 'ri-code-line',
+            'Science': 'ri-flask-line',
+            'Mathematics': 'ri-calculator-line',
+            'Programming': 'ri-terminal-line',
+            'Design': 'ri-palette-line',
+            'Business': 'ri-briefcase-line',
+            'Education': 'ri-book-open-line',
+            'Research': 'ri-search-line',
+            'Documentation': 'ri-file-text-line',
+            'General': 'ri-folder-line'
+        };
+        return icons[category] || 'ri-folder-line';
     }
 
     showCurrentPageFallback(title, category) {
@@ -262,25 +379,88 @@ class PopupController {
     }
 
     startRealTimeUpdates() {
-        setInterval(() => {
+        // Update current page analysis every 3 seconds
+        this.pageUpdateInterval = setInterval(() => {
             try {
-                if (isExtensionContextValid()) {
+                if (isExtensionContextValid() && this.isTracking) {
                     this.loadCurrentPage();
                 }
             } catch (error) {
-                console.log('Extension context invalidated, stopping updates');
+                console.log('Extension context invalidated, stopping page updates');
+                clearInterval(this.pageUpdateInterval);
             }
-        }, 5000);
+        }, 3000);
 
-        setInterval(() => {
+        // Update stats every 10 seconds
+        this.statsUpdateInterval = setInterval(() => {
             try {
                 if (isExtensionContextValid()) {
                     this.loadQuickStats();
                 }
             } catch (error) {
-                console.log('Extension context invalidated, stopping updates');
+                console.log('Extension context invalidated, stopping stats updates');
+                clearInterval(this.statsUpdateInterval);
+            }
+        }, 10000);
+
+        // Update topics every 30 seconds
+        this.topicsUpdateInterval = setInterval(() => {
+            try {
+                if (isExtensionContextValid()) {
+                    this.loadTopTopics();
+                }
+            } catch (error) {
+                console.log('Extension context invalidated, stopping topics updates');
+                clearInterval(this.topicsUpdateInterval);
             }
         }, 30000);
+
+        // Listen for tab changes for instant updates
+        if (chrome.tabs && chrome.tabs.onActivated) {
+            chrome.tabs.onActivated.addListener(() => {
+                setTimeout(() => this.loadCurrentPage(), 500);
+            });
+        }
+
+        // Listen for tracking status changes
+        chrome.storage.onChanged.addListener((changes, namespace) => {
+            if (namespace === 'local' && changes.trackingEnabled) {
+                this.isTracking = changes.trackingEnabled.newValue;
+                this.updateTrackingUI();
+                if (this.isTracking) {
+                    this.loadCurrentPage();
+                }
+            }
+        });
+
+        // Add visual indicator for realtime updates
+        this.addRealtimeIndicator();
+    }
+
+    addRealtimeIndicator() {
+        const header = document.querySelector('.header');
+        if (header) {
+            const indicator = document.createElement('div');
+            indicator.className = 'realtime-indicator';
+            indicator.innerHTML = '<i class="ri-pulse-line"></i>';
+            indicator.style.cssText = `
+                position: absolute;
+                top: 0.5rem;
+                right: 0.5rem;
+                width: 0.5rem;
+                height: 0.5rem;
+                background: var(--success-500);
+                border-radius: 50%;
+                animation: pulse 2s infinite;
+                opacity: 0.8;
+            `;
+            
+            // Only show when tracking
+            if (this.isTracking) {
+                header.style.position = 'relative';
+                header.appendChild(indicator);
+            }
+        }
     }
 }
 
